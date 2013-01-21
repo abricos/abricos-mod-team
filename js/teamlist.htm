@@ -1,0 +1,38 @@
+<!--{widget}-->
+<div id="{i#id}" class="teamlist">
+	<div id="{i#list}"></div>
+</div>
+
+<!--{row}-->
+<div id="{i#id}" class="teamrow">
+	<div class="wrp">
+		<div class="logo">
+			<div class="tmb tmb100">{v#img}</div>
+		</div>
+		
+		<div class="cont">
+			<div class="tl">
+				<a href="{v#urlview}">{v#tl}</a>
+			</div>
+			<div class="dsc">
+				{v#dsc}
+			</div>
+			<div class="info">
+				<span class="members">Участников: <span class="num">{v#mbrcnt}</span></span>
+			</div>
+		</div>
+		
+		<div class="clear"></div>
+	</div>
+</div>
+
+
+<!--{img}-->
+<a href="{v#urlview}" class="tmbpre" title="{v#tl}">
+	<img src="/filemanager/i/{v#fid}/w_100-h_100/teamlogo/" />
+</a>
+
+<!--{empty}-->
+<div id="{i#id}" class="emptyrow">
+	Список пуст
+</div>

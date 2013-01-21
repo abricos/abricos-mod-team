@@ -1,0 +1,368 @@
+/* 
+@version $Id: lib.js 1356 2012-12-26 14:30:11Z roosit $
+@package Abricos
+@copyright Copyright (C) 2012 Abricos All rights reserved.
+@license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+*/
+
+var Component = new Brick.Component();
+Component.requires = { 
+	mod:[
+        {name: 'sys', files: ['item.js']},
+        {name: 'widget', files: ['lib.js']},
+        {name: 'uprofile', files: ['lib.js']},
+        {name: '{C#MODNAME}', files: ['roles.js']}
+	]
+};
+Component.entryPoint = function(NS){
+
+	var Dom = YAHOO.util.Dom,
+		L = YAHOO.lang,
+		R = NS.roles;
+
+	var CE = YAHOO.util.CustomEvent;
+	var SysNS = Brick.mod.sys;
+	var LNG = this.language;
+	var UP = Brick.mod.uprofile;
+
+	this.buildTemplate({}, '');
+	
+	NS.lif = function(f){return L.isFunction(f) ? f : function(){}; };
+	NS.life = function(f,p1,p2,p3,p4,p5,p6,p7){
+		f=NS.lif(f); f(p1,p2,p3,p4,p5,p6,p7);
+	};
+	NS.Item = SysNS.Item;
+	NS.ItemList = SysNS.ItemList;
+	
+	NS.emailValidate = function(email) { 
+		var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+	    return re.test(email);
+	};
+	
+	var Team = function(d){
+		d = L.merge({
+			'm': 'team',
+			'nm': '',
+			'eml': '',
+			'tl': '',
+			'dsc': '',
+			'site': '',
+			'logo': '',
+			'mbrcnt': 0,
+			'auid': Brick.env.user.id,
+			'extended': false,
+			'member': {}
+		}, d || {});
+		Team.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(Team, SysNS.Item, {
+		init: function(d){
+			this.manager = Manager.get(d['m']);
+			this.member = new this.manager['MemberClass'](d['member']);
+			
+			Team.superclass.init.call(this, d);
+		},
+		update: function(d){
+			this.extended	= d['extended'];
+			this.module		= d['m'];
+			this.name		= d['nm'];
+			this.authorid	= d['auid'];			// создатель сообщества
+			this.title		= d['tl'];
+			this.descript	= d['dsc'];
+			this.site		= d['site'];
+			this.email		= d['eml'];
+			this.logo		= d['logo'].length == 8 ? d['logo'] : null;
+			this.memberCount = d['mbrcnt']*1;
+
+			this.siteHTML = this.siteURL = '';
+			if (L.isString(this.site) && this.site.length > 3){
+				this.siteURL = 'http://'+this.site;
+				this.siteHTML = "<a href='"+this.siteURL+"' target='_blank'>"+this.site+"</a>";
+			}
+			this.member.update(d['member']);
+		},
+		load: function(callback, reload){ // загрузить полные данные
+			NS.Manager.fire(this.module, 'teamLoad', this.id, callback, reload);
+		}
+	});
+	NS.Team = Team;
+	
+	var TeamList = function(d, teamClass){
+		TeamList.superclass.constructor.call(this, d, teamClass || Team);
+	};
+	YAHOO.extend(TeamList, SysNS.ItemList, {});
+	NS.TeamList = TeamList;
+
+	var Member = function(d){
+		d = L.merge({
+			'ismbr': 0,
+			'isadm': 0,
+			'isinv': 0,
+			'isjrq': 0,
+			'ruid': 0
+		}, d || {});
+		Member.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(Member, SysNS.Item, {
+		init: function(d){
+			this.team = null;
+			this.teams = null;
+			Member.superclass.init.call(this, d);
+		},
+		update: function(d){
+			
+			this.isMember = d['ismbr']*1==1;
+			this.isAdmin = d['isadm']*1==1;
+			
+			this.isJoinRequest = !this.isMember && d['isjrq']*1==1;
+			this.isInvite = !this.isMember && d['isinv']*1==1;
+			this.relUserId = d['ruid']*1;
+		}
+	});
+	NS.Member = Member;
+	
+	var MemberList = function(d){
+		MemberList.superclass.constructor.call(this, d, Member);
+	};
+	YAHOO.extend(MemberList, SysNS.ItemList, {});
+	NS.MemberList = MemberList;
+	
+	var UserConfig = function(d){
+		d = L.merge({
+			'iwCount': 0,
+			'iwLimit': 0
+		}, d || {});
+		this.init(d);
+	};
+	UserConfig.prototype = {
+		init: function(d){
+			this.needUpdate = true;
+			this.update(d);
+		},
+		update: function(d){
+			this.inviteWaitCount = d['iwCount'];
+			this.inviteWaitLimit = d['iwLimit'];
+		}
+	};
+	NS.UserConfig = UserConfig;
+
+	var Manager = function(modname, callback, cfg){
+		this.modname = modname;
+		cfg = L.merge({
+			'UserConfigClass': UserConfig,
+			'TeamClass': Team,
+			'TeamListClass': TeamList,
+			'MemberClass': Member,
+			'MemberListClass': MemberList
+		}, cfg || {});
+		
+		this.init(callback, cfg);
+	};
+	Manager.prototype = {
+		init: function(callback, cfg){
+			this.UserConfigClass = cfg['UserConfigClass'];
+			this.TeamClass = cfg['TeamClass'];
+			this.TeamListClass = cfg['TeamListClass'];
+			this.MemberClass = cfg['MemberClass'];
+			this.MemberListClass = cfg['MemberListClass'];
+			
+			this.invite = null;
+			this.userConfig = new this.UserConfigClass();
+			this._cacheTeam = {};
+			
+			this.users = UP.viewer.users;
+			
+			// глобальный кеш групп
+			this._teamCache = new this.TeamListClass();
+		},
+		
+		ajax: function(d, callback){
+			d = d || {};
+			d['tm'] = Math.round((new Date().getTime())/1000);
+			
+			var userConfig = this.userConfig;
+
+			if (userConfig.needUpdate){
+				d['userconfigupdate'] = true;
+			}
+			
+			Brick.ajax(this.modname, {
+				'data': d,
+				'event': function(request){
+					var d = !L.isNull(request) && !L.isNull(request.data) ? request.data : null,
+						result = !L.isNull(d) ? d.result : null;
+		
+					if (!L.isNull(d) && d['userconfig']){
+						userConfig.update(d['userconfig']);
+					}
+					
+					NS.life(callback, result);
+				}
+			});
+		},
+		
+		_updateTeamList: function(d){
+			if (!L.isArray(d)){
+				return null;
+			}
+			var cache = this._teamCache,
+				list = new this.TeamListClass();
+			
+			for (var i=0;i<d.length;i++){
+				var di = d[i], team = cache.get(di['id']);
+				this.users.update([di['member']]);
+				
+				if (L.isNull(team)){
+					team = new this.TeamClass(di);
+					cache.add(team);
+				}else{
+					team.update(di);
+				}
+				list.add(team);
+			}
+			return list;
+		},
+		
+		teamListLoad: function(callback, prm){
+			prm = L.merge({
+				'page': 1,
+				'memberid': 0
+			}, prm||{});
+			prm['do'] = 'teamlist';
+			
+			var __self = this;
+			
+			this.ajax(prm, function(d){
+				var list = __self._updateTeamList(d);
+				NS.life(callback, list);
+			});
+		},
+		
+		teamSave: function(sd, callback){
+			var __self = this;
+			sd['do'] = 'teamsave';
+			
+			this.ajax(sd, function(d){
+				var list = __self._updateTeamList(d);
+				NS.life(callback, list);
+			});
+		},
+		
+		teamLoad: function(teamid, callback, cfg){
+			cfg = L.merge({
+				'reload': false,
+				'other': null
+			}, cfg || {});
+			
+			var __self = this,
+				cache = this._teamCache,
+				team = cache.get(teamid);
+
+			if (!L.isNull(team) && team.extended && !cfg['reload']){
+				NS.life(callback, team);
+				return;
+			}
+			
+			var rq = {
+				'do': 'team',
+				'teamid': teamid
+			};
+			if (!L.isNull(cfg['other'])){
+				rq['other'] = cfg['other'];
+			}
+			this.ajax(rq, function(d){
+				if (!L.isNull(d)){
+					__self.users.update([d['member']]);
+					if (L.isNull(team)){
+						team = new __self.TeamClass(d);
+						cache.add(team);
+					}else{
+						team.update(d);
+					}
+				}
+				NS.life(callback, team);
+			});
+		},
+		
+		teamRemove: function(team, callback){
+			if (L.isNull(team)){
+				NS.life(callback);
+				return;
+			}
+			this.ajax({'do': 'teamremove', 'teamid': team.id}, function(d){
+				NS.life(callback);
+			});
+		},
+		
+		_updateMember: function(d){
+			if (L.isNull(d)){
+				return null;
+				this.users.update([d]);
+			}
+
+			return new this.MemberClass(d);
+		},
+		
+		memberLoad: function(team, memberid, callback){
+			if (L.isNull(team)){
+				NS.life(callback, null);
+				return;
+			}
+			var __self = this;
+			this.ajax({
+				'do': 'member',
+				'teamid': team.id,
+				'memberid': memberid
+			}, function(d){
+				var member = __self._updateMember(d);
+				NS.life(callback, member);
+			});
+		},
+		
+		memberListLoad: function(team, callback){
+			if (L.isNull(team)){
+				NS.life(callback, null);
+				return;
+			}
+			var __self = this;
+			this.ajax({
+				'do': 'memberlist',
+				'teamid': team.id
+			}, function(d){
+				var list = null;
+				if (!L.isNull(d)){
+					__self.users.update(d);
+					list = new __self.MemberListClass(d);
+				}
+				
+				NS.life(callback, list);
+			});
+		},
+
+		memberSave: function(team, sd, callback){
+			sd['do'] = 'membersave';
+			sd['teamid'] = team.id;
+			var __self = this;
+			this.ajax(sd, function(d){
+				var member = __self._updateMember(d);
+				NS.life(callback, member);
+			});
+		}		
+		
+	};
+	Manager.get = function(modname){
+		var man = Brick.mod[modname]['manager'];
+		if (!L.isObject(man)){
+			man = NS.manager;
+		}
+		return man;
+	};
+	Manager.fire = function(modname, fname, p1, p2, p3, p4, p5, p6, p7, p8){
+		var func = Manager.get(modname)[fname];
+		if (L.isFunction(func)){
+			func(p1, p2, p3, p4, p5, p6, p7, p8);
+		}
+	};
+	NS.Manager = Manager;
+
+};
