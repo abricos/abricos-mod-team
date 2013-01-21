@@ -1,7 +1,5 @@
-/*
-@version $Id: roles.js 881 2012-07-17 07:34:26Z roosit $
+/* 
 @package Abricos
-@license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
 */
 
 var Component = new Brick.Component();

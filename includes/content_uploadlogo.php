@@ -1,6 +1,5 @@
 <?php
 /**
- * @version $Id: uploadimg.php 1170 2012-11-16 05:12:33Z roosit $
  * @package Abricos
  * @subpackage Jofolio
  * @author Alexander Kuzmin <roosit@abricos.org>

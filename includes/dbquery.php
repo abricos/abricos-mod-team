@@ -1,13 +1,11 @@
 <?php
 /**
- * @version $Id: dbquery.php 1353 2012-12-25 10:30:03Z roosit $
  * @package Abricos
  * @subpackage Team
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
 class TeamQuery {
-	
 	
 	/**
 	 * Список групп с правами текущего пользователя на эти группы

@@ -1,8 +1,5 @@
 /* 
-@version $Id: lib.js 1356 2012-12-26 14:30:11Z roosit $
 @package Abricos
-@copyright Copyright (C) 2012 Abricos All rights reserved.
-@license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
 */
 
 var Component = new Brick.Component();

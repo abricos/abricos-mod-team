@@ -1,7 +1,5 @@
-/*
-@version $Id: home.js 1548 2012-05-03 09:09:38Z roosit $
+/* 
 @package Abricos
-@license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
 */
 
 var Component = new Brick.Component();

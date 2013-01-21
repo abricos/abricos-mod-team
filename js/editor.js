@@ -1,5 +1,5 @@
-/*
-@version $Id: portfolio.js 989 2012-10-10 17:11:31Z roosit $
+/* 
+@package Abricos
 */
 
 var Component = new Brick.Component();

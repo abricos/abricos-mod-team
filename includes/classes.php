@@ -1,6 +1,5 @@
 <?php 
 /**
- * @version $Id: manager.php 1311 2012-12-13 09:54:18Z roosit $
  * @package Abricos
  * @subpackage Team
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php

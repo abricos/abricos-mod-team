@@ -2,7 +2,6 @@
 /**
  * Схема таблиц данного модуля.
  * 
- * @version $Id: shema.php 1320 2012-12-15 12:20:21Z roosit $
  * @package Abricos
  * @subpackage Team
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
