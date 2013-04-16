@@ -19,18 +19,18 @@ class TeamQuery {
 		$curUserid = Abricos::$user->id;
 		$sql = "
 			SELECT
-				t.teamid,
-				t.module,
-				t.userid as authorid,
-				t.title,
-				t.email,
-				t.descript,
+				t.teamid as id,
+				t.module as m,
+				t.userid as auid,
+				t.title as tl,
+				t.email as eml,
+				t.descript as dsc,
 				t.site,
 				t.logo,
-				t.membercount
+				t.isanyjoin as anj,
+				t.membercount as mcnt
 				
 				".($curUserid==0 ? "" : ",
-					ur.userid,
 					ur.ismember,
 					ur.isadmin,
 					ur.isjoinrequest,
@@ -171,48 +171,6 @@ class TeamQuery {
 		$db->query_write($sql);
 	}
 	
-	/*
-	public function MemberList(Ab_Database $db, $teamid){
-		$sql = "
-			SELECT 
-				userid as id,
-				ismember as ismbr,
-				isadmin as isadm,
-				isjoinrequest as isjrq,
-				isinvite as isinv,
-				reluserid as ruid
-			FROM ".$db->prefix."team_userrole
-			WHERE userid<>".bkint(Abricos::$user->id)." AND teamid=".bkint($teamid)." 
-				AND ismember=0 AND (isjoinrequest=1 OR isinvite=1)
-		";
-		return $db->query_read($sql);
-	}
-	/**/
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	/*
-	public static function MemberInfo(Ab_Database $db, $teamid, $userid){
-		$sql = "
-			SELECT *
-			FROM ".$db->prefix."team_userrole
-			WHERE userid=".bkint($userid)." AND teamid=".bkint($teamid)."
-			LIMIT 1		
-		";
-		return $db->query_first($sql);
-	}
-	/**/
 	
 	/**
 	 * Список участников группы

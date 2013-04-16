@@ -6,365 +6,62 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
-require_once 'dbquery.php';
+require_once 'classesman.php';
 
-class TeamManager {
-	
-	/**
-	 * @var TeamManager
-	 */
-	public $modManager = null;
-
-	/**
-	 * Имя управляющего модуля
-	 * @var string
-	 */
-	public $modname = '';
-
-	/**
-	 * @var Ab_Database
-	 */
-	public $db;
-	
-	/**
-	 * @var User
-	 */
-	public $user;
-	
-	/**
-	 * @var integer
-	 */
-	public $userid;
-	
-	/**
-	 * @var Team
-	 */
-	public $TeamClass			= Team;
-	public $TeamExtendedClass	= TeamExtended;
-	
-	/**
-	 * @var TeamList
-	 */
-	public $TeamListClass		= TeamList;
-	
-	public $MemberClass			= Member;
-	public $MemberExtendedClass = MemberExtended;
-	public $MemberListClass		= MemberList;
-	
-	public $TeamUserConfigClass	= TeamUserConfig;
-	
-	/**
-	 * @param TeamModuleManager $modManager
-	 */
-	public function __construct(Ab_ModuleManager $modManager){
-		$this->modManager = $modManager;
-		$this->modname = $modManager->module->name;
-		$this->db = $modManager->db;
-		$this->user = $modManager->user;
-		$this->userid = $modManager->userid;
-	}
-	
-	public function IsAdminRole(){ return $this->modManager->IsAdminRole(); }
-	public function IsWriteRole(){ return $this->modManager->IsWriteRole(); }
-	public function IsViewRole(){ return $this->modManager->IsViewRole(); }
-	
-	public final function AJAX($d){
-		$ret = new stdClass();
-		$ret->result = $this->AJAXMethod($d);
-		
-		if ($d->userconfigupdate){
-			$ret->userconfig = $this->UserConfigToAJAX();
-		}
-		
-		return $ret;
-	}
-	
-	public function AJAXMethod($d){
-		switch($d->do){
-			case 'team':		return $this->TeamToAJAX($d->teamid);
-			case 'teamsave':	return $this->TeamSave($d);
-			case 'teamremove':	return $this->TeamRemove($d->teamid);
-			case 'teamlist':	return $this->TeamListToAJAX($d->page, $d->memberid);
-			
-			case 'member':	 	return $this->MemberToAJAX($d->teamid, $d->memberid);
-			case 'memberlist': 	return $this->MemberListToAJAX($d->teamid);
-			case 'membersave': 	return $this->MemberSave($d->teamid, $d);
-			
-			case 'mynamesave': return $this->MyNameSave($d);
-		}
-		return null;
-	}
-	
-	public function ToArray($rows, &$ids1 = "", $fnids1 = 'uid', &$ids2 = "", $fnids2 = '', &$ids3 = "", $fnids3 = ''){
-		$ret = array();
-		while (($row = $this->db->fetch_array($rows))){
-			array_push($ret, $row);
-			if (is_array($ids1)){
-				$ids1[$row[$fnids1]] = $row[$fnids1];
-			}
-			if (is_array($ids2)){
-				$ids2[$row[$fnids2]] = $row[$fnids2];
-			}
-			if (is_array($ids3)){
-				$ids3[$row[$fnids3]] = $row[$fnids3];
-			}
-		}
-		return $ret;
-	}
-	
-	public function ToArrayId($rows, $field = "id"){
-		$ret = array();
-		while (($row = $this->db->fetch_array($rows))){
-			$ret[$row[$field]] = $row;
-		}
-		return $ret;
-	}
-	
-	public function MyNameSave($d){
-		$utmf = Abricos::TextParser(true);
-		$d->firstname = $utmf->Parser($d->firstname);
-		$d->lastname = $utmf->Parser($d->lastname);
-	
-		TeamQuery::MyNameUpdate($this->db, $this->userid, $d);
-	
-		return $d;
-	}
-	
-	public function TeamSave($d){
-		if (!$this->IsWriteRole()){ return null; }
-		
-		$d->id = intval($d->id);
-		
-		$utmf = Abricos::TextParser(true);
-		
-		$d->tl =  $utmf->Parser($d->tl);
-		$d->eml =  $utmf->Parser($d->eml);
-		$d->site =  $utmf->Parser($d->site);
-		
-		$utm = Abricos::TextParser();
-		$utm->jevix->cfgSetAutoBrMode(true);
-		
-		$d->dsc =  $utm->Parser($d->dsc);
-		
-		if ($d->id == 0){ // добавление нового общества
-			
-			// TODO: необходимо продумать ограничение на создание сообществ
-			$d->id = TeamQuery::TeamAppend($this->db, $this->modname, $this->userid, $d);
-			if ($d->id == 0){
-				return null;
-			}
-			TeamQuery::UserRoleUpdate($this->db, $d->id, $this->userid, 1, 1);
-		} else {
-			$team = new Team($d->id);
-			if (!$team->member->IsAdmin()){
-				return null;
-			}
-			TeamQuery::TeamUpdate($this->db, $d);
-		}
-		
-		TeamQuery::TeamMemberCountRecalc($this->db, $d->id);
-		
-		return $d->id;		
-	}
-	
-	public function TeamRemove($teamid){
-		$team = $this->Team($teamid);
-		if (is_null($team) || !$team->member->IsAdmin()){
-			return null;
-		}
-		TeamQuery::TeamRemove($this->db, $teamid);
-		return true;
-	}
-	
-	/**
-	 * @param integer $teamid
-	 * @return TeamExtended
-	 */
-	public function Team($teamid){
-		if (!$this->IsViewRole()){ return null; }
-
-		$row = TeamQuery::Team($this->db, $this->modname, $teamid);
-		if (empty($row)){ return null; }
-		$team = new $this->TeamClass($this, $row);
-		
-		$team = $team->Extend();
-		
-		return $team;
-	}
-	
-	public function TeamToAJAX($teamid, $other = ''){
-		$team = $this->Team($teamid);
-		if (is_null($team)){ return null; }
-		
-		return $team->ToAJAX($other);
-	}
-	
-	/**
-	 * 
-	 * @param integer $page
-	 * @param integer $memberid
-	 * 
-	 * @return TeamList
-	 */
-	public function TeamList($page = 1, $memberid = 0){
-		if (!$this->IsViewRole()){ return null; }
-
-		$rows = TeamQuery::TeamList($this->db, $this->modname, $page, $memberid);
-		$list = new $this->TeamListClass($this, $rows);
-		
-		return $list;
-	}
-	
-	public function TeamListToAJAX($page = 1, $limit = 15){
-		$teamList = $this->TeamList($page, $limit);
-		
-		if (is_null($teamList)){ return null; }
-		
-		return $teamList->ToAJAX();
-	}
-	
-	/**
-	 * @param integer $teamid
-	 * @param integer $memberid
-	 * @return MemberExtended
-	 */
-	public function Member($teamid, $memberid){
-
-		$team = $this->Team($teamid);
-		
-		if (is_null($team)){ return null; }
-
-		$member = $team->MemberLoad($memberid);
-		
-		if (is_null($member)){ return null; }
-		$member = $member->Extend();
-		
-		return $member;
-	}
-	
-	public function MemberToAJAX($teamid, $memberid){
-
-		$member = $this->Member($teamid, $memberid);
-
-		if (is_null($member)){ return null; }
-		return $member->ToAJAX();
-	}
-	
-	/**
-	 * @param integer $teamid
-	 * @return MemberList
-	 */
-	public function MemberList($teamid){
-		$team = $this->Team($teamid);
-		if (is_null($team)){ return null; }
-
-		return $team->MemberList();
-	}
-	
-	public function MemberListToAJAX($teamid){
-		$list = $this->MemberList($teamid);
-		if (is_null($list)){ return null; }
-		
-		return $list->ToAJAX();
-	}
-	
-	public function MemberSave($teamid, $d){
-		$team = $this->Team($teamid);
-		if (is_null($team)){
-			return null;
-		}
-		
-		return $team->MemberSave($d);
-	}
-	
-	/**
-	 * @return TeamUserConfig
-	 */
-	public function UserConfig(){
-		if (!$this->IsViewRole()){
-			return null;
-		}
-		return new $this->TeamUserConfigClass($this);
-	}
-	
-	public function UserConfigToAJAX(){
-		$ucfg = $this->UserConfig();
-		if (is_null($ucfg)){
-			return null;
-		}
-		return $ucfg->ToAJAX();
-	}
-}
-
-
-class Team {
-
-	/**
-	 * @var TeamManager
-	 */
-	public $manager;
-
-	/**
-	 * Идентификатор группы
-	 * @var integer
-	 */
-	public $id = 0;
+/**
+ * Команда (сообщество, компания, клубы и т.п.)
+ */
+abstract class Team extends TeamItem {
 
 	/**
 	 * Имя управляющего модуля 
 	 * @var string
 	 */
 	public $module = '';
+	
 	public $title = '';
 	public $authorid = 0;
 	public $email = '';
 	public $descript = '';
 	public $site = '';
 	public $logo = '';
+	public $anyjoin = 0;
 	public $memberCount = 0;
 
 	/**
-	 * Текущий пользователь (его роль в группе)
-	 * @var Member
+	 * Роль текущего пользователя в этой группе
+	 * @var TeamUserRole
 	 */
-	public $member = null;
-
-	public function __construct(TeamManager $manager, $d){
-
-		$this->manager = $manager;
-
-		$this->id = $d['teamid'];
-
-		$this->module		= $d['module'];
-		$this->title		= $d['title'];
-		$this->authorid		= $d['authorid'];
-		$this->email		= $d['email'];
-		$this->descript		= $d['descript'];
-		$this->site			= $d['site'];
-		$this->logo			= $d['logo'];
-		$this->memberCount	= $d['membercount'];
-
-		$this->member = new $manager->MemberClass($this, $d);
-	}
-
+	public $role;
+	
 	/**
-	 * @return TeamExtended
+	 * @var TeamDetail
 	 */
-	public function Extend(){
-		return new $this->manager->TeamExtendedClass($this);
+	public $detail = null;
+
+	public function __construct($d){
+		parent::__construct($d);
+		
+		$this->module		= strval($d['m']);
+		$this->title		= strval($d['tl']);
+		$this->authorid		= intval($d['auid']);
+		$this->email		= strval($d['eml']);
+		$this->descript		= strval($d['dsc']);
+		$this->site			= strval($d['site']);
+		$this->logo			= strval($d['logo']);
+		$this->memberCount	= intval($d['mcnt']);
+		
+		// $this->role 		= 
+		
 	}
 	
-	public function CloneToExtend(TeamExtended $teamex){
-		$objs = get_class_vars(get_class($this));
-		foreach($objs as $key => $val){
-			$teamex->$key = $this->$key;
-		}
-	}
+	/**
+	 * @return TeamManager
+	 */
+	public abstract function Manager();
 
 	public function ToAJAX($other = ''){
-
-		$ret = new stdClass();
-		$ret->id		= $this->id;
+		$ret = parent::ToAJAX();
 		$ret->m			= $this->module;
 		$ret->auid		= $this->authorid;
 		$ret->tl		= $this->title;
@@ -372,89 +69,143 @@ class Team {
 		$ret->dsc		= $this->descript;
 		$ret->site		= $this->site;
 		$ret->logo		= $this->logo;
-		$ret->anj		= anyjoin;
-		$ret->mbrcnt	= $this->memberCount;
+		$ret->anj		= $this->anyjoin;
+		$ret->mcnt		= $this->memberCount;
+		
+		$ret->role		= $this->role->ToAJAX();
 
-		$ret->member = $this->member->ToAJAX();
+		if (!empty($this->detail)){
+			$ret->dtl = $this->detail->ToAJAX();
+		}
 
 		return $ret;
 	}
 }
 
-/**
- * Расширенный класс команды/группы
- */
-class TeamExtended extends Team {
-
-	/**
-	 * @var Ab_Database
-	 */
-	public $db;
-
-	/**
-	 * @var User
-	 */
-	public $user;
-
-	/**
-	 * @var integer
-	 */
-	public $userid;
-
+class TeamDetail {
 	/**
 	 * Количество неподтвержденных приглашений
 	 * @var integer
 	 */
-	public $inviteWaitCount = 0;
+	public $inviteWaitCount = null;
 
-	public function __construct(Team $team){
-		$team->CloneToExtend($this);
-
-		$man = $team->manager;
-		$this->db = $man->db;
-		$this->user = $man->user;
-		$this->userid = $man->userid;
-
-		if ($this->userid > 0){
-			// сделан запрос авторизованным пользователем
-			// нужно отметить что он смотрел эту группу
-			TeamQuery::UserTeamView($this->db, $this->userid);
-		}
-		
-		$this->member = $this->member->Extend();
-		
-		if ($this->member->IsAdmin()){
-			$this->inviteWaitCount = TeamQuery::MemberInviteWaitCountByTeam($this->db, $this->id);
-		}
-		$this->OnLoad();
-	}
-
-	public function OnLoad(){ }
-	public function Extend(){ return $this; }
-
-	public function ToAJAX($other = ''){
-		$ret = parent::ToAJAX($other = '');
-		$ret->extended = true;
-
-		if ($this->member->IsAdmin()){
+	public function ToAJAX(){
+		$ret = new stdClass();
+	
+		if (!is_null($this->inviteWaitCount)){
 			$ret->iwCount = $this->inviteWaitCount;
 		}
 		return $ret;
 	}
+}
+
+/**
+ * Роль участника к группе
+ */
+class TeamUserRole {
+
+	public $userid;
 
 	/**
-	 * @return MemberList
+	 * @var Team
 	 */
+	public $team;
+
+	/**
+	 * Участник группы
+	 * @var boolean
+	 */
+	protected $_isMember = 0;
+
+	/**
+	 * Админ группы
+	 * @var boolean
+	 */
+	protected $_isAdmin = 0;
+
+	/**
+	 * Приглашен, ожидает подтверждение
+	 * @var boolean
+	 */
+	protected $_isInvite = 0;
+
+	/**
+	 * Послал запрос на вструпление, ожидает подтверждение
+	 * @var boolean
+	 */
+	protected $_isJoinRequest = 0;
+
+	/**
+	 * Удален (до этого был участником группы)
+	 * @var unknown_type
+	 */
+	protected $_isRemove = 0;
+
+	public function __construct(Team $team, $userid, $d){
+		$this->team				= $team;
+		$this->userid			= $userid;
+
+		$this->_isMember		= intval($d['ismember']);
+		$this->_isAdmin			= intval($d['isadmin']);
+		$this->_isInvite		= intval($d['isinvite']);
+		$this->_isJoinRequest	= intval($d['isjoinrequest']);
+		$this->_isRemove		= intval($d['isremove']);
+		$this->_relUserId		= intval($d['reluserid']);
+	}
+
+	/**
+	 * @return TeamManager
+	 */
+	public function Manager(){
+		return TeamManager::$instance;
+	}
+
+	/**
+	 * Пользователь участник группы
+	 */
+	public function IsMember(){
+		return $this->_isMember == 1;
+	}
+
+	/**
+	 * Пользовтель админ группы
+	 */
+	public function IsAdmin(){
+		if ($this->Manager()->IsAdminRole()){ return true; }
+		if (!$this->IsMember()){ return false; }
+
+		return $this->_isAdmin == 1;
+	}
+
+	public function ToAJAX(){
+
+		$ret = new stdClass();
+		$ret->ismbr = $this->_isMember;
+		$ret->isadm = $this->_isAdmin;
+
+		// Полные данные по ролям может получить админ группы или пользователь свои
+		if ($this->userid == Abricos::$user->id || $this->team->role->IsAdmin()){
+			$ret->isjrq = $this->_isJoinRequest;
+			$ret->isinv = $this->_isInvite;
+			$ret->ruid = $this->_relUserId;
+		}
+
+		return $ret;
+	}
+
+}
+
+/**
+ * Расширенный класс команды/группы
+ */
+class TeamExtended_OLD extends Team {
+
+
 	public function MemberList(){
 		$rows = TeamQuery::MemberList($this->db, $this->id, $this->member->IsAdmin());
 
 		return new $this->manager->MemberListClass($this, $rows);
 	}
-
-	/**
-	 * @param integer $memberid
-	 * @return Member
-	 */
 	public function MemberLoad($memberid){
 		$row = TeamQuery::Member($this->db, $this->id, $this->member->IsAdmin(), $memberid);
 
@@ -465,10 +216,6 @@ class TeamExtended extends Team {
 		return new $this->manager->MemberClass($this, $row);
 	}
 	
-	/**
-	 * Добавление/сохранение участника группы
-	 * @param object $d
-	 */
 	public function MemberSave($d){
 		if (!$this->member->IsAdmin()){ // текущий пользователь не админ => нет прав
 			return null;
@@ -563,35 +310,10 @@ class TeamExtended extends Team {
 		
 		return $userid;
 	} 
-		
 
 }
 
-class TeamList {
-
-	/**
-	 * @var TeamManager
-	 */
-	public $manager;
-
-	public $list = array();
-
-	public function __construct(TeamManager $manager, $rows = null){
-		$this->manager = $manager;
-
-		if (!is_null($rows)){
-			$this->Update($rows);
-		}
-	}
-
-	public function Update($rows){
-		$man = $this->manager;
-		$list = array();
-		while (($row = $man->db->fetch_array($rows))){
-			array_push($list, new $man->TeamClass($man, $row));
-		}
-		$this->list = $list;
-	}
+class TeamList extends TeamItemList {
 
 	public function ToAJAX(){
 		$ret = array();
@@ -623,6 +345,7 @@ class Member {
 	public $avatar = '';
 
 	protected $_isMember = 0;
+	
 	protected $_isAdmin = 0;
 	protected $_isInvite = 0;
 	protected $_isJoinRequest = 0;
@@ -715,19 +438,6 @@ class Member {
 		return $ret;
 	}
 
-	/**
-	 * @return MemberExtended
-	 */
-	public function Extend(){
-		return new $this->team->manager->MemberExtendedClass($this);
-	}
-	
-	public function CloneToExtend(MemberExtended $memberex){
-		$objs = get_class_vars(get_class($this));
-		foreach($objs as $key => $val){
-			$memberex->$key = $this->$key;
-		}
-	}
 
 }
 
@@ -840,5 +550,83 @@ class TeamUserConfig {
 	}
 }
 
+
+class TeamItem {
+	public $id;
+
+	public function __construct($d){
+		$this->id = intval($d['id']);
+	}
+
+	public function ToAJAX(){
+		$ret = new stdClass();
+		$ret->id = $this->id;
+		return $ret;
+	}
+}
+
+class TeamItemList {
+
+	protected $_list = array();
+	protected $_map = array();
+
+	protected $isCheckDouble = false;
+
+	public function __construct(){
+		$this->_list = array();
+		$this->_map = array();
+	}
+
+	public function Add(TeamItem $item = null){
+		if (empty($item)){
+			return;
+		}
+
+		if ($this->isCheckDouble){
+			$checkItem = $this->Get($item->id);
+			if (!empty($checkItem)){
+				return;
+			}
+		}
+
+		$index = count($this->_list);
+		$this->_list[$index] = $item;
+		$this->_map[$item->id] = $index;
+	}
+
+	public function Count(){
+		return count($this->_list);
+	}
+
+	/**
+	 * @param integer $index
+	 * @return TeamItem
+	 */
+	public function GetByIndex($index){
+		return $this->_list[$index];
+	}
+
+	/**
+	 * @param integer $id
+	 * @return TeamItem
+	 */
+	public function Get($id){
+		$index = $this->_map[$id];
+		return $this->_list[$index];
+	}
+
+	public function ToAJAX(){
+		$list = array();
+		$count = $this->Count();
+		for ($i=0; $i<$count; $i++){
+			array_push($list, $this->GetByIndex($i)->ToAJAX());
+		}
+
+		$ret = new stdClass();
+		$ret->list = $list;
+
+		return $ret;
+	}
+}
 
 ?>

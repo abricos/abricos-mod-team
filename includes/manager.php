@@ -6,8 +6,8 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
-require_once 'dbquery.php';
 require_once 'classes.php';
+require_once 'dbquery.php';
 
 class TeamModuleManager extends Ab_ModuleManager {
 	
@@ -40,20 +40,6 @@ class TeamModuleManager extends Ab_ModuleManager {
 		if ($this->IsWriteRole()){ return true; }
 		return $this->IsRoleEnable(TeamAction::VIEW);
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	public function AJAX($d){
 		switch($d->do){
