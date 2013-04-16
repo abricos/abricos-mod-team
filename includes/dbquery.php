@@ -552,6 +552,20 @@ class TeamQuery {
 		return $db->query_first($sql);
 	}
 	
+	public static function MyNameUpdate(Ab_Database $db, $userid, $d){
+		$sql = "
+			UPDATE ".$db->prefix."user
+			SET
+				firstname='".$d->firstname."',
+				lastname='".$d->lastname."'
+			WHERE userid=".bkint($userid)."
+			LIMIT 1
+		";
+		$db->query_write($sql);
+	}
+	
+	
+	
 }
 
 

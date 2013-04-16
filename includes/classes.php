@@ -89,6 +89,8 @@ class TeamManager {
 			case 'member':	 	return $this->MemberToAJAX($d->teamid, $d->memberid);
 			case 'memberlist': 	return $this->MemberListToAJAX($d->teamid);
 			case 'membersave': 	return $this->MemberSave($d->teamid, $d);
+			
+			case 'mynamesave': return $this->MyNameSave($d);
 		}
 		return null;
 	}
@@ -116,6 +118,16 @@ class TeamManager {
 			$ret[$row[$field]] = $row;
 		}
 		return $ret;
+	}
+	
+	public function MyNameSave($d){
+		$utmf = Abricos::TextParser(true);
+		$d->firstname = $utmf->Parser($d->firstname);
+		$d->lastname = $utmf->Parser($d->lastname);
+	
+		TeamQuery::MyNameUpdate($this->db, $this->userid, $d);
+	
+		return $d;
 	}
 	
 	public function TeamSave($d){
