@@ -45,22 +45,20 @@ Component.entryPoint = function(NS){
 			'dsc': '',
 			'site': '',
 			'logo': '',
-			'mbrcnt': 0,
+			'mcnt': 0,
 			'auid': Brick.env.user.id,
-			'extended': false,
-			'member': {}
+			'role': {}
 		}, d || {});
 		Team.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(Team, SysNS.Item, {
 		init: function(d){
 			this.manager = Manager.get(d['m']);
-			this.member = new this.manager['MemberClass'](d['member']);
+			this.role = new this.manager['TeamUserRoleClass'](d['role']);
 			
 			Team.superclass.init.call(this, d);
 		},
 		update: function(d){
-			this.extended	= d['extended'];
 			this.module		= d['m'];
 			this.name		= d['nm'];
 			this.authorid	= d['auid'];			// создатель сообщества
@@ -69,14 +67,14 @@ Component.entryPoint = function(NS){
 			this.site		= d['site'];
 			this.email		= d['eml'];
 			this.logo		= d['logo'].length == 8 ? d['logo'] : null;
-			this.memberCount = d['mbrcnt']*1;
+			this.memberCount = d['mcnt']*1;
 
 			this.siteHTML = this.siteURL = '';
 			if (L.isString(this.site) && this.site.length > 3){
 				this.siteURL = 'http://'+this.site;
 				this.siteHTML = "<a href='"+this.siteURL+"' target='_blank'>"+this.site+"</a>";
 			}
-			this.member.update(d['member']);
+			this.role.update(d['role']);
 		},
 		load: function(callback, reload){ // загрузить полные данные
 			NS.Manager.fire(this.module, 'teamLoad', this.id, callback, reload);
@@ -89,6 +87,31 @@ Component.entryPoint = function(NS){
 	};
 	YAHOO.extend(TeamList, SysNS.ItemList, {});
 	NS.TeamList = TeamList;
+
+	var TeamUserRole = function(d){
+		d = L.merge({
+			'ismbr': 0,
+			'isadm': 0,
+			'isinv': 0,
+			'isjrq': 0,
+			'ruid': 0
+		}, d || {});
+	};
+	TeamUserRole.prototype = {
+		init: function(d){
+			// this.team = null;
+			// this.teams = null;
+		},
+		update: function(d){
+			this.isMember = d['ismbr']*1==1;
+			this.isAdmin = d['isadm']*1==1;
+			
+			this.isJoinRequest = !this.isMember && d['isjrq']*1==1;
+			this.isInvite = !this.isMember && d['isinv']*1==1;
+			this.relUserId = d['ruid']*1;
+		}
+	};
+	NS.TeamUserRole = TeamUserRole;
 
 	var Member = function(d){
 		d = L.merge({
@@ -149,6 +172,7 @@ Component.entryPoint = function(NS){
 			'UserConfigClass': UserConfig,
 			'TeamClass': Team,
 			'TeamListClass': TeamList,
+			'TeamUserRoleClass': TeamUserRole,
 			'MemberClass': Member,
 			'MemberListClass': MemberList
 		}, cfg || {});
@@ -160,6 +184,7 @@ Component.entryPoint = function(NS){
 			this.UserConfigClass = cfg['UserConfigClass'];
 			this.TeamClass = cfg['TeamClass'];
 			this.TeamListClass = cfg['TeamListClass'];
+			this.TeamUserRoleClass = cfg['TeamUserRoleClass'];
 			this.MemberClass = cfg['MemberClass'];
 			this.MemberListClass = cfg['MemberListClass'];
 			
@@ -187,7 +212,7 @@ Component.entryPoint = function(NS){
 				'data': d,
 				'event': function(request){
 					var d = !L.isNull(request) && !L.isNull(request.data) ? request.data : null,
-						result = !L.isNull(d) ? d.result : null;
+						result = !L.isNull(d) ? (d.result ? d.result : null) : null;
 		
 					if (!L.isNull(d) && d['userconfig']){
 						userConfig.update(d['userconfig']);
@@ -199,15 +224,18 @@ Component.entryPoint = function(NS){
 		},
 		
 		_updateTeamList: function(d){
-			if (!L.isArray(d)){
-				return null;
+			if (!d || !d['teams'] || !L.isArray(d['teams']['list'])){ 
+				return null; 
 			}
+			
+			var dList = d['teams']['list'];
+			
 			var cache = this._teamCache,
 				list = new this.TeamListClass();
 			
-			for (var i=0;i<d.length;i++){
-				var di = d[i], team = cache.get(di['id']);
-				this.users.update([di['member']]);
+			for (var i=0;i<dList.length;i++){
+				var di = dList[i], team = cache.get(di['id']);
+				// this.users.update([di['member']]);
 				
 				if (L.isNull(team)){
 					team = new this.TeamClass(di);
@@ -255,7 +283,7 @@ Component.entryPoint = function(NS){
 				cache = this._teamCache,
 				team = cache.get(teamid);
 
-			if (!L.isNull(team) && team.extended && !cfg['reload']){
+			if (!L.isNull(team) && !cfg['reload']){
 				NS.life(callback, team);
 				return;
 			}
@@ -268,10 +296,10 @@ Component.entryPoint = function(NS){
 				rq['other'] = cfg['other'];
 			}
 			this.ajax(rq, function(d){
-				if (!L.isNull(d)){
-					__self.users.update([d['member']]);
+				if (d && !L.isNull(d) && d['team']){
+					// __self.users.update([d['member']]);
 					if (L.isNull(team)){
-						team = new __self.TeamClass(d);
+						team = new __self.TeamClass(d['team']);
 						cache.add(team);
 					}else{
 						team.update(d);

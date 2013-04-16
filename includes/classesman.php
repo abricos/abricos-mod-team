@@ -5,6 +5,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
+require_once 'dbquery.php';
 
 class TeamManager {
 	
@@ -38,7 +39,9 @@ class TeamManager {
 	 * @var Team
 	 */
 	public $TeamClass			= Team;
-	public $TeamExtendedClass	= TeamExtended;
+	public $TeamDetailClass		= TeamDetail;
+	
+	public $TeamUserRoleClass	= TeamUserRole;
 	
 	/**
 	 * @var TeamList
@@ -46,7 +49,7 @@ class TeamManager {
 	public $TeamListClass		= TeamList;
 	
 	public $MemberClass			= Member;
-	public $MemberExtendedClass = MemberExtended;
+	public $MemberDetailClass	= MemberDetail;
 	public $MemberListClass		= MemberList;
 	
 	public $TeamUserConfigClass	= TeamUserConfig;
@@ -63,13 +66,29 @@ class TeamManager {
 	}
 	
 	/**
-	 * @param Member $member
 	 * @param array $d
 	 * @return Team
 	 */
-	public abstract function NewTeam($d);
+	public function NewTeam($d){ 
+		return new $this->TeamClass($d);
+	}
 	
-	public abstract function NewTeamUserRole(Team $team, $userid, $d);
+	/**
+	 * @param Team $team
+	 * @return TeamDetail
+	 */
+	public function NewTeamDetail(Team $team){
+		return new $this->TeamDetailClass($team);
+	}
+
+	/**
+	 * @param Team $team
+	 * @param integer $userid
+	 * @param array $d
+	 */
+	public function NewTeamUserRole(Team $team, $userid, $d){
+		return new $this->TeamUserRoleClass($team, $userid, $d);
+	}
 	
 	/**
 	 * @return TeamList
@@ -77,10 +96,24 @@ class TeamManager {
 	public function NewTeamList(){ return new $this->TeamListClass(); }
 	
 	/**
+	 * @param Team $team
 	 * @param array $d
 	 * @return Member
 	 */
-	public function NewMember($d){ return new $this->MemberClass($d); }
+	public function NewMember(Team $team, $d){ return new $this->MemberClass($team, $d); }
+	
+	/**
+	 * @param Member $member
+	 * @return MemberDetail
+	 */
+	public function NewMemberDetail(Member $member){
+		return new $this->MemberDetailClass($member);
+	}
+	
+	/**
+	 * @return MemberList
+	 */
+	public function NewMemberList(){ return new $this->MemberListClass(); }
 	
 	public function IsAdminRole(){ return $this->modManager->IsAdminRole(); }
 	public function IsWriteRole(){ return $this->modManager->IsWriteRole(); }
@@ -113,27 +146,22 @@ class TeamManager {
 		return null;
 	}
 	
-	protected function TeamDetail(){
-		
-	}
 	
+	private $_teamCache = array();
+
 	/**
 	 * @param integer $teamid
 	 * @return Team
 	 */
 	public function Team($teamid){
 		if (!$this->IsViewRole()){ return null; }
+		
+		if (!empty($this->_teamCache[$teamid])){
+			return $this->_teamCache[$teamid];
+		}
 
 		$row = TeamQuery::Team($this->db, $this->modname, $teamid);
 		if (empty($row)){ return null; }
-		
-		$team = $this->NewTeam($member, $row);
-		$detail = new TeamDetail();
-		
-		if ($member->IsAdmin()){
-			$detail->inviteWaitCount = TeamQuery::MemberInviteWaitCountByTeam($this->db, $teamid);
-		}
-		$team->detail = $detail;
 		
 		if ($this->userid > 0){
 			// сделан запрос авторизованным пользователем
@@ -141,14 +169,28 @@ class TeamManager {
 			TeamQuery::UserTeamView($this->db, $teamid);
 		}
 		
+		$team = $this->NewTeam($row);
+		
+		$detail = $this->NewTeamDetail($team);
+		
+		if ($team->role->IsAdmin()){
+			$detail->inviteWaitCount = TeamQuery::MemberInviteWaitCountByTeam($this->db, $teamid);
+		}
+		$team->detail = $detail;
+		
+		$this->_teamCache[$teamid] = $team;
+		
 		return $team;
 	}
 	
-	public function TeamToAJAX($teamid, $other = ''){
+	public function TeamToAJAX($teamid){
 		$team = $this->Team($teamid);
-		if (is_null($team)){ return null; }
+		if (empty($team)){ return null; }
 		
-		return $team->ToAJAX($other);
+		$ret = new stdClass();
+		$ret->team = $team->ToAJAX($other);
+		
+		return $ret;
 	}
 	
 	/**
@@ -162,43 +204,40 @@ class TeamManager {
 		if (!$this->IsViewRole()){ return null; }
 
 		$rows = TeamQuery::TeamList($this->db, $this->modname, $page, $memberid);
-		$list = new $this->NewTeamList();
+		$list = $this->NewTeamList();
 		
-		while (($row = $man->db->fetch_array($rows))){
-			$list->Add();
-			array_push($list, new $man->TeamClass($man, $row));
+		while (($d = $this->db->fetch_array($rows))){
+			$list->Add($this->NewTeam($d));
 		}
-		$this->list = $list;
-		
 		
 		return $list;
 	}
 	
 	public function TeamListToAJAX($page = 1, $limit = 15){
-		$teamList = $this->TeamList($page, $limit);
+		$list = $this->TeamList($page, $limit);
 		
-		if (is_null($teamList)){ return null; }
+		if (empty($list)){ return null; }
 		
-		return $teamList->ToAJAX();
+		$ret = new stdClass();
+		$ret->teams = $list->ToAJAX();
+		return $ret;
 	}
 	
 	public function TeamSave($d){
-		if (!$this->IsWriteRole()){
-			return null;
-		}
+		if (!$this->IsWriteRole()){ return null; }
 	
 		$d->id = intval($d->id);
 	
 		$utmf = Abricos::TextParser(true);
 	
-		$d->tl =  $utmf->Parser($d->tl);
-		$d->eml =  $utmf->Parser($d->eml);
-		$d->site =  $utmf->Parser($d->site);
+		$d->tl = $utmf->Parser($d->tl);
+		$d->eml = $utmf->Parser($d->eml);
+		$d->site = $utmf->Parser($d->site);
 	
 		$utm = Abricos::TextParser();
 		$utm->jevix->cfgSetAutoBrMode(true);
 	
-		$d->dsc =  $utm->Parser($d->dsc);
+		$d->dsc = $utm->Parser($d->dsc);
 	
 		if ($d->id == 0){ // добавление нового общества
 				
@@ -210,9 +249,7 @@ class TeamManager {
 			TeamQuery::UserRoleUpdate($this->db, $d->id, $this->userid, 1, 1);
 		} else {
 			$team = new Team($d->id);
-			if (!$team->member->IsAdmin()){
-				return null;
-			}
+			if (!$team->role->IsAdmin()){ return null; }
 			TeamQuery::TeamUpdate($this->db, $d);
 		}
 	
@@ -223,7 +260,7 @@ class TeamManager {
 	
 	public function TeamRemove($teamid){
 		$team = $this->Team($teamid);
-		if (is_null($team) || !$team->member->IsAdmin()){
+		if (is_null($team) || !$team->role->IsAdmin()){
 			return null;
 		}
 		TeamQuery::TeamRemove($this->db, $teamid);
@@ -236,25 +273,26 @@ class TeamManager {
 	 * @return MemberExtended
 	 */
 	public function Member($teamid, $memberid){
-
 		$team = $this->Team($teamid);
-		
-		if (is_null($team)){ return null; }
+		if (empty($team)){ return null; }
 
-		$member = $team->MemberLoad($memberid);
+		$row = TeamQuery::Member($this->db, $this->id, $this->member->IsAdmin(), $memberid);
+		$member = $this->NewMember($team, $row);
 		
-		if (is_null($member)){ return null; }
-		$member = $member->Extend();
+		$member->detail = $this->NewMemberDetail($member);
 		
 		return $member;
 	}
 	
 	public function MemberToAJAX($teamid, $memberid){
-
 		$member = $this->Member($teamid, $memberid);
 
-		if (is_null($member)){ return null; }
-		return $member->ToAJAX();
+		if (empty($member)){ return null; }
+		
+		$ret = new stdClass();
+		$ret->member = $member->ToAJAX();
+		
+		return $ret;
 	}
 	
 	/**
@@ -262,26 +300,126 @@ class TeamManager {
 	 * @return MemberList
 	 */
 	public function MemberList($teamid){
+		
 		$team = $this->Team($teamid);
-		if (is_null($team)){ return null; }
-
-		return $team->MemberList();
+		
+		$rows = TeamQuery::MemberList($this->db, $this->id, $team->role->IsAdmin());
+		
+		$list = $this->NewMemberList();
+		while (($d = $this->db->fetch_array($rows))){
+			$list->Add($this->NewMember($team, $d));
+		}
+		return $list;
 	}
 	
 	public function MemberListToAJAX($teamid){
 		$list = $this->MemberList($teamid);
-		if (is_null($list)){ return null; }
+		if (empty($list)){ return null; }
 		
-		return $list->ToAJAX();
+		$ret = new stdClass();
+		$ret->members = $list->ToAJAX();
+		
+		return $ret;
 	}
 	
 	public function MemberSave($teamid, $d){
 		$team = $this->Team($teamid);
-		if (is_null($team)){
+		
+		if (!$team->role->IsAdmin()){ // текущий пользователь не админ => нет прав
 			return null;
 		}
+		$d->id = intval($d->id);
 		
-		return $team->MemberSave($d);
+		if ($d->id == 0){ // приглашение участника в группу по email
+		
+			$d->email = strtolower($d->email);
+			if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
+				return null;
+			}
+			Abricos::GetModule('team')->GetManager();
+			$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
+				
+			if (empty($rd)){ return null; }
+		
+			if (!empty($rd->user) && $rd->user['id'] == $this->userid){
+				if ($team->role->IsMember()){
+					// уже участник группы
+					// return null;
+				}
+				// добавляем себя в участники
+				$d->id = $rd->user['id'];
+			}else{
+				// есть ли лимит на кол-во приглашений
+				$ucfg = $this->UserConfig();
+		
+				if ($ucfg->inviteWaitLimit > -1 &&
+						($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
+					// нужно подтвердить других участников, чтобы иметь возможность добавить еще
+					return null;
+				}
+					
+				if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
+					// сгенерировать учетку с паролем и выслать приглашение пользователю
+					$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm);
+					if (is_null($invite)){
+						return null;
+					}
+					$d->id = $invite->user['id'];
+				}else{
+					// выслать приглашение существующему пользователю
+					$d->id = $rd->user['id'];
+
+					$member = $this->MemberLoad($rd->user['id']);
+						
+					if (!is_null($member) && $member->IsMember()){
+						// этот пользователь уже участник группы
+						sleep(1);
+						return null;
+					}
+					// приглашение существующего пользователя в группу
+					$this->MemberInvite($d->id);
+				}
+			}
+		}
+		return $d->id;		
+	}
+	
+	/**
+	 * Зарегистрировать нового пользователя
+	 *
+	 * @param string $email
+	 * @param string $fname Имя
+	 * @param string $lname Фамилия
+	 */
+	protected function MemberNewInvite(Team $team, $email, $fname, $lname){
+	
+		Abricos::GetModule('invite');
+		$manInv = InviteModule::$instance->GetManager();
+	
+		// зарегистрировать пользователя (будет сгенерировано имя и пароль)
+		$invite = $manInv->UserRegister($this->modname, $email, $fname, $lname);
+	
+		if ($invite->error == 0){
+				
+			// пометка пользователя флагом приглашенного
+			// (система ожидает подтверждение от пользователя)
+			TeamQuery::MemberInviteSetWait($this->db, $team->id, $invite->user['id'], $this->userid);
+		}
+	
+		return $invite;
+	}
+	
+	protected function MemberInvite($userid){
+		$user = UserQueryExt::User($this->db, $userid);
+	
+		if (empty($user)){
+			return null;
+		}
+		// TODO: необходимо запрашивать разрешение на приглашение пользователя
+		// пометка пользователя флагом приглашенного
+		TeamQuery::MemberInviteSetWait($this->db, $this->id, $userid, $this->userid);
+	
+		return $userid;
 	}
 	
 	/**
