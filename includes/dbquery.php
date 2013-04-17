@@ -185,7 +185,7 @@ class TeamQuery {
 		// этот пользователь в этом списке
 		array_push($arr, "
 			SELECT
-				userid,
+				userid as id,
 				ismember,
 				isadmin,
 				isjoinrequest,
@@ -203,7 +203,7 @@ class TeamQuery {
 			// список доступен только админу группы
 			array_push($arr, "
 				SELECT 
-					userid,
+					userid as id,
 					ismember,
 					isadmin,
 					isjoinrequest,
@@ -218,27 +218,23 @@ class TeamQuery {
 		// публичный список пользователей
 		array_push($arr, "
 			SELECT
-				userid,
+				userid as id,
 				ismember,
 				isadmin,
 				isjoinrequest,
 				isinvite,
 				reluserid
 			FROM ".$db->prefix."team_userrole
-			WHERE userid<>".bkint(Abricos::$user->id)." AND teamid=".bkint($teamid)." AND ismember=1
+			WHERE userid<>".bkint(Abricos::$user->id)." AND teamid=".bkint($teamid)." 
+				AND ismember=1
 		");
 		
 		$sql = "
-			SELECT
-				ur.*,
-				u.avatar,
-				u.username,
-				u.firstname,
-				u.lastname
+			SELECT 
+				DISTINCT *
 			FROM (
 				".implode(" UNION ", $arr)."
 			) ur
-			INNER JOIN ".$db->prefix."user u ON ur.userid=u.userid
 		";
 		if ($memberid > 0){
 			$sql .= "
@@ -507,6 +503,26 @@ class TeamQuery {
 			LIMIT 1
 		";
 		return $db->query_first($sql);
+	}
+
+	public static function UserByIds(Ab_Database $db, $ids){
+		if (count($ids) == 0){ return; }
+		
+		$wh = array();
+		for ($i=0; $i<count($ids); $i++){
+			array_push($wh, "u.userid=".bkint($ids[$i]));
+		}
+		$sql = "
+			SELECT
+				u.userid as id,
+				u.avatar as avt,
+				u.username as unm,
+				u.firstname as fnm,
+				u.lastname as lnm
+			FROM ".$db->prefix."user u
+			WHERE ".implode(" OR ", $wh)."
+		";
+		return $db->query_read($sql);
 	}
 	
 	public static function MyNameUpdate(Ab_Database $db, $userid, $d){

@@ -55,6 +55,7 @@ Component.entryPoint = function(NS){
 		init: function(d){
 			this.manager = Manager.get(d['m']);
 			this.role = new this.manager['TeamUserRoleClass'](d['role']);
+			this.detail = null;
 			
 			Team.superclass.init.call(this, d);
 		},
@@ -75,6 +76,10 @@ Component.entryPoint = function(NS){
 				this.siteHTML = "<a href='"+this.siteURL+"' target='_blank'>"+this.site+"</a>";
 			}
 			this.role.update(d['role']);
+			
+			if (d['dtl'] && !L.isNull(d['dtl'])){
+				this.detail = new this.manager['TeamDetailClass'](d['dtl']);
+			}
 		},
 		load: function(callback, reload){ // загрузить полные данные
 			NS.Manager.fire(this.module, 'teamLoad', this.id, callback, reload);
@@ -87,6 +92,23 @@ Component.entryPoint = function(NS){
 	};
 	YAHOO.extend(TeamList, SysNS.ItemList, {});
 	NS.TeamList = TeamList;
+	
+	var TeamDetail = function(d){
+		d = L.merge({
+			'iwCount': 0
+		}, d || {});
+		this.init(d);
+	};
+	TeamDetail.prototype = {
+		init: function(d){
+			this.update(d);
+		},
+		update: function(d){
+			this.inviteWaitCount = d['iwCount'];
+		}
+	};
+	NS.TeamDetail = TeamDetail;
+
 
 	var TeamUserRole = function(d){
 		d = L.merge({
@@ -96,11 +118,11 @@ Component.entryPoint = function(NS){
 			'isjrq': 0,
 			'ruid': 0
 		}, d || {});
+		this.init(d);
 	};
 	TeamUserRole.prototype = {
 		init: function(d){
-			// this.team = null;
-			// this.teams = null;
+			this.update(d);
 		},
 		update: function(d){
 			this.isMember = d['ismbr']*1==1;
@@ -115,7 +137,7 @@ Component.entryPoint = function(NS){
 
 	var Member = function(d){
 		d = L.merge({
-			'ismbr': 0,
+			'role': {},
 			'isadm': 0,
 			'isinv': 0,
 			'isjrq': 0,
@@ -169,24 +191,28 @@ Component.entryPoint = function(NS){
 	var Manager = function(modname, callback, cfg){
 		this.modname = modname;
 		cfg = L.merge({
-			'UserConfigClass': UserConfig,
-			'TeamClass': Team,
-			'TeamListClass': TeamList,
-			'TeamUserRoleClass': TeamUserRole,
-			'MemberClass': Member,
-			'MemberListClass': MemberList
+			'UserConfigClass':		UserConfig,
+			'TeamClass':			Team,
+			'TeamDetailClass':		TeamDetail,
+			'TeamListClass':		TeamList,
+			'TeamUserRoleClass':	TeamUserRole,
+			'MemberClass':			Member,
+			'MemberListClass':		MemberList
 		}, cfg || {});
 		
 		this.init(callback, cfg);
 	};
 	Manager.prototype = {
 		init: function(callback, cfg){
-			this.UserConfigClass = cfg['UserConfigClass'];
-			this.TeamClass = cfg['TeamClass'];
-			this.TeamListClass = cfg['TeamListClass'];
-			this.TeamUserRoleClass = cfg['TeamUserRoleClass'];
-			this.MemberClass = cfg['MemberClass'];
-			this.MemberListClass = cfg['MemberListClass'];
+			this.UserConfigClass	= cfg['UserConfigClass'];
+			
+			this.TeamClass			= cfg['TeamClass'];
+			this.TeamDetailClass	= cfg['TeamDetailClass'];
+			this.TeamListClass		= cfg['TeamListClass'];
+			this.TeamUserRoleClass	= cfg['TeamUserRoleClass'];
+			
+			this.MemberClass		= cfg['MemberClass'];
+			this.MemberListClass	= cfg['MemberListClass'];
 			
 			this.invite = null;
 			this.userConfig = new this.UserConfigClass();
@@ -297,7 +323,6 @@ Component.entryPoint = function(NS){
 			}
 			this.ajax(rq, function(d){
 				if (d && !L.isNull(d) && d['team']){
-					// __self.users.update([d['member']]);
 					if (L.isNull(team)){
 						team = new __self.TeamClass(d['team']);
 						cache.add(team);

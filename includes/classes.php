@@ -198,6 +198,107 @@ class TeamUserRole {
 class TeamList extends TeamItemList {
 }
 
+class TeamUser extends TeamItem {
+	
+	public $userName = '';
+	public $firstName = '';
+	public $lastName = '';
+	public $avatar = '';
+	
+	public function __construct($d){
+		parent::__construct($d);
+		
+		$this->userName		= strval($d['unm']);
+		$this->firstName	= strval($d['fnm']);
+		$this->lastName		= strval($d['lnm']);
+		$this->avatar		= strval($d['avt']);
+	}
+	
+	public function UserNameBuild(){
+		return (!empty($this->firstName) && !empty($this->lastName)) ? 
+			$this->firstName." ".$this->lastName : $this->userName;
+	}
+	
+	public function ToAJAX(){
+		$ret = parent::ToAJAX();
+	
+		$ret->unm = $this->userName;
+		$ret->fnm = $this->firstName;
+		$ret->lnm = $this->lastName;
+		$ret->avt = $this->avatar;
+	
+		$ret->role = $this->role->ToAJAX();
+	
+		return $ret;
+	}
+}
+
+class TeamUserList extends TeamItemList { }
+
+class TeamUserManager {
+
+	/**
+	 * @var TeamUserList
+	 */
+	private static $list = null;
+	private static $_ids = array();
+	
+	public static function Clear(){
+		TeamUserManager::$_ids = array();
+	}
+	
+	public static function AddId($userid){
+		$ids = &TeamUserManager::$_ids;
+		if (!empty($ids[$userid])){ return; }
+		
+		$o = new stdClass();
+		$o->load = false;
+		$ids[$userid] = $o;
+	}
+	
+	private static function LoadList(){
+		$ids = &TeamUserManager::$_ids;
+		$arr = array();
+		
+		foreach ($ids as $key){
+			if ($ids[$key]->load){
+				continue;
+			}
+			$ids[$key]->load = true;
+			array_push($arr, $key);
+		}
+		
+		if (count($arr) == 0){ return; }
+		$rows = TeamQuery::UserByIds(Abricos::$db, $arr);
+		while (($d = $this->db->fetch_array($rows))){
+			TeamUserManager::$list->Add(new TeamUser($d));
+		}
+	}
+	
+	public static function Get($userid){
+		if (empty(TeamUserManager::$list)){
+			TeamUserManager::$list = new TeamUserList();
+		}
+
+		$list = TeamUserManager::$list;
+		$user = $list->Get($userid);
+		if (empty($user)){
+			TeamUserManager::AddId($userid);
+			TeamUserManager::LoadList();
+			$user = $list->Get($userid);
+		}
+		return $user;
+	}
+	
+	public static function ToAJAX(){
+		if (empty(TeamUserManager::$list)){
+			return null;
+		}
+		TeamUserManager::LoadList();
+		return TeamUserManager::$list->ToAJAX();
+	}
+}
+
 class Member extends TeamItem {
 	
 	/**
@@ -205,11 +306,6 @@ class Member extends TeamItem {
 	 */
 	public $team = null;
 
-	public $userName = '';
-	public $firstName = '';
-	public $lastName = '';
-	public $avatar = '';
-	
 	/**
 	 * Роль пользователя в группе
 	 * @var TeamUserRole
@@ -224,32 +320,15 @@ class Member extends TeamItem {
 	public function __construct(Team $team, $d){
 		parent::__construct($d);
 
-		$this->id = $d['userid'];
 		$this->team = $team;
 		
 		$this->role = $team->Manager()->NewTeamUserRole($team, $this->id, $d);
-
-		$this->userName		= $d['username'];
-		$this->firstName	= $d['firstname'];
-		$this->lastName		= $d['lastname'];
-		$this->avatar		= $d['avatar'];
+		
+		TeamUserManager::AddId($this->id);
 	}
 
-	public static function UserNameBuild($user){
-		$firstname = !empty($user['fnm']) ? $user['fnm'] : $user['firstname'];
-		$lastname = !empty($user['lnm']) ? $user['lnm'] : $user['lastname'];
-		$username = !empty($user['unm']) ? $user['unm'] : $user['username'];
-		return (!empty($firstname) && !empty($lastname)) ? $firstname." ".$lastname : $username;
-	}
-	
 	public function ToAJAX(){
 		$ret = parent::ToAJAX();
-		
-		$ret->unm = $this->userName;
-		$ret->fnm = $this->firstName;
-		$ret->lnm = $this->lastName;
-		$ret->avt = $this->avatar;
-
 		$ret->role = $this->role->ToAJAX();
 		
 		return $ret;

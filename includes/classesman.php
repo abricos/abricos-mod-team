@@ -122,6 +122,10 @@ class TeamManager {
 	public final function AJAX($d){
 		$ret = new stdClass();
 		$ret->result = $this->AJAXMethod($d);
+		$users = TeamUserManager::ToAJAX();
+		if (!empty($users)){
+			$ret->users = $users;
+		}
 		
 		if ($d->userconfigupdate){
 			$ret->userconfig = $this->UserConfigToAJAX();
@@ -369,15 +373,15 @@ class TeamManager {
 					// выслать приглашение существующему пользователю
 					$d->id = $rd->user['id'];
 
-					$member = $this->MemberLoad($rd->user['id']);
+					$member = $this->Member($teamid, $rd->user['id']);
 						
-					if (!is_null($member) && $member->IsMember()){
+					if (!empty($member) && $member->role->IsMember()){
 						// этот пользователь уже участник группы
 						sleep(1);
 						return null;
 					}
 					// приглашение существующего пользователя в группу
-					$this->MemberInvite($d->id);
+					$this->MemberInvite($team, $d->id);
 				}
 			}
 		}
@@ -409,8 +413,8 @@ class TeamManager {
 		return $invite;
 	}
 	
-	protected function MemberInvite($userid){
-		$user = UserQueryExt::User($this->db, $userid);
+	protected function MemberInvite(Team $team, $userid){
+		$user = TeamUserManager::Get($userid);
 	
 		if (empty($user)){
 			return null;
