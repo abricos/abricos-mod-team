@@ -79,6 +79,16 @@ abstract class Team extends TeamItem {
 
 		return $ret;
 	}
+	
+	public function URI(){
+		return "/".$this->module."/t".$this->id."/";
+	}
+	
+	public function URL(){
+		$host = $_SERVER['HTTP_HOST'] ? $_SERVER['HTTP_HOST'] : $_ENV['HTTP_HOST'];
+		
+		return "http://".$host.$this->URI();
+	}
 }
 
 class TeamDetail {
@@ -204,7 +214,7 @@ class TeamUser extends TeamItem {
 	public $firstName = '';
 	public $lastName = '';
 	public $avatar = '';
-	
+
 	public function __construct($d){
 		parent::__construct($d);
 		
@@ -227,13 +237,21 @@ class TeamUser extends TeamItem {
 		$ret->lnm = $this->lastName;
 		$ret->avt = $this->avatar;
 	
-		$ret->role = $this->role->ToAJAX();
-	
 		return $ret;
 	}
 }
 
-class TeamUserList extends TeamItemList { }
+class TeamUserList extends TeamItemList {
+	/**
+	 * @return TeamUser
+	 */
+	public function Get($id){ return parent::Get($id); }
+	
+	/**
+	 * @return TeamUser
+	 */
+	public function GetByIndex($index){ return parent::GetByIndex($index); }
+}
 
 class TeamUserManager {
 
@@ -257,10 +275,14 @@ class TeamUserManager {
 	}
 	
 	private static function LoadList(){
+		if (empty(TeamUserManager::$list)){
+			TeamUserManager::$list = new TeamUserList();
+		}
+		
 		$ids = &TeamUserManager::$_ids;
 		$arr = array();
-		
-		foreach ($ids as $key){
+
+		foreach ($ids as $key => $value){
 			if ($ids[$key]->load){
 				continue;
 			}
@@ -270,11 +292,14 @@ class TeamUserManager {
 		
 		if (count($arr) == 0){ return; }
 		$rows = TeamQuery::UserByIds(Abricos::$db, $arr);
-		while (($d = $this->db->fetch_array($rows))){
+		while (($d =Abricos::$db->fetch_array($rows))){
 			TeamUserManager::$list->Add(new TeamUser($d));
 		}
 	}
 	
+	/**
+	 * @return TeamUser
+	 */
 	public static function Get($userid){
 		if (empty(TeamUserManager::$list)){
 			TeamUserManager::$list = new TeamUserList();
@@ -291,11 +316,13 @@ class TeamUserManager {
 	}
 	
 	public static function ToAJAX(){
-		if (empty(TeamUserManager::$list)){
+		if (count(TeamUserManager::$_ids) == 0){
 			return null;
 		}
 		TeamUserManager::LoadList();
-		return TeamUserManager::$list->ToAJAX();
+		$ret = TeamUserManager::$list->ToAJAX();
+		$ret = $ret->list;
+		return $ret;
 	}
 }
 

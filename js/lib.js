@@ -135,30 +135,19 @@ Component.entryPoint = function(NS){
 	};
 	NS.TeamUserRole = TeamUserRole;
 
-	var Member = function(d){
+	var Member = function(team, d){
+		this.team = team;
 		d = L.merge({
-			'role': {},
-			'isadm': 0,
-			'isinv': 0,
-			'isjrq': 0,
-			'ruid': 0
+			'role': {}
 		}, d || {});
 		Member.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(Member, SysNS.Item, {
 		init: function(d){
-			this.team = null;
-			this.teams = null;
 			Member.superclass.init.call(this, d);
 		},
 		update: function(d){
-			
-			this.isMember = d['ismbr']*1==1;
-			this.isAdmin = d['isadm']*1==1;
-			
-			this.isJoinRequest = !this.isMember && d['isjrq']*1==1;
-			this.isInvite = !this.isMember && d['isinv']*1==1;
-			this.relUserId = d['ruid']*1;
+			this.role = new this.team.manager.TeamUserRoleClass(d['role']);
 		}
 	});
 	NS.Member = Member;
@@ -229,21 +218,25 @@ Component.entryPoint = function(NS){
 			d['tm'] = Math.round((new Date().getTime())/1000);
 			
 			var userConfig = this.userConfig;
-
 			if (userConfig.needUpdate){
 				d['userconfigupdate'] = true;
+				userConfig.needUpdate = false;
 			}
-			
+			var __self = this;
 			Brick.ajax(this.modname, {
 				'data': d,
 				'event': function(request){
 					var d = !L.isNull(request) && !L.isNull(request.data) ? request.data : null,
 						result = !L.isNull(d) ? (d.result ? d.result : null) : null;
 		
-					if (!L.isNull(d) && d['userconfig']){
-						userConfig.update(d['userconfig']);
+					if (!L.isNull(d)){
+						if (d['userconfig']){
+							userConfig.update(d['userconfig']);
+						}
+						if (d['users']){
+							__self.users.update(d['users']);
+						}
 					}
-					
 					NS.life(callback, result);
 				}
 			});
@@ -261,7 +254,6 @@ Component.entryPoint = function(NS){
 			
 			for (var i=0;i<dList.length;i++){
 				var di = dList[i], team = cache.get(di['id']);
-				// this.users.update([di['member']]);
 				
 				if (L.isNull(team)){
 					team = new this.TeamClass(di);
@@ -309,7 +301,7 @@ Component.entryPoint = function(NS){
 				cache = this._teamCache,
 				team = cache.get(teamid);
 
-			if (!L.isNull(team) && !cfg['reload']){
+			if (!L.isNull(team) && !L.isNull(team.detail) && !cfg['reload']){
 				NS.life(callback, team);
 				return;
 			}
@@ -327,7 +319,7 @@ Component.entryPoint = function(NS){
 						team = new __self.TeamClass(d['team']);
 						cache.add(team);
 					}else{
-						team.update(d);
+						team.update(d['team']);
 					}
 				}
 				NS.life(callback, team);
@@ -380,9 +372,15 @@ Component.entryPoint = function(NS){
 				'teamid': team.id
 			}, function(d){
 				var list = null;
-				if (!L.isNull(d)){
-					__self.users.update(d);
-					list = new __self.MemberListClass(d);
+				
+				if (L.isValue(d) && L.isValue(d['members'])){
+					
+					list = new __self.MemberListClass();
+					
+					var dList = d['members']['list'];
+					for (var i=0; i<dList.length; i++){
+						list.add(new __self.MemberClass(team, dList[i]));
+					}
 				}
 				
 				NS.life(callback, list);

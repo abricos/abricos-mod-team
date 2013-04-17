@@ -280,7 +280,7 @@ class TeamManager {
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
 
-		$row = TeamQuery::Member($this->db, $this->id, $this->member->IsAdmin(), $memberid);
+		$row = TeamQuery::Member($this->db, $this->id, $team->role->IsAdmin(), $memberid);
 		$member = $this->NewMember($team, $row);
 		
 		$member->detail = $this->NewMemberDetail($member);
@@ -307,8 +307,7 @@ class TeamManager {
 		
 		$team = $this->Team($teamid);
 		
-		$rows = TeamQuery::MemberList($this->db, $this->id, $team->role->IsAdmin());
-		
+		$rows = TeamQuery::MemberList($this->db, $teamid, $team->role->IsAdmin());
 		$list = $this->NewMemberList();
 		while (($d = $this->db->fetch_array($rows))){
 			$list->Add($this->NewMember($team, $d));
@@ -416,12 +415,10 @@ class TeamManager {
 	protected function MemberInvite(Team $team, $userid){
 		$user = TeamUserManager::Get($userid);
 	
-		if (empty($user)){
-			return null;
-		}
+		if (empty($user)){ return null; }
 		// TODO: необходимо запрашивать разрешение на приглашение пользователя
 		// пометка пользователя флагом приглашенного
-		TeamQuery::MemberInviteSetWait($this->db, $this->id, $userid, $this->userid);
+		TeamQuery::MemberInviteSetWait($this->db, $team->id, $userid, $this->userid);
 	
 		return $userid;
 	}
