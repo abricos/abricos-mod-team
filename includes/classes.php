@@ -52,6 +52,8 @@ abstract class Team extends TeamItem {
 		$this->memberCount	= intval($d['mcnt']);
 		
 		$this->role = $this->Manager()->NewTeamUserRole($this, Abricos::$user->id, $d);
+		
+		TeamUserManager::AddId($this->authorid);
 	}
 	
 	/**

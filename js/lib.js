@@ -336,13 +336,11 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
-		_updateMember: function(d){
-			if (L.isNull(d)){
+		_updateMember: function(team, d){
+			if (!(L.isValue(d) && L.isValue(d['member']))){
 				return null;
-				this.users.update([d]);
 			}
-
-			return new this.MemberClass(d);
+			return new this.MemberClass(team, d['member']);
 		},
 		
 		memberLoad: function(team, memberid, callback){
@@ -356,7 +354,8 @@ Component.entryPoint = function(NS){
 				'teamid': team.id,
 				'memberid': memberid
 			}, function(d){
-				var member = __self._updateMember(d);
+				var member = __self._updateMember(team, d);
+
 				NS.life(callback, member);
 			});
 		},
@@ -392,11 +391,19 @@ Component.entryPoint = function(NS){
 			sd['teamid'] = team.id;
 			var __self = this;
 			this.ajax(sd, function(d){
-				var member = __self._updateMember(d);
+				var member = __self._updateMember(team, d);
 				NS.life(callback, member);
 			});
-		}		
+		},
 		
+		memberInviteAccept: function(team, sd, callback){
+			var __self = this;
+			sd['do'] = 'memberinviteact';
+			this.ajax(sd, function(d){
+				var member = __self._updateMember(team, d);
+				NS.life(callback, member);
+			});
+		}
 	};
 	Manager.get = function(modname){
 		var man = Brick.mod[modname]['manager'];

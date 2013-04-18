@@ -296,16 +296,16 @@ class TeamQuery {
 		";
 		if ($memberid > 0){
 			$sql .= "
-				WHERE urm.userid=".bkint($memberid)."
+				WHERE urm.id=".bkint($memberid)."
 				LIMIT 1
 			";
 		}
 		return $db->query_read($sql);		
 	}
 	
-	public static function Member(Ab_Database $db, $teamid, $isAdmin = false, $memberid = 0){
-		$rows = TeamQuery::MemberList($db, $teamid, $isAdmin, $memberid);
-		return $db->fetch_array($rows);
+	public static function Member(TeamManager $man, $team, $memberid){
+		$rows = TeamQuery::MemberList($man, $team, $memberid);
+		return $man->db->fetch_array($rows);
 	}
 
 		

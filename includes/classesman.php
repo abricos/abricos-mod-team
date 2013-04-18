@@ -154,6 +154,8 @@ class TeamManager {
 			case 'memberlist': 	return $this->MemberListToAJAX($d->teamid);
 			case 'membersave': 	return $this->MemberSave($d->teamid, $d);
 			
+			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
+			
 			case 'mynamesave': return $this->MyNameSave($d);
 		}
 		return null;
@@ -281,15 +283,20 @@ class TeamManager {
 	}
 		
 	/**
+	 * 
 	 * @param integer $teamid
 	 * @param integer $memberid
-	 * @return MemberExtended
+	 * @param string $invite
+	 * @return Member
 	 */
 	public function Member($teamid, $memberid){
+		
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
 
-		$row = TeamQuery::Member($this->db, $this->id, $team->role->IsAdmin(), $memberid);
+		$row = TeamQuery::Member($this, $team, $memberid);
+		if (empty($row)){ return null; }
+		
 		$member = $this->NewMember($team, $row);
 		
 		$member->detail = $this->NewMemberDetail($member);
@@ -430,6 +437,20 @@ class TeamManager {
 		TeamQuery::MemberInviteSetWait($this->db, $team->id, $userid, $this->userid);
 	
 		return $userid;
+	}
+	
+	public function MemberInviteAccept($teamid, $memberid, $flag){
+		$member = $this->Member($teamid, $memberid);
+		
+		if (empty($member) || $member->id != $this->userid){ return null; }
+		
+		if ($flag){
+			TeamQuery::MemberInviteSetAccept($this->db, $teamid, $memberid);
+		}else{
+			TeamQuery::MemberInviteSetReject($this->db, $teamid, $memberid);
+		}
+		
+		return $this->MemberToAJAX($teamid, $memberid);
 	}
 	
 	/**
