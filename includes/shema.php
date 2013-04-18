@@ -76,7 +76,7 @@ if ($updateManager->isInstall()){
 			`isprivate` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Скрывать свое участие не членам группы',
 			
 			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			`lastview` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата посещения',
+			`lastview` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата посещения группы',
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
 			
 			UNIQUE KEY `userrole` (`teamid`,`userid`)

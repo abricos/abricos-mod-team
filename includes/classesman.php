@@ -43,9 +43,6 @@ class TeamManager {
 	
 	public $TeamUserRoleClass	= TeamUserRole;
 	
-	/**
-	 * @var TeamList
-	 */
 	public $TeamListClass		= TeamList;
 	
 	public $MemberClass			= Member;
@@ -53,6 +50,18 @@ class TeamManager {
 	public $MemberListClass		= MemberList;
 	
 	public $TeamUserConfigClass	= TeamUserConfig;
+		
+	/**
+	 * Информация о расширенной таблицы ролей пользовтеля
+	 * Например для спортклуба:
+	 * $this->fldExtTeamUserRole['sportclub_userrole'] = "isemployee,istrener,issportsman"; 
+	 * 
+	 * sportclub_userrole - таблица расширения в базе
+	 * isemployee,istrener,issportsman - перечень полей в ней
+	 */
+	public $fldExtTeamUserRole = array();
+
+	public $fldExtTeamDetail = array();
 	
 	/**
 	 * @param TeamModuleManager $modManager
@@ -77,8 +86,8 @@ class TeamManager {
 	 * @param Team $team
 	 * @return TeamDetail
 	 */
-	public function NewTeamDetail(Team $team){
-		return new $this->TeamDetailClass($team);
+	public function NewTeamDetail(Team $team, $d){
+		return new $this->TeamDetailClass($team, $d);
 	}
 
 	/**
@@ -164,7 +173,7 @@ class TeamManager {
 			return $this->_teamCache[$teamid];
 		}
 
-		$row = TeamQuery::Team($this->db, $this->modname, $teamid);
+		$row = TeamQuery::Team($this, $teamid);
 		if (empty($row)){ return null; }
 		
 		if ($this->userid > 0){
@@ -175,7 +184,7 @@ class TeamManager {
 		
 		$team = $this->NewTeam($row);
 		
-		$detail = $this->NewTeamDetail($team);
+		$detail = $this->NewTeamDetail($team, $row);
 		
 		if ($team->role->IsAdmin()){
 			$detail->inviteWaitCount = TeamQuery::MemberInviteWaitCountByTeam($this->db, $teamid);
@@ -207,7 +216,7 @@ class TeamManager {
 	public function TeamList($page = 1, $memberid = 0){
 		if (!$this->IsViewRole()){ return null; }
 
-		$rows = TeamQuery::TeamList($this->db, $this->modname, $page, $memberid);
+		$rows = TeamQuery::TeamList($this, $page, $memberid);
 		$list = $this->NewTeamList();
 		
 		while (($d = $this->db->fetch_array($rows))){
@@ -304,10 +313,10 @@ class TeamManager {
 	 * @return MemberList
 	 */
 	public function MemberList($teamid){
-		
 		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
 		
-		$rows = TeamQuery::MemberList($this->db, $teamid, $team->role->IsAdmin());
+		$rows = TeamQuery::MemberList($this, $team);
 		$list = $this->NewMemberList();
 		while (($d = $this->db->fetch_array($rows))){
 			$list->Add($this->NewMember($team, $d));

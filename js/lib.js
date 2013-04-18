@@ -125,12 +125,12 @@ Component.entryPoint = function(NS){
 			this.update(d);
 		},
 		update: function(d){
-			this.isMember = d['ismbr']*1==1;
-			this.isAdmin = d['isadm']*1==1;
+			this.isMember = d['ismbr']|0==1;
+			this.isAdmin = d['isadm']|0==1;
 			
-			this.isJoinRequest = !this.isMember && d['isjrq']*1==1;
-			this.isInvite = !this.isMember && d['isinv']*1==1;
-			this.relUserId = d['ruid']*1;
+			this.isJoinRequest = !this.isMember && d['isjrq']|0==1;
+			this.isInvite = !this.isMember && d['isinv']|0==1;
+			this.relUserId = d['ruid']|0;
 		}
 	};
 	NS.TeamUserRole = TeamUserRole;

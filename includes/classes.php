@@ -101,7 +101,7 @@ class TeamDetail {
 	 */
 	public $inviteWaitCount = null;
 	
-	public function __construct(Team $team){
+	public function __construct(Team $team, $d){
 		$this->team = $team;
 	}
 

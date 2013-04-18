@@ -13,10 +13,12 @@ class TeamQuery {
 	 * @param Ab_Database $db
 	 * @param string $module имя модуля
 	 */
-	public static function TeamList(Ab_Database $db, $module, $page = 1, $memberid = 0, $teamid = 0){
+	public static function TeamList(TeamManager $man, $page = 1, $memberid = 0, $teamid = 0){
+		$db = $man->db;
+		$module = $man->modname;
 		$memberid = intval($memberid);
 		$teamid = intval($teamid);
-		$curUserid = Abricos::$user->id;
+		
 		$sql = "
 			SELECT
 				t.teamid as id,
@@ -29,47 +31,83 @@ class TeamQuery {
 				t.logo,
 				t.isanyjoin as anj,
 				t.membercount as mcnt
-				
-				".($curUserid==0 ? "" : ",
-					ur.ismember,
-					ur.isadmin,
-					ur.isjoinrequest,
-					ur.isinvite,
-					ur.reluserid,
-					ur.isremove
-				")."
-				
-				
-			FROM ".$db->prefix."team t
-			
-			".($curUserid==0 ? "" : "
-			
-			LEFT JOIN ".$db->prefix."team_userrole ur ON t.teamid=ur.teamid
-				AND ur.userid=".bkint(Abricos::$user->id)."
-
-			")."			
-
-			".($memberid==0 ? "" : "
-			
-			LEFT JOIN ".$db->prefix."team_userrole urm ON t.teamid=urm.teamid
-				AND urm.userid=".bkint($memberid)."
-
-			")."
-			
-			WHERE t.deldate=0 AND t.module='".bkstr($module)."'
-
-			".($memberid==0 ? "" : "
-				AND urm.ismember=1
-			")."
-			
-			".($teamid==0 ? "" : "
-				AND t.teamid=".bkint($teamid)."
-			")."
-			
-			".($teamid==0 ? "" : "
-				LIMIT 1
-			")."
 		";
+		
+		if (Abricos::$user->id > 0){
+			$sql .= "
+				,ur.ismember
+				,ur.isadmin
+				,ur.isjoinrequest
+				,ur.isinvite
+				,ur.reluserid
+				,ur.isremove
+			";
+
+			foreach($man->fldExtTeamUserRole as $key => $value){
+				$far = explode(",", $value);
+				foreach($far as $f){
+					$sql .= " ,".$key.".".trim($f)." ";
+				}
+			}
+		}
+		
+		if ($teamid > 0){
+			foreach($man->fldExtTeamDetail as $key => $value){
+				$far = explode(",", $value);
+				foreach($far as $f){
+					$sql .= " ,".$key.".".trim($f)." ";
+				}
+			}
+		}
+		
+		$sql .= "
+			FROM ".$db->prefix."team t
+		";
+		
+		if (Abricos::$user->id > 0){
+			$sql .= "
+				LEFT JOIN ".$db->prefix."team_userrole ur ON t.teamid=ur.teamid
+					AND ur.userid=".bkint(Abricos::$user->id)."
+			";
+			
+			foreach($man->fldExtTeamUserRole as $key => $value){
+				$sql .= "
+					LEFT JOIN ".$db->prefix.$key." ".$key." ON t.teamid=".$key.".teamid
+						AND ".$key.".userid=".bkint(Abricos::$user->id)."
+				";
+			}
+		}
+		if ($teamid > 0){
+			foreach($man->fldExtTeamDetail as $key => $value){
+				$sql .= "
+					LEFT JOIN ".$db->prefix.$key." ".$key." ON t.teamid=".$key.".teamid
+				";
+			}
+				
+		}
+		if ($memberid>0){
+			$sql .= "
+				LEFT JOIN ".$db->prefix."team_userrole urm ON t.teamid=urm.teamid
+					AND urm.userid=".bkint($memberid)."
+			";
+		}
+	
+		$sql .= "
+			WHERE t.deldate=0 AND t.module='".bkstr($module)."'
+		";
+		
+		if ($memberid>0){
+			$sql .= "
+				AND urm.ismember=1
+			";
+		}
+		if ($teamid > 0){
+			$sql .= "
+				AND t.teamid=".bkint($teamid)."
+				LIMIT 1
+			";
+		}
+
 		return $db->query_read($sql);
 	}
 	
@@ -80,15 +118,13 @@ class TeamQuery {
 	 * @param integer $teamid
 	 * @param integer $userid текущий пользователь для выявление его ролей к этой группе
 	 */
-	public static function Team(Ab_Database $db, $module, $teamid){
-		$rows = TeamQuery::TeamList($db, $module, 1, 0, $teamid);
-		while (($row = $db->fetch_array($rows))){
+	public static function Team(TeamManager $man, $teamid){
+		$rows = TeamQuery::TeamList($man, 1, 0, $teamid);
+		while (($row = $man->db->fetch_array($rows))){
 			return $row;
 		}
 		return null;
 	}
-	
-	
 	
 	public static function TeamMemberCountRecalc(Ab_Database $db, $teamid){
 		$sql = "
@@ -179,54 +215,76 @@ class TeamQuery {
 	 * @param integer $teamid
 	 * @param boolean $isAdmin
 	 */
-	public static function MemberList(Ab_Database $db, $teamid, $isAdmin = false, $memberid = 0){
+	public static function MemberList(TeamManager $man, Team $team, $memberid = 0){
+		$db = $man->db;
+		$flds = "";
+		$ljoin = "";
+		
+		foreach($man->fldExtTeamUserRole as $key => $value){
+			$ljoin .= "
+				LEFT JOIN ".$db->prefix.$key." ".$key." ON ur.teamid=".$key.".teamid
+					AND ".$key.".userid=ur.userid
+			";
+				
+			$far = explode(",", $value);
+			foreach($far as $f){
+				$flds .= " ,".$key.".".trim($f)." ";
+			}
+		}
+		
 		$arr = array();
 		
 		// этот пользователь в этом списке
 		array_push($arr, "
 			SELECT
-				userid as id,
-				ismember,
-				isadmin,
-				isjoinrequest,
-				isinvite,
-				reluserid
-			FROM ".$db->prefix."team_userrole
-			WHERE userid=".bkint(Abricos::$user->id)." AND teamid=".bkint($teamid)."
-				AND (ismember=1 OR isjoinrequest=1 OR isinvite=1)
+				ur.userid as id,
+				ur.ismember,
+				ur.isadmin,
+				ur.isjoinrequest,
+				ur.isinvite,
+				ur.reluserid
+				".$flds."
+			FROM ".$db->prefix."team_userrole ur
+				".$ljoin."
+			WHERE ur.userid=".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)."
+				AND (ur.ismember=1 OR ur.isjoinrequest=1 OR ur.isinvite=1)
 			LIMIT 1
 		");
 		
-		if ($isAdmin){
+		if ($team->role->IsAdmin()){
 			// список пользователей которых пригласили или сделали запрос на 
 			// вступление в группу
 			// список доступен только админу группы
 			array_push($arr, "
 				SELECT 
-					userid as id,
-					ismember,
-					isadmin,
-					isjoinrequest,
-					isinvite,
-					reluserid
-				FROM ".$db->prefix."team_userrole
-				WHERE userid<>".bkint(Abricos::$user->id)." AND teamid=".bkint($teamid)." 
-					AND ismember=0 AND (isjoinrequest=1 OR isinvite=1)
+					ur.userid as id,
+					ur.ismember,
+					ur.isadmin,
+					ur.isjoinrequest,
+					ur.isinvite,
+					ur.reluserid
+				".$flds."
+				FROM ".$db->prefix."team_userrole ur
+				".$ljoin."
+				WHERE ur.userid<>".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)." 
+					AND ur.ismember=0 AND (ur.isjoinrequest=1 OR ur.isinvite=1)
 			");
 		}
 		
 		// публичный список пользователей
 		array_push($arr, "
 			SELECT
-				userid as id,
-				ismember,
-				isadmin,
-				isjoinrequest,
-				isinvite,
-				reluserid
-			FROM ".$db->prefix."team_userrole
-			WHERE userid<>".bkint(Abricos::$user->id)." AND teamid=".bkint($teamid)." 
-				AND ismember=1
+				ur.userid as id,
+				ur.ismember,
+				ur.isadmin,
+				ur.isjoinrequest,
+				ur.isinvite,
+				ur.reluserid
+				".$flds."
+			FROM ".$db->prefix."team_userrole ur
+				".$ljoin."
+			WHERE ur.userid<>".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)." 
+				AND ur.ismember=1
 		");
 		
 		$sql = "
@@ -234,11 +292,11 @@ class TeamQuery {
 				DISTINCT *
 			FROM (
 				".implode(" UNION ", $arr)."
-			) ur
+			) urm
 		";
 		if ($memberid > 0){
 			$sql .= "
-				WHERE ur.userid=".bkint($memberid)."
+				WHERE urm.userid=".bkint($memberid)."
 				LIMIT 1
 			";
 		}
