@@ -152,7 +152,7 @@ class TeamManager {
 			
 			case 'member':	 	return $this->MemberToAJAX($d->teamid, $d->memberid);
 			case 'memberlist': 	return $this->MemberListToAJAX($d->teamid);
-			case 'membersave': 	return $this->MemberSave($d->teamid, $d);
+			case 'membersave': 	return $this->MemberSaveToAJAX($d->teamid, $d);
 			
 			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
 			
@@ -401,6 +401,15 @@ class TeamManager {
 			}
 		}
 		return $d->id;		
+	}
+	
+	public function MemberSaveToAJAX($teamid, $d){
+		$memberid = $this->MemberSave($teamid, $d);
+		if (empty($memberid)){ return null; }
+		
+		$ret = $this->MemberToAJAX($teamid, $memberid);
+		$ret->memberid = $memberid;
+		return $ret;
 	}
 	
 	/**
