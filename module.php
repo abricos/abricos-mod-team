@@ -20,7 +20,7 @@
 class TeamModule extends Ab_Module {
 
 	public function __construct(){
-		$this->version = "0.1";
+		$this->version = "0.1.1";
 		$this->name = "team";
 		$this->takelink = "team";
 		$this->permission = new TeamPermission($this);
@@ -51,7 +51,6 @@ class TeamModule extends Ab_Module {
 		
 		return $cname;
 	}
-	
 }
 
 

@@ -18,7 +18,7 @@ if ($updateManager->isInstall()){
 
 	$db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team (
-			`teamid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор общества',
+			`teamid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
 			`module` varchar(25) NOT NULL DEFAULT '' COMMENT 'Модуль создатель',
 			
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Основатель',
@@ -61,7 +61,7 @@ if ($updateManager->isInstall()){
 	 */
 	$db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team_userrole (
-			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Группа',
+			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 
 			`ismember` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT 'Член общества: 0 - нет, 1 - да',
@@ -81,6 +81,30 @@ if ($updateManager->isInstall()){
 			
 			UNIQUE KEY `userrole` (`teamid`,`userid`)
 		)".$charset
+	);
+	
+}
+
+if ($updateManager->isUpdate('0.1.1')){
+	$db->query_write("
+		CREATE TABLE `".$pfx."team_event` (
+			`eventid` integer(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор события',
+				
+			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
+				
+			`title` varchar(250) NOT NULL DEFAULT '' COMMENT 'Заголовок',
+				
+			`address` varchar(250) NOT NULL DEFAULT '' COMMENT 'Место проведения',
+				
+			`datefrom` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Начало события',
+			`dateto` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Окончание события',
+				
+			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
+			`deldate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
+	
+			PRIMARY KEY (`eventid`),
+			KEY `deldate` (`deldate`)
+		)". $charset
 	);
 	
 }
