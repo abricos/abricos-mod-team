@@ -419,6 +419,39 @@ class TeamUserConfig {
 	}
 }
 
+/**
+ * Событие сообщества (встречи, сборы и т.п.)
+ */
+class TeamEvent extends TeamItem {
+
+	/**
+	 * Название
+	 * @var string
+	 */
+	public $title;
+	
+	/**
+	 * Дата начала события
+	 * @var integer
+	 */
+	public $date;
+	
+	public function __construct($d){
+		parent::__construct($d);
+	
+		$this->title = strval($d['tl']);
+	}
+	
+	public function ToAJAX(){
+		$ret = parent::ToAJAX();
+		$ret->tl = $this->title;
+		return $ret;
+	}
+}
+
+class TeamEventList extends TeamItemList {
+	
+}
 
 class TeamItem {
 	public $id;

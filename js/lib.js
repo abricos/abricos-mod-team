@@ -177,6 +177,27 @@ Component.entryPoint = function(NS){
 	};
 	NS.UserConfig = UserConfig;
 
+	var Event = function(team, d){
+		this.team = team;
+		d = L.merge({
+			'tl': ''
+		}, d || {});
+		Event.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(Event, SysNS.Item, {
+		update: function(d){
+			this.title = d['tl'];
+		}
+	});
+	NS.Event = Event;
+	
+	var EventList = function(d){
+		EventList.superclass.constructor.call(this, d, Member);
+	};
+	YAHOO.extend(EventList, SysNS.ItemList, {});
+	NS.EventList = EventList;
+	
+	
 	var Manager = function(modname, callback, cfg){
 		this.modname = modname;
 		cfg = L.merge({
@@ -402,6 +423,31 @@ Component.entryPoint = function(NS){
 			this.ajax(sd, function(d){
 				var member = __self._updateMember(team, d);
 				NS.life(callback, member);
+			});
+		},
+		
+		eventListLoad: function(team, callback){
+			if (L.isNull(team)){
+				NS.life(callback, null);
+				return;
+			}
+			var __self = this;
+			this.ajax({
+				'do': 'eventlist',
+				'teamid': team.id
+			}, function(d){
+				var list = null;
+				
+				if (L.isValue(d) && L.isValue(d['events'])){
+					list = new __self.EventListClass();
+					
+					var dList = d['events']['list'];
+					for (var i=0; i<dList.length; i++){
+						list.add(new __self.EventClass(team, dList[i]));
+					}
+				}
+				
+				NS.life(callback, list);
 			});
 		}
 	};
