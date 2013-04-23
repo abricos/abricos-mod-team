@@ -361,57 +361,61 @@ class TeamManager {
 		}
 		$d->id = intval($d->id);
 		
-		if ($d->id == 0){ // приглашение участника в группу по email
+		if ($d->id > 0){ 
+			return null; // TODO: необходима реализация сохранения текущего пользователя
+		}
 		
-			$d->email = strtolower($d->email);
-			if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
+		// приглашение участника в группу по email
+		
+		$d->email = strtolower($d->email);
+		if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
+			return null;
+		}
+		Abricos::GetModule('team')->GetManager();
+		$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
+			
+		if (empty($rd)){ return null; }
+	
+		if (!empty($rd->user) && $rd->user['id'] == $this->userid){
+			if ($team->role->IsMember()){
+				// уже участник группы
+				// return null;
+			}
+			// добавляем себя в участники
+			$d->id = $rd->user['id'];
+		}else{
+			// есть ли лимит на кол-во приглашений
+			$ucfg = $this->UserConfig();
+	
+			if ($ucfg->inviteWaitLimit > -1 &&
+					($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
+				// нужно подтвердить других участников, чтобы иметь возможность добавить еще
 				return null;
 			}
-			Abricos::GetModule('team')->GetManager();
-			$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
 				
-			if (empty($rd)){ return null; }
-		
-			if (!empty($rd->user) && $rd->user['id'] == $this->userid){
-				if ($team->role->IsMember()){
-					// уже участник группы
-					// return null;
-				}
-				// добавляем себя в участники
-				$d->id = $rd->user['id'];
-			}else{
-				// есть ли лимит на кол-во приглашений
-				$ucfg = $this->UserConfig();
-		
-				if ($ucfg->inviteWaitLimit > -1 &&
-						($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
-					// нужно подтвердить других участников, чтобы иметь возможность добавить еще
+			if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
+				// сгенерировать учетку с паролем и выслать приглашение пользователю
+				$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm);
+				if (is_null($invite)){
 					return null;
 				}
-					
-				if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
-					// сгенерировать учетку с паролем и выслать приглашение пользователю
-					$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm);
-					if (is_null($invite)){
-						return null;
-					}
-					$d->id = $invite->user['id'];
-				}else{
-					// выслать приглашение существующему пользователю
-					$d->id = $rd->user['id'];
+				$d->id = $invite->user['id'];
+			}else{
+				// выслать приглашение существующему пользователю
+				$d->id = $rd->user['id'];
 
-					$member = $this->Member($teamid, $rd->user['id']);
-						
-					if (!empty($member) && $member->role->IsMember()){
-						// этот пользователь уже участник группы
-						sleep(1);
-						return null;
-					}
-					// приглашение существующего пользователя в группу
-					$this->MemberInvite($team, $d->id);
+				$member = $this->Member($teamid, $rd->user['id']);
+					
+				if (!empty($member) && $member->role->IsMember()){
+					// этот пользователь уже участник группы
+					sleep(1);
+					return null;
 				}
+				// приглашение существующего пользователя в группу
+				$this->MemberInvite($team, $d->id);
 			}
 		}
+		
 		return $d->id;		
 	}
 	
@@ -449,6 +453,12 @@ class TeamManager {
 		return $invite;
 	}
 	
+	/**
+	 * Пригласить существуюищего пользователя
+	 * 
+	 * @param Team $team
+	 * @param integer $userid
+	 */
 	protected function MemberInvite(Team $team, $userid){
 		$user = TeamUserManager::Get($userid);
 	

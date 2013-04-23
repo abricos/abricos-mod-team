@@ -155,7 +155,7 @@ class TeamUserRole {
 
 	/**
 	 * Удален (до этого был участником группы)
-	 * @var unknown_type
+	 * @var boolean
 	 */
 	protected $_isRemove = 0;
 

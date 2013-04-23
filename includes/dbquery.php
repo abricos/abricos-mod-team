@@ -436,6 +436,7 @@ class TeamQuery {
 				".TIMENOW.",
 				".TIMENOW."
 			) ON DUPLICATE KEY UPDATE
+				reluserid=".bkint($adminid).",
 				isinvite=1
 		";
 		$db->query_write($sql);
