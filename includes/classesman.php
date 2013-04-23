@@ -157,6 +157,11 @@ class TeamManager {
 			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
 			
 			case 'mynamesave': return $this->MyNameSave($d);
+			
+			case "event": return $this->EventToAJAX($d->teamid, $d->eventid);
+			case "eventlist": return $this->EventListToAJAX($d->teamid);
+			case "eventsave": return $this->EventSave($d->teamid, $d);
+			case "eventremove": return $this->EventRemove($d->teamid, $d->eventid);
 		}
 		return null;
 	}
@@ -201,6 +206,8 @@ class TeamManager {
 	public function TeamToAJAX($teamid){
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
+		
+		TeamUserManager::AddId($team->authorid);
 		
 		$ret = new stdClass();
 		$ret->team = $team->ToAJAX($other);
@@ -308,6 +315,8 @@ class TeamManager {
 		$member = $this->Member($teamid, $memberid);
 
 		if (empty($member)){ return null; }
+
+		TeamUserManager::AddId($memberid);
 		
 		$ret = new stdClass();
 		$ret->member = $member->ToAJAX();
@@ -326,7 +335,10 @@ class TeamManager {
 		$rows = TeamQuery::MemberList($this, $team);
 		$list = $this->NewMemberList();
 		while (($d = $this->db->fetch_array($rows))){
+			$member = $this->NewMember($team, $d);
 			$list->Add($this->NewMember($team, $d));
+			
+			TeamUserManager::AddId($member->id);
 		}
 		return $list;
 	}
@@ -462,6 +474,89 @@ class TeamManager {
 		return $this->MemberToAJAX($teamid, $memberid);
 	}
 	
+	public function Event($teamid, $eventid){
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+
+		$row = TeamQuery::Event($this, $team, $eventid);
+		if (empty($row)){ return null; }
+		
+		return new TeamEvent($team, $row);
+	}
+	
+	public function EventToAJAX($teamid, $eventid){
+		$event = $this->Event($teamid, $eventid);
+		if (empty($event)){ return null; }
+		
+		$ret = new stdClass();
+		$ret->event = $event->ToAJAX();
+		
+		return $ret;		
+	}
+
+	public function EventList($teamid){
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+	
+		$list = new TeamEventList();
+		$rows = TeamQuery::EventList($this, $team);
+	
+		while (($d = $this->db->fetch_array($rows))){
+			$list->Add(new TeamEvent($team, $d));
+		}
+	
+		return $list;
+	}
+	
+	public function EventListToAJAX($teamid){
+		$list = $this->EventList($teamid);
+		if (empty($list)){
+			return null;
+		}
+	
+		$ret = new stdClass();
+		$ret->events = $list->ToAJAX();
+	
+		return $ret;
+	}
+	
+	public function EventSave($teamid, $d){
+		$team = $this->Team($teamid);
+		
+		if (!$team->role->IsAdmin()){ // текущий пользователь не админ => нет прав
+			return null;
+		}
+			
+		$error = 0;
+		$d->id = intval($d->id);
+	
+		$utmf = Abricos::TextParser(true);
+		$d->tl = $utmf->Parser($d->tl);
+	
+		if ($d->id == 0){
+			$d->id = TeamQuery::EventAppend($this->db, $teamid, $d);
+		}else{
+				
+		}
+	
+		$ret = $this->EventListToAJAX($teamid);
+		$ret->error = $error;
+		$ret->eventid = $d->id;
+	
+		return $ret;
+	}
+	
+	public function EventRemove($teamid, $eventid){
+		$team = $this->Team($teamid);
+		
+		if (!$team->role->IsAdmin()){ // текущий пользователь не админ => нет прав
+			return null;
+		}
+		
+		TeamQuery::EventRemove($this->db, $teamid, $eventid);
+		return true;
+	}
+		
 	/**
 	 * @return TeamUserConfig
 	 */

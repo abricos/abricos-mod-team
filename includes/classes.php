@@ -53,7 +53,7 @@ abstract class Team extends TeamItem {
 		
 		$this->role = $this->Manager()->NewTeamUserRole($this, Abricos::$user->id, $d);
 		
-		TeamUserManager::AddId($this->authorid);
+		// TeamUserManager::AddId($this->authorid);
 	}
 	
 	/**
@@ -352,8 +352,6 @@ class Member extends TeamItem {
 		$this->team = $team;
 		
 		$this->role = $team->Manager()->NewTeamUserRole($team, $this->id, $d);
-		
-		TeamUserManager::AddId($this->id);
 	}
 
 	public function ToAJAX(){
@@ -425,6 +423,11 @@ class TeamUserConfig {
 class TeamEvent extends TeamItem {
 
 	/**
+	 * @var Team
+	 */
+	public $team = null;
+	
+	/**
 	 * Название
 	 * @var string
 	 */
@@ -436,8 +439,10 @@ class TeamEvent extends TeamItem {
 	 */
 	public $date;
 	
-	public function __construct($d){
+	public function __construct(Team $team, $d){
 		parent::__construct($d);
+		
+		$this->team = $team;
 	
 		$this->title = strval($d['tl']);
 	}
@@ -449,9 +454,7 @@ class TeamEvent extends TeamItem {
 	}
 }
 
-class TeamEventList extends TeamItemList {
-	
-}
+class TeamEventList extends TeamItemList { }
 
 class TeamItem {
 	public $id;
