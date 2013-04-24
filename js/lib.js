@@ -431,6 +431,20 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
+		memberRemove: function(team, member, callback){
+			if (L.isNull(team)){
+				NS.life(callback);
+				return;
+			}
+			this.ajax({
+				'do': 'memberremove', 
+				'teamid': team.id,
+				'memberid': member.id
+			}, function(d){
+				NS.life(callback);
+			});
+		},
+		
 		_updateEvent: function(team, d){
 			if (!(L.isValue(d) && L.isValue(d['event']))){
 				return null;

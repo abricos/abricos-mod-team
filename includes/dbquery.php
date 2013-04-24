@@ -134,13 +134,15 @@ class TeamQuery {
 			GROUP BY ur.teamid
 		";
 		$row = $db->query_first($sql);
+		$cnt = intval($row['cnt']);
 		$sql = "
 			UPDATE ".$db->prefix."team
-			SET membercount=".intval($row['cnt'])."
+			SET membercount=".$cnt."
 			WHERE teamid=".bkint($teamid)." 
 			LIMIT 1
 		";
 		$db->query_write($sql);
+		return $cnt;
 	}
 	
 	public static function TeamAppend(Ab_Database $db, $module, $userid, $d){
@@ -247,7 +249,7 @@ class TeamQuery {
 			FROM ".$db->prefix."team_userrole ur
 				".$ljoin."
 			WHERE ur.userid=".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)."
-				AND (ur.ismember=1 OR ur.isjoinrequest=1 OR ur.isinvite=1)
+				AND (ur.ismember=1 OR ur.isjoinrequest=1 OR ur.isinvite=1) AND ur.isremove=0
 			LIMIT 1
 		");
 		
@@ -267,7 +269,7 @@ class TeamQuery {
 				FROM ".$db->prefix."team_userrole ur
 				".$ljoin."
 				WHERE ur.userid<>".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)." 
-					AND ur.ismember=0 AND (ur.isjoinrequest=1 OR ur.isinvite=1)
+					AND ur.ismember=0 AND (ur.isjoinrequest=1 OR ur.isinvite=1) AND ur.isremove=0
 			");
 		}
 		
@@ -284,7 +286,7 @@ class TeamQuery {
 			FROM ".$db->prefix."team_userrole ur
 				".$ljoin."
 			WHERE ur.userid<>".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)." 
-				AND ur.ismember=1
+				AND ur.ismember=1 
 		");
 		
 		$sql = "
@@ -300,7 +302,8 @@ class TeamQuery {
 				LIMIT 1
 			";
 		}
-		return $db->query_read($sql);		
+
+		return $db->query_read($sql);
 	}
 	
 	public static function Member(TeamManager $man, $team, $memberid){
@@ -480,6 +483,18 @@ class TeamQuery {
 				ismember=1
 			WHERE teamid=".bkint($teamid)." AND userid=".bkint($userid)." 
 				AND ismember=0
+			LIMIT 1
+		";
+		$db->query_write($sql);
+	}
+
+	public static function MemberRemove(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			UPDATE ".$db->prefix."team_userrole
+			SET
+				isremove=".(Abricos::$user->id == $userid ? 2 : 1).",
+				ismember=0
+			WHERE teamid=".bkint($teamid)." AND userid=".bkint($userid)."
 			LIMIT 1
 		";
 		$db->query_write($sql);

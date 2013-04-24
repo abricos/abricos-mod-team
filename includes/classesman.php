@@ -153,6 +153,7 @@ class TeamManager {
 			case 'member':	 	return $this->MemberToAJAX($d->teamid, $d->memberid);
 			case 'memberlist': 	return $this->MemberListToAJAX($d->teamid);
 			case 'membersave': 	return $this->MemberSaveToAJAX($d->teamid, $d);
+			case 'memberremove':return $this->MemberRemove($d->teamid, $d->memberid);
 			
 			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
 			
@@ -275,7 +276,7 @@ class TeamManager {
 			TeamQuery::TeamUpdate($this->db, $d);
 		}
 	
-		TeamQuery::TeamMemberCountRecalc($this->db, $d->id);
+		$this->TeamMemberCountRecalc($d->id);
 	
 		return $d->id;
 	}
@@ -287,6 +288,16 @@ class TeamManager {
 		}
 		TeamQuery::TeamRemove($this->db, $teamid);
 		return true;
+	}
+	
+	/**
+	 * Пересчитать количество участников в сообществе
+	 * @param integer $teamid
+	 * @return integer количество участников
+	 */
+	public function TeamMemberCountRecalc($teamid){
+		$cnt = TeamQuery::TeamMemberCountRecalc($this->db, $teamid);
+		return $cnt;
 	}
 		
 	/**
@@ -361,60 +372,62 @@ class TeamManager {
 		}
 		$d->id = intval($d->id);
 		
-		if ($d->id > 0){ 
-			return null; // TODO: необходима реализация сохранения текущего пользователя
-		}
-		
-		// приглашение участника в группу по email
-		
-		$d->email = strtolower($d->email);
-		if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
-			return null;
-		}
-		Abricos::GetModule('team')->GetManager();
-		$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
-			
-		if (empty($rd)){ return null; }
-	
-		if (!empty($rd->user) && $rd->user['id'] == $this->userid){
-			if ($team->role->IsMember()){
-				// уже участник группы
-				// return null;
-			}
-			// добавляем себя в участники
-			$d->id = $rd->user['id'];
-		}else{
-			// есть ли лимит на кол-во приглашений
-			$ucfg = $this->UserConfig();
-	
-			if ($ucfg->inviteWaitLimit > -1 &&
-					($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
-				// нужно подтвердить других участников, чтобы иметь возможность добавить еще
+		if ($d->id == 0){ // Добавление участника
+
+			// приглашение участника в группу по email
+			$d->email = strtolower($d->email);
+			if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
 				return null;
 			}
+			Abricos::GetModule('team')->GetManager();
+			$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
 				
-			if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
-				// сгенерировать учетку с паролем и выслать приглашение пользователю
-				$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm);
-				if (is_null($invite)){
-					return null;
+			if (empty($rd)){ return null; }
+		
+			if (!empty($rd->user) && $rd->user['id'] == $this->userid){
+				if ($team->role->IsMember()){
+					// уже участник группы
+					// return null;
 				}
-				$d->id = $invite->user['id'];
-			}else{
-				// выслать приглашение существующему пользователю
+				// добавляем себя в участники
 				$d->id = $rd->user['id'];
-
-				$member = $this->Member($teamid, $rd->user['id']);
-					
-				if (!empty($member) && $member->role->IsMember()){
-					// этот пользователь уже участник группы
-					sleep(1);
+			}else{
+				// есть ли лимит на кол-во приглашений
+				$ucfg = $this->UserConfig();
+		
+				if ($ucfg->inviteWaitLimit > -1 &&
+						($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
+					// нужно подтвердить других участников, чтобы иметь возможность добавить еще
 					return null;
 				}
-				// приглашение существующего пользователя в группу
-				$this->MemberInvite($team, $d->id);
+					
+				if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
+					// сгенерировать учетку с паролем и выслать приглашение пользователю
+					$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm);
+					if (is_null($invite)){
+						return null;
+					}
+					$d->id = $invite->user['id'];
+				}else{
+					// выслать приглашение существующему пользователю
+					$d->id = $rd->user['id'];
+	
+					$member = $this->Member($teamid, $rd->user['id']);
+						
+					if (!empty($member) && $member->role->IsMember()){
+						// этот пользователь уже участник группы
+						sleep(1);
+						return null;
+					}
+					// приглашение существующего пользователя в группу
+					$this->MemberInvite($team, $d->id);
+				}
 			}
+		}else{
+			
 		}
+		
+		$this->TeamMemberCountRecalc($teamid);
 		
 		return $d->id;		
 	}
@@ -481,7 +494,20 @@ class TeamManager {
 			TeamQuery::MemberInviteSetReject($this->db, $teamid, $memberid);
 		}
 		
+		$this->TeamMemberCountRecalc($teamid);
+		
 		return $this->MemberToAJAX($teamid, $memberid);
+	}
+	
+	public function MemberRemove($teamid, $memberid){
+		$team = $this->Team($teamid);
+		if (empty($team) || !$team->role->IsAdmin()){ return null; }
+		
+		TeamQuery::MemberRemove($this->db, $teamid, $memberid);
+		
+		$this->TeamMemberCountRecalc($teamid);
+		
+		return true;
 	}
 	
 	public function Event($teamid, $eventid){
