@@ -382,6 +382,81 @@ class MemberList extends TeamItemList {
 	}
 }
 
+class TeamAppInfo extends TeamItem {
+	
+	public $title = "";
+	public $jsURI = "";
+	
+	public function __construct($modname){
+		$this->id = $modname;
+	}
+	
+	public function ToAJAX(){
+		$ret = parent::ToAJAX();
+		$ret->tl = $this->title;
+		$ret->jsuri = $this->jsURI;
+		return $ret;
+	}
+}
+
+class TeamAppInfoList extends TeamItemList { }
+
+class TeamInitData {
+	
+	/**
+	 * Приложения для сообществ
+	 * @var TeamAppInfoList
+	 */
+	public $appList;
+	
+	public function __construct(){
+		
+		$this->appList = new TeamAppInfoList();
+		
+		// зарегистрировать все модули
+		Abricos::$instance->modules->RegisterAllModule();
+		$modules = Abricos::$instance->modules->GetModules();
+
+		// опросить каждый модуль на наличие приложения для сообщества
+		foreach ($modules as $name => $module){
+			if (!method_exists($module, 'Team_GetAppInfo')){
+				continue;
+			}
+			$appInfo = $module->Team_GetAppInfo();
+			if (empty($appInfo)){ continue; }
+
+			$this->appList->Add($appInfo);
+		}
+	}
+	
+	public function ToAJAX(){
+		$ret = new stdClass();
+		$apps = $this->appList->ToAJAX();
+		$ret->apps = $apps->list;
+		return $ret;
+	}
+}
+
+class TeamConfig {
+	
+	/**
+	 * @var TeamConfig
+	 */
+	public static $instance;
+
+	public function __construct($cfg){
+		ScorebConfig::$instance = $this;
+		
+		if (empty($cfg)){ $cfg = array(); }
+		
+		/*
+		if (isset($cfg['subscribeSendLimit'])){
+			$this->subscribeSendLimit = intval($cfg['subscribeSendLimit']);
+		}
+		/**/
+	}
+}
+
 class TeamUserConfig {
 
 	/**

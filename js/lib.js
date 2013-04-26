@@ -36,6 +36,40 @@ Component.entryPoint = function(NS){
 	    return re.test(email);
 	};
 	
+	var AppInfo = function(d){
+		d = L.merge({
+			'tl': '',
+			'jsuri': ''
+		}, d || {});
+		AppInfo.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(AppInfo, SysNS.Item, {
+		update: function(d){
+			this.title = d['tl'];
+			this.jsURI = d['jsuri'];
+		}
+	});
+	NS.AppInfo = AppInfo;
+	
+	var AppInfoList = function(d){
+		AppInfoList.superclass.constructor.call(this, d, AppInfo);
+	};
+	YAHOO.extend(AppInfoList, SysNS.ItemList, {});
+	NS.AppInfoList = AppInfoList;
+
+	var InitData = function(d){
+		d = L.merge({
+			'apps': []
+		}, d || {});
+		this.init(d);
+	};
+	InitData.prototype = {
+		init: function(d){
+			this.appInfoList = new NS.AppInfoList(d['apps']);
+		}
+	};
+	NS.InitData = InitData;
+
 	var Team = function(d){
 		d = L.merge({
 			'm': 'team',
@@ -108,7 +142,6 @@ Component.entryPoint = function(NS){
 		}
 	};
 	NS.TeamDetail = TeamDetail;
-
 
 	var TeamUserRole = function(d){
 		d = L.merge({
@@ -211,6 +244,8 @@ Component.entryPoint = function(NS){
 			
 			// глобальный кеш групп
 			this._teamCache = new this.TeamListClass();
+			
+			this.initData = null;
 		},
 		
 		ajax: function(d, callback){
@@ -222,6 +257,10 @@ Component.entryPoint = function(NS){
 				d['userconfigupdate'] = true;
 				userConfig.needUpdate = false;
 			}
+			if (!L.isValue(this.initData)){
+				d['initdataupdate'] = true;
+			}
+			
 			var __self = this;
 			Brick.ajax(this.modname, {
 				'data': d,
@@ -230,11 +269,14 @@ Component.entryPoint = function(NS){
 						result = !L.isNull(d) ? (d.result ? d.result : null) : null;
 		
 					if (!L.isNull(d)){
-						if (d['userconfig']){
+						if (L.isValue(d['userconfig'])){
 							userConfig.update(d['userconfig']);
 						}
-						if (d['users']){
+						if (L.isValue(d['users'])){
 							__self.users.update(d['users']);
+						}
+						if (L.isValue(d['initdata'])){
+							__self.initData = new NS.InitData(d['initdata']);
 						}
 					}
 					NS.life(callback, result);

@@ -47,23 +47,23 @@
 	position: absolute;
 	top: 0; left: 30px;
 }
-.aw-team .gheadermenu ul.topmenu {
+.aw-team .gheadermenu .topmenu {
 	margin: 10px;
 	margin-top: 6px;
 }
-.aw-team .gheadermenu ul.topmenu li{
+.aw-team .gheadermenu .topmenu .mitem {
 	float: left;
     padding: 1px 0.5em;
     margin-right: 10px;
 }
-.aw-team .gheadermenu ul.topmenu a {
+.aw-team .gheadermenu .topmenu a {
 	font-size: 
 }
-.aw-team .gheadermenu ul.topmenu li.sel {
+.aw-team .gheadermenu .topmenu .sel {
 	background: none repeat scroll 0 0 #E3E3D7;
     border: 1px solid #DDD9E2;
 }
-.aw-team .gheadermenu ul.topmenu li.sel a {
+.aw-team .gheadermenu .topmenu .sel a {
 	color: #000;
 	text-decoration: none;
 }

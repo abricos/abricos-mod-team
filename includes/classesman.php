@@ -140,6 +140,13 @@ class TeamManager {
 			$ret->userconfig = $this->UserConfigToAJAX();
 		}
 		
+		if ($d->initdataupdate){
+			$idAX = $this->InitDataToAJAX();
+			if (!empty($idAX)){
+				$ret->initdata = $idAX->initdata;
+			}
+		}
+		
 		return $ret;
 	}
 	
@@ -162,6 +169,30 @@ class TeamManager {
 		return null;
 	}
 	
+	private $_cacheInitData = null;
+	
+	/**
+	 * @return TeamInitData
+	 */
+	public function InitData(){
+		if (!$this->IsViewRole()){ return null; }
+		
+		if (!empty($this->_cacheInitData)){
+			return $this->_cacheInitData;
+		}
+		$this->_cacheInitData = new TeamInitData();
+		return $this->_cacheInitData;
+	}
+	
+	public function InitDataToAJAX(){
+		$item = $this->InitData();
+		if (empty($item)){ return null; }
+		
+		$ret = new stdClass();
+		$ret->initdata = $item->ToAJAX();
+		
+		return $ret;
+	}
 	
 	private $_teamCache = array();
 
