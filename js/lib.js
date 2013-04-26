@@ -177,27 +177,6 @@ Component.entryPoint = function(NS){
 	};
 	NS.UserConfig = UserConfig;
 
-	var Event = function(team, d){
-		this.team = team;
-		d = L.merge({
-			'tl': ''
-		}, d || {});
-		Event.superclass.constructor.call(this, d);
-	};
-	YAHOO.extend(Event, SysNS.Item, {
-		update: function(d){
-			this.title = d['tl'];
-		}
-	});
-	NS.Event = Event;
-	
-	var EventList = function(d){
-		EventList.superclass.constructor.call(this, d, Event);
-	};
-	YAHOO.extend(EventList, SysNS.ItemList, {});
-	NS.EventList = EventList;
-	
-	
 	var Manager = function(modname, callback, cfg){
 		this.modname = modname;
 		cfg = L.merge({
@@ -207,9 +186,7 @@ Component.entryPoint = function(NS){
 			'TeamListClass':		TeamList,
 			'TeamUserRoleClass':	TeamUserRole,
 			'MemberClass':			Member,
-			'MemberListClass':		MemberList,
-			'EventClass':			Event,
-			'EventListClass':		EventList
+			'MemberListClass':		MemberList
 		}, cfg || {});
 		
 		this.init(callback, cfg);
@@ -225,9 +202,6 @@ Component.entryPoint = function(NS){
 			
 			this.MemberClass		= cfg['MemberClass'];
 			this.MemberListClass	= cfg['MemberListClass'];
-
-			this.EventClass			= cfg['EventClass'];
-			this.EventListClass		= cfg['EventListClass'];
 
 			this.invite = null;
 			this.userConfig = new this.UserConfigClass();
@@ -443,79 +417,7 @@ Component.entryPoint = function(NS){
 			}, function(d){
 				NS.life(callback);
 			});
-		},
-		
-		_updateEvent: function(team, d){
-			if (!(L.isValue(d) && L.isValue(d['event']))){
-				return null;
-			}
-			return new this.EventClass(team, d['event']);
-		},
-		
-		_updateEventList: function(team, d){
-			if (!(L.isValue(d) && L.isValue(d['events']))){
-				return null;
-			}
-			var list = new this.EventListClass();
-			
-			var dList = d['events']['list'];
-			for (var i=0; i<dList.length; i++){
-				list.add(new this.EventClass(team, dList[i]));
-			}
-			return list;
-		},
-		
-		eventLoad: function(team, eventid, callback){
-			if (L.isNull(team)){
-				NS.life(callback, null);
-				return;
-			}
-			var __self = this;
-			this.ajax({
-				'do': 'event',
-				'teamid': team.id,
-				'eventid': eventid
-			}, function(d){
-				var event = __self._updateEvent(team, d);
-				NS.life(callback, event);
-			});			
-		},
-		
-		eventListLoad: function(team, callback){
-			if (L.isNull(team)){
-				NS.life(callback, null);
-				return;
-			}
-			var __self = this;
-			this.ajax({
-				'do': 'eventlist',
-				'teamid': team.id
-			}, function(d){
-				var list = __self._updateEventList(team, d);
-				NS.life(callback, list);
-			});
-		},
-		
-		eventSave: function(team, sd, callback){
-			sd['do'] = 'eventsave';
-			sd['teamid'] = team.id;
-			var __self = this;
-			this.ajax(sd, function(d){
-				var event = __self._updateEvent(team, d);
-				NS.life(callback, event);
-			});
-		},
-
-		eventRemove: function(team, eventid, callback){
-			this.ajax({
-				'do': 'eventremove',
-				'teamid': team.id,
-				'eventid': eventid
-			}, function(d){
-				NS.life(callback);
-			});
 		}
-		
 	};
 	Manager.get = function(modname){
 		var man = Brick.mod[modname]['manager'];

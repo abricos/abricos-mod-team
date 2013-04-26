@@ -611,60 +611,6 @@ class TeamQuery {
 		$db->query_write($sql);
 	}
 
-	public static function Event(TeamManager $man, Team $team, $eventid){
-		$rows = TeamQuery::EventList($man, $team, $eventid);
-		return $man->db->fetch_array($rows);
-	}
-	
-	public static function EventList(TeamManager $man, Team $team, $eventid = 0){
-		$db = $man->db;
-		$sql = "
-			SELECT
-				e.eventid as id,
-				e.title as tl
-			FROM ".$db->prefix."team_event e
-			WHERE e.deldate=0 AND e.teamid=".bkint($team->id)."
-		";
-		if ($eventid > 0){
-			$sql .= "
-				AND eventid=".bkint($eventid)."
-				LIMIT 1
-			";
-		}
-		return $db->query_read($sql);
-	}
-	
-	public static function EventAppend(Ab_Database $db, $teamid, $d){
-		$sql = "
-			INSERT INTO ".$db->prefix."team_event (teamid, title, dateline) VALUES (
-				".bkint($teamid).",
-				'".bkstr($d->tl)."',
-				".TIMENOW."
-			)
-		";
-		$db->query_write($sql);
-		return $db->insert_id();
-	}
-	
-	public static function EventUpdate(Ab_Database $db, $teamid, $eventid, $d){
-		$sql = "
-			UPDATE ".$db->prefix."team_event
-			SET title='".bkstr($d->tl)."'
-			WHERE eventid=".bkint($eventid)." AND teamid=".bkint($teamid)."
-			LIMIT 1
-		";
-		$db->query_write($sql);
-	}
-	
-	public static function EventRemove(Ab_Database $db, $teamid, $eventid){
-		$sql = "
-			UPDATE ".$db->prefix."team_event
-			SET deldate=".TIMENOW."
-			WHERE eventid=".bkint($eventid)." AND teamid=".bkint($teamid)."
-			LIMIT 1
-		";
-		$db->query_write($sql);
-	}
 }
 
 

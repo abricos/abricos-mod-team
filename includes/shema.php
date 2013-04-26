@@ -89,6 +89,9 @@ if ($updateManager->isInstall()){
 }
 
 if ($updateManager->isUpdate('0.1.1')){
+	
+	// вынесено в отдельный модуль TeamEvent
+	/*
 	$db->query_write("
 		CREATE TABLE `".$pfx."team_event` (
 			`eventid` integer(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор события',
@@ -109,7 +112,7 @@ if ($updateManager->isUpdate('0.1.1')){
 			KEY `deldate` (`deldate`)
 		)". $charset
 	);
-	
+	/**/
 }
 
 ?>
