@@ -44,6 +44,7 @@ class TeamModuleManager extends Ab_ModuleManager {
 	public function AJAX($d){
 		switch($d->do){
 			case 'userfindbyemail': return $this->UserFindByEmail($d->email);
+			case 'teammodulename': return $this->TeamModuleName($d->teamid);
 		}
 		return null;
 	}
@@ -100,8 +101,15 @@ class TeamModuleManager extends Ab_ModuleManager {
 		return $ret;
 	}
 	
-
-	
+	/**
+	 * Получить имя модуля сообщества наследуемого приложения
+	 * @param integer $teamid
+	 */
+	public function TeamModuleName($teamid){
+		if (!$this->IsViewRole()){ return null; }
+		
+		return TeamQuery::TeamModuleName($this->db, $teamid);
+	}
 }
 
 ?>

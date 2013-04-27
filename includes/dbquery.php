@@ -7,6 +7,19 @@
 
 class TeamQuery {
 	
+	public static function TeamModuleName(Ab_Database $db, $teamid){
+		$sql = "
+			SELECT t.module as m
+			FROM ".$db->prefix."team t
+			WHERE t.deldate=0 AND t.teamid=".bkint($teamid)."
+			LIMIT 1
+		";
+		$row = $db->query_first($sql);
+		if (empty($row)){ return null; }
+		
+		return $row['m'];
+	}
+	
 	/**
 	 * Список групп с правами текущего пользователя на эти группы
 	 *

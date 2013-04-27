@@ -36,6 +36,9 @@ Component.entryPoint = function(NS){
 	    return re.test(email);
 	};
 	
+	// глобальный кеш сообществ
+	NS.teamCache = {};
+	
 	var AppInfo = function(d){
 		d = L.merge({
 			'tl': '',
@@ -71,6 +74,7 @@ Component.entryPoint = function(NS){
 	NS.InitData = InitData;
 
 	var Team = function(d){
+		NS.teamCache[d['id']] = this;
 		d = L.merge({
 			'm': 'team',
 			'nm': '',
@@ -242,9 +246,6 @@ Component.entryPoint = function(NS){
 			
 			this.users = UP.viewer.users;
 			
-			// глобальный кеш групп
-			this._teamCache = new this.TeamListClass();
-			
 			this.initData = null;
 		},
 		
@@ -291,15 +292,13 @@ Component.entryPoint = function(NS){
 			
 			var dList = d['teams']['list'];
 			
-			var cache = this._teamCache,
-				list = new this.TeamListClass();
+			var list = new this.TeamListClass();
 			
 			for (var i=0;i<dList.length;i++){
-				var di = dList[i], team = cache.get(di['id']);
+				var di = dList[i], team = NS.teamCache[di['id']];
 				
-				if (L.isNull(team)){
+				if (!L.isValue(team)){
 					team = new this.TeamClass(di);
-					cache.add(team);
 				}else{
 					team.update(di);
 				}
@@ -340,10 +339,9 @@ Component.entryPoint = function(NS){
 			}, cfg || {});
 			
 			var __self = this,
-				cache = this._teamCache,
-				team = cache.get(teamid);
+				team = NS.teamCache[teamid];
 
-			if (!L.isNull(team) && !L.isNull(team.detail) && !cfg['reload']){
+			if (L.isValue(team) && !L.isNull(team.detail) && !cfg['reload']){
 				NS.life(callback, team);
 				return;
 			}
@@ -357,9 +355,8 @@ Component.entryPoint = function(NS){
 			}
 			this.ajax(rq, function(d){
 				if (d && !L.isNull(d) && d['team']){
-					if (L.isNull(team)){
+					if (!L.isValue(team)){
 						team = new __self.TeamClass(d['team']);
-						cache.add(team);
 					}else{
 						team.update(d['team']);
 					}
@@ -461,6 +458,7 @@ Component.entryPoint = function(NS){
 			});
 		}
 	};
+	// Получить менеджер наследуемого приложения
 	Manager.get = function(modname){
 		var man = Brick.mod[modname]['manager'];
 		if (!L.isObject(man)){
@@ -476,4 +474,40 @@ Component.entryPoint = function(NS){
 	};
 	NS.Manager = Manager;
 
+	NS.getTeam = function(teamid, callback){
+		var team = NS.teamCache[teamid];
+		/*
+		if (L.isValue(team)){
+			NS.life(callback, team);
+			return;
+		}
+		/**/
+		Brick.ajax('team', {
+			'data': {
+				'do': 'teammodulename',
+				'teamid': teamid
+			},
+			'event': function(request){
+				if (L.isValue(request) && L.isValue(request.data)){
+					
+					var mName = request.data;
+					Brick.ff(mName, 'lib', function(){
+						var mNS = Brick.mod[mName] || {};
+						if (!L.isFunction(mNS['initManager'])){
+							NS.life(callback, null);
+						}else{
+							mNS['initManager'](function(man){
+								man.teamLoad(teamid, function(team){
+									NS.life(callback, team);
+								});
+							});
+						}
+					});
+				}else{
+					NS.life(callback, null);
+				}
+			}
+		});		
+		
+	};
 };
