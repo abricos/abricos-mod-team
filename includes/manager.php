@@ -12,14 +12,14 @@ require_once 'dbquery.php';
 class TeamModuleManager extends Ab_ModuleManager {
 	
 	/**
+	 * @var TeamModuleManager
+	 */
+	public static $instance = null;
+	 
+	/**
 	 * @var TeamModule
 	 */
 	public $module = null;
-	
-	/**
-	 * @var TeamModuleManager
-	 */
-	public static $instance = null; 
 	
 	public function __construct(TeamModule $module){
 		parent::__construct($module);
@@ -68,11 +68,6 @@ class TeamModuleManager extends Ab_ModuleManager {
 		return $ret;
 	}
 	
-	private $_teamCache = array();
-	public function CacheClear(){
-		$this->_teamCache = array();
-	}
-	
 	/**
 	 * Поиск пользователя по email
 	 */
@@ -109,6 +104,24 @@ class TeamModuleManager extends Ab_ModuleManager {
 		if (!$this->IsViewRole()){ return null; }
 		
 		return TeamQuery::TeamModuleName($this->db, $teamid);
+	}
+	
+	/**
+	 * 
+	 * @param integer $teamid
+	 * @return Team
+	 */
+	public function Team($teamid){
+		$modName = TeamQuery::TeamModuleName($this->db, $teamid);
+		if (empty($modName)){ return null; }
+
+		$mod = Abricos::GetModule($modName);
+		if (empty($mod)){ return null; }
+		
+		$modMan = $mod->GetManager();
+		if (empty($modMan) || empty($modMan->teamManager)){ return null; }
+
+		return $modMan->teamManager->Team($teamid);
 	}
 }
 
