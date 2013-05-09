@@ -476,12 +476,12 @@ Component.entryPoint = function(NS){
 
 	NS.getTeam = function(teamid, callback){
 		var team = NS.teamCache[teamid];
-		/*
+		
 		if (L.isValue(team)){
 			NS.life(callback, team);
 			return;
 		}
-		/**/
+
 		Brick.ajax('team', {
 			'data': {
 				'do': 'teammodulename',
