@@ -74,8 +74,8 @@ Component.entryPoint = function(NS){
 	NS.InitData = InitData;
 
 	var Team = function(d){
-		NS.teamCache[d['id']] = this;
 		d = L.merge({
+			'id': 0,
 			'm': 'team',
 			'nm': '',
 			'eml': '',
@@ -87,6 +87,11 @@ Component.entryPoint = function(NS){
 			'auid': Brick.env.user.id,
 			'role': {}
 		}, d || {});
+
+		if (d['id'] > 0){
+			NS.teamCache[d['id']] = this;
+		}
+		
 		Team.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(Team, SysNS.Item, {
