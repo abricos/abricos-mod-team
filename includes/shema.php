@@ -87,32 +87,21 @@ if ($updateManager->isInstall()){
 	);
 	
 }
+if ($updateManager->isUpdate('0.1.2')){
 
-if ($updateManager->isUpdate('0.1.1')){
-	
-	// вынесено в отдельный модуль TeamEvent
-	/*
+	// файлы
 	$db->query_write("
-		CREATE TABLE `".$pfx."team_event` (
-			`eventid` integer(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор события',
-				
-			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
-				
-			`title` varchar(250) NOT NULL DEFAULT '' COMMENT 'Заголовок',
-				
-			`address` varchar(250) NOT NULL DEFAULT '' COMMENT 'Место проведения',
-				
-			`datefrom` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Начало события',
-			`dateto` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Окончание события',
-				
-			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			`deldate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
-	
-			PRIMARY KEY (`eventid`),
-			KEY `deldate` (`deldate`)
+		CREATE TABLE IF NOT EXISTS `".$pfx."team_filebuffer` (
+			`fileid` int(10) UNSIGNED NOT NULL auto_increment,
+			`userid` int(10) UNSIGNED NOT NULL COMMENT 'Пользователь',
+			`filehash` varchar(8) NOT NULL COMMENT 'Идентификатор файла',
+			`filename` varchar(250) NOT NULL COMMENT 'Имя файла',
+			`ord` int(4) UNSIGNED NOT NULL default '0' COMMENT 'Сортировка',
+			`dateline` int(10) UNSIGNED NOT NULL default '0' COMMENT 'Дата добавления',
+			PRIMARY KEY (`fileid`),
+			KEY `dateline` (`dateline`)
 		)". $charset
 	);
-	/**/
-}
 
+}
 ?>

@@ -123,6 +123,28 @@ class TeamModuleManager extends Ab_ModuleManager {
 
 		return $modMan->teamManager->Team($teamid);
 	}
+	
+	public function FileAddToBuffer($fhash, $fname){
+		if (!$this->IsWriteRole()){ return null; }
+		
+		TeamQuery::FileAddToBuffer($this->db, $this->userid, $fhash, $fname);
+		$this->FileBufferClear();
+	}
+	
+	public function FileBufferClear(){
+		$mod = Abricos::GetModule('filemanager');
+		if (empty($mod)){ return; }
+		$mod->GetManager();
+		$fm = FileManager::$instance;
+		$fm->RolesDisable();
+	
+		$rows = TeamQuery::FileFreeFromBufferList($this->db);
+		while (($row = $this->db->fetch_array($rows))){
+			$fm->FileRemove($row['fh']);
+		}
+		$fm->RolesEnable();
+		TeamQuery::FileFreeListClear($this->db);
+	}
 }
 
 ?>

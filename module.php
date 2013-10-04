@@ -19,8 +19,15 @@
  */
 class TeamModule extends Ab_Module {
 
+	/**
+	 * @var TeamModule
+	 */
+	public static $instance;
+	
 	public function __construct(){
-		$this->version = "0.1.1";
+		TeamModule::$instance = $this;
+		
+		$this->version = "0.1.2";
 		$this->name = "team";
 		$this->takelink = "team";
 		$this->permission = new TeamPermission($this);

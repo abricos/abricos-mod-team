@@ -209,7 +209,7 @@ class TeamManager {
 
 		$row = TeamQuery::Team($this, $teamid);
 		if (empty($row)){ return null; }
-		
+
 		if ($this->userid > 0){
 			// сделан запрос авторизованным пользователем
 			// нужно отметить что он смотрел эту группу
@@ -272,6 +272,18 @@ class TeamManager {
 		return $ret;
 	}
 	
+	protected function TeamLogoSaveCheck($logo){
+		if (empty($logo)){
+			return '';
+		}
+		$fInfo = TeamQuery::FileBufferCheck($this->db, $logo);
+		if (empty($fInfo)){
+			return '';
+		}else{
+			TeamQuery::FileRemoveFromBuffer($this->db, $logo);
+		}
+		return $logo;
+	}
 	public function TeamSave($d){
 		if (!$this->IsWriteRole()){ return null; }
 	
@@ -283,12 +295,15 @@ class TeamManager {
 		$d->eml = $utmf->Parser($d->eml);
 		$d->site = $utmf->Parser($d->site);
 	
-		$utm = Abricos::TextParser();
-		$utm->jevix->cfgSetAutoBrMode(true);
+		// $utm = Abricos::TextParser();
+		// $utm->jevix->cfgSetAutoBrMode(true);
 	
-		$d->dsc = $utm->Parser($d->dsc);
+		$d->dsc = $utmf->Parser($d->dsc);
 	
 		if ($d->id == 0){ // добавление нового общества
+			
+			// добавить лого можно только из своего загруженного файла 
+			$d->logo = $this->TeamLogoSaveCheck($d->logo);
 				
 			// TODO: необходимо продумать ограничение на создание сообществ
 			$d->id = TeamQuery::TeamAppend($this->db, $this->modname, $this->userid, $d);
@@ -297,12 +312,28 @@ class TeamManager {
 			}
 			TeamQuery::UserRoleUpdate($this->db, $d->id, $this->userid, 1, 1);
 		} else {
-			$team = new Team($d->id);
-			if (!$team->role->IsAdmin()){ return null; }
+			
+			$team = $this->Team($d->id);
+			
+			if (empty($team) || !$team->role->IsAdmin()){ return null; }
+				
+			if ($team->logo != $d->logo){
+				if (!empty($team->logo)){
+					// добавить текущий файл в буффер для последующей зачистки
+					TeamQuery::FileAddToBuffer($this->db, $this->userid, $team->logo, '');
+				}
+				
+				$d->logo = $this->TeamLogoSaveCheck($d->logo);
+			}
+			
 			TeamQuery::TeamUpdate($this->db, $d);
 		}
-	
+		
 		$this->TeamMemberCountRecalc($d->id);
+		
+		Abricos::GetModule('team');
+		
+		TeamModule::$instance->GetManager()->FileBufferClear();
 	
 		return $d->id;
 	}

@@ -7,6 +7,8 @@
 
 class TeamQuery {
 	
+	const FILECLEARTIME = 86400;
+	
 	public static function TeamModuleName(Ab_Database $db, $teamid){
 		$sql = "
 			SELECT t.module as m
@@ -127,9 +129,8 @@ class TeamQuery {
 	/**
 	 * Группа с правами текущего пользователя на неё
 	 *
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid текущий пользователь для выявление его ролей к этой группе
+	 * @param TeamManager $man
+	 * @param unknown_type $teamid
 	 */
 	public static function Team(TeamManager $man, $teamid){
 		$rows = TeamQuery::TeamList($man, 1, 0, $teamid);
@@ -623,6 +624,58 @@ class TeamQuery {
 		";
 		$db->query_write($sql);
 	}
+	
+	public static function FileAddToBuffer(Ab_Database $db, $userid, $fhash, $fname){
+		$sql = "
+			INSERT INTO ".$db->prefix."team_filebuffer (userid, filehash, filename, dateline) VALUES (
+				".bkint($userid).",
+				'".bkstr($fhash)."',
+				'".bkstr($fname)."',
+				".TIMENOW."
+			)
+		";
+		$db->query_write($sql);
+	}
+	
+	public static function FileBufferCheck(Ab_Database $db, $fhash){
+		$sql = "
+			SELECT
+				fileid as id,
+				filehash as fh
+			FROM ".$db->prefix."team_filebuffer
+			WHERE filehash='".bkstr($fhash)."'
+			LIMIT 1
+		";
+		return $db->query_first($sql);
+	}
+	
+	public static function FileRemoveFromBuffer(Ab_Database $db, $fhash){
+		$sql = "
+			DELETE FROM ".$db->prefix."team_filebuffer
+			WHERE filehash='".bkstr($fhash)."'
+		";
+		return $db->query_read($sql);
+	}
+	
+	public static function FileFreeFromBufferList(Ab_Database $db){
+		$sql = "
+			SELECT
+				fileid as id,
+				filehash as fh
+			FROM ".$db->prefix."team_filebuffer
+			WHERE dateline<".(TIMENOW-TeamQuery::FILECLEARTIME)."
+		";
+		return $db->query_read($sql);
+	}
+	
+	public static function FileFreeListClear(Ab_Database $db){
+		$sql = "
+			DELETE FROM ".$db->prefix."team_filebuffer
+			WHERE dateline<".(TIMENOW-TeamQuery::FILECLEARTIME)."
+		";
+		return $db->query_read($sql);
+	}
+	
 
 }
 
