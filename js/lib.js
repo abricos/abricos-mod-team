@@ -6,7 +6,7 @@ var Component = new Brick.Component();
 Component.requires = { 
 	mod:[
         {name: 'sys', files: ['item.js']},
-        {name: 'widget', files: ['lib.js']},
+        {name: 'widget', files: ['notice.js']},
         {name: 'uprofile', files: ['lib.js']},
         {name: '{C#MODNAME}', files: ['roles.js']}
 	]
@@ -41,15 +41,19 @@ Component.entryPoint = function(NS){
 	
 	var AppInfo = function(d){
 		d = L.merge({
-			'tl': '',
-			'jsuri': ''
+			'mnm': '',
+			'nm': '',
+			'w': '',
+			'tl': ''
 		}, d || {});
 		AppInfo.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(AppInfo, SysNS.Item, {
 		update: function(d){
+			this.moduleName = d['mnm'];
+			this.name = d['nm'];
+			this.widgetName = d['w'];
 			this.title = d['tl'];
-			this.jsURI = d['jsuri'];
 		}
 	});
 	NS.AppInfo = AppInfo;
@@ -57,7 +61,20 @@ Component.entryPoint = function(NS){
 	var AppInfoList = function(d){
 		AppInfoList.superclass.constructor.call(this, d, AppInfo);
 	};
-	YAHOO.extend(AppInfoList, SysNS.ItemList, {});
+	YAHOO.extend(AppInfoList, SysNS.ItemList, {
+		getBy: function(mname, cname, wname){
+			var ret = null;
+			this.foreach(function(app){
+				if (app.moduleName == mname
+						&& app.name == cname 
+						&& app.widgetName == wname){
+					ret = app;
+					return true;
+				}
+			});
+			return ret;
+		}
+	});
 	NS.AppInfoList = AppInfoList;
 
 	var InitData = function(d){
@@ -222,6 +239,7 @@ Component.entryPoint = function(NS){
 	var Manager = function(modname, callback, cfg){
 		this.modname = modname;
 		cfg = L.merge({
+			'InitDataClass':		InitData,
 			'UserConfigClass':		UserConfig,
 			'TeamClass':			Team,
 			'TeamDetailClass':		TeamDetail,
@@ -235,6 +253,8 @@ Component.entryPoint = function(NS){
 	};
 	Manager.prototype = {
 		init: function(callback, cfg){
+
+			this.InitDataClass		= cfg['InitDataClass'];
 			this.UserConfigClass	= cfg['UserConfigClass'];
 			
 			this.TeamClass			= cfg['TeamClass'];
@@ -282,7 +302,7 @@ Component.entryPoint = function(NS){
 							__self.users.update(d['users']);
 						}
 						if (L.isValue(d['initdata'])){
-							__self.initData = new NS.InitData(d['initdata']);
+							__self.initData = new __self.InitDataClass(d['initdata']);
 						}
 					}
 					NS.life(callback, result);

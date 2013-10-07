@@ -382,24 +382,62 @@ class MemberList extends TeamItemList {
 	}
 }
 
-class TeamAppInfo extends TeamItem {
+/**
+ * Приложение
+ */
+class TeamAppInfo extends AbricosItem {
 	
-	public $title = "";
-	public $jsURI = "";
+	private static $idCounter = 1;
 	
-	public function __construct($modname){
-		$this->id = $modname;
+	/**
+	 * Имя модуля
+	 * @var string
+	 */
+	public $moduleName;
+	
+	/**
+	 * Имя приложения
+	 * @var string
+	 */
+	public $name;
+	
+	/**
+	 * Имя виджета
+	 * @var string
+	 */
+	public $widget;
+	
+	/**
+	 * Название приложения
+	 * @var string
+	 */
+	public $title;
+	
+	public function __construct($modName, $name = '', $widget = '', $title = ''){
+		$this->id = TeamAppInfo::$idCounter++;
+		$this->moduleName = $modName;
+		
+		if (empty($name)){ $name = $modName; }
+		$this->name = $name;
+		
+		if (empty($widget)){ $widget = $modName; }
+		$this->widget = $widget;
+		
+		if (empty($title)){ $title = $modName; }
+		$this->title = $title;
 	}
 	
 	public function ToAJAX(){
 		$ret = parent::ToAJAX();
+		$ret->mnm = $this->moduleName;
+		$ret->nm = $this->name;
+		$ret->w = $this->widget;
 		$ret->tl = $this->title;
-		$ret->jsuri = $this->jsURI;
 		return $ret;
 	}
 }
 
-class TeamAppInfoList extends TeamItemList { }
+class TeamAppInfoList extends AbricosList { }
 
 class TeamInitData {
 	
@@ -409,22 +447,37 @@ class TeamInitData {
 	 */
 	public $appList;
 	
-	public function __construct(){
+	public function __construct(TeamManager $man){
 		
 		$this->appList = new TeamAppInfoList();
 		
 		// зарегистрировать все модули
 		Abricos::$instance->modules->RegisterAllModule();
 		$modules = Abricos::$instance->modules->GetModules();
-
+		
 		// опросить каждый модуль на наличие приложения для сообщества
+		// сначало модуль родитель, затем все остальные модули
+		$module = $man->modManager->module;
+		if (method_exists($module, 'Team_GetAppInfo')){
+			$appInfo = $module->Team_GetAppInfo();
+			$this->Reg($appInfo);
+		}
 		foreach ($modules as $name => $module){
+			if ($name == $man->modname){ continue; }
 			if (!method_exists($module, 'Team_GetAppInfo')){
 				continue;
 			}
 			$appInfo = $module->Team_GetAppInfo();
-			if (empty($appInfo)){ continue; }
-
+			$this->Reg($appInfo);
+		}
+	}
+	
+	public function Reg($appInfo){
+		if (is_array($appInfo)){
+			foreach($appInfo as $item){
+				$this->Reg($item);
+			}
+		}else if ($appInfo instanceof TeamAppInfo){
 			$this->appList->Add($appInfo);
 		}
 	}

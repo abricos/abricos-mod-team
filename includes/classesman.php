@@ -10,7 +10,7 @@ require_once 'dbquery.php';
 class TeamManager {
 	
 	/**
-	 * @var TeamManager
+	 * @var Ab_ModuleManager
 	 */
 	public $modManager = null;
 
@@ -180,7 +180,7 @@ class TeamManager {
 		if (!empty($this->_cacheInitData)){
 			return $this->_cacheInitData;
 		}
-		$this->_cacheInitData = new TeamInitData();
+		$this->_cacheInitData = new TeamInitData($this);
 		return $this->_cacheInitData;
 	}
 	
