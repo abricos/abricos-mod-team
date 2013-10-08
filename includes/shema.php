@@ -32,13 +32,15 @@ if ($updateManager->isInstall()){
 			`membercount` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Количество участников',
 			
 			`isanyjoin` tinyint(1) unsigned NOT NULL DEFAULT 0 COMMENT '1 - любой может вступить в группу',
+
+			`ismoder` tinyint(1) UNSIGNED NOT NULL default '0' COMMENT '1-ожидает модерацию',
 			
 			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
 			`deldate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
-			
+
 			PRIMARY KEY  (`teamid`),
-			KEY `team` (`module`, `deldate`),
+			KEY `team` (`ismoder`, `module`, `deldate`),
 			KEY (`userid`)
 		)".$charset
 	);
@@ -103,5 +105,12 @@ if ($updateManager->isUpdate('0.1.2')){
 		)". $charset
 	);
 
+	$db->query_write("
+		ALTER TABLE `".$pfx."team`
+		ADD `ismoder` tinyint(1) UNSIGNED NOT NULL default '0' COMMENT '1-ожидает модерацию',
+		DROP INDEX `team`,
+		ADD INDEX `team` (`ismoder`, `module`, `deldate`)
+	");
+	
 }
 ?>

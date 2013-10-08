@@ -21,10 +21,18 @@ class TeamModuleManager extends Ab_ModuleManager {
 	 */
 	public $module = null;
 	
+	/**
+	 * Настройка модуля
+	 * @var TeamConfig
+	 */
+	public $config;
+	
 	public function __construct(TeamModule $module){
+		TeamModuleManager::$instance = $this;
+		
 		parent::__construct($module);
 		
-		TeamModuleManager::$instance = $this;
+		$this->config = new TeamConfig(Abricos::$config['module']['team']);
 	}
 	
 	public function IsAdminRole(){

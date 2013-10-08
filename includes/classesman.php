@@ -195,15 +195,19 @@ class TeamManager {
 	}
 	
 	private $_teamCache = array();
+	
+	public function TeamCacheClear(){
+		$this->_teamCache = array();
+	}
 
 	/**
 	 * @param integer $teamid
 	 * @return Team
 	 */
-	public function Team($teamid){
+	public function Team($teamid, $clearCache = false){
 		if (!$this->IsViewRole()){ return null; }
 		
-		if (!empty($this->_teamCache[$teamid])){
+		if (isset($this->_teamCache[$teamid])){
 			return $this->_teamCache[$teamid];
 		}
 
@@ -243,6 +247,9 @@ class TeamManager {
 	}
 	
 	/**
+	 * Список сообществ
+	 * 
+	 * Если указан $memberid, то список сообществ принадлежащих пользователю $memberid
 	 * 
 	 * @param integer $page
 	 * @param integer $memberid
@@ -288,7 +295,7 @@ class TeamManager {
 	public function TeamSave($d){
 		if (!$this->IsWriteRole()){ return null; }
 	
-		$d->id = intval($d->id);
+		$teamid = $d->id = intval($d->id);
 	
 		$utmf = Abricos::TextParser(true);
 	
@@ -300,21 +307,34 @@ class TeamManager {
 		// $utm->jevix->cfgSetAutoBrMode(true);
 	
 		$d->dsc = $utmf->Parser($d->dsc);
+		
+		$isNewTeam = false;
+		$isModer = false;
+		
+		Abricos::GetModule('team');
+		TeamModule::$instance->GetManager();
+		
+		$cfg = TeamModuleManager::$instance->config;
 	
 		if ($d->id == 0){ // добавление нового общества
-			
+			$isNewTeam = true;
+				
 			// добавить лого можно только из своего загруженного файла 
 			$d->logo = $this->TeamLogoSaveCheck($d->logo);
-				
-			// TODO: необходимо продумать ограничение на создание сообществ
-			$d->id = TeamQuery::TeamAppend($this->db, $this->modname, $this->userid, $d);
-			if ($d->id == 0){
-				return null;
+			
+			if (!$this->IsAdminRole() && $cfg->moderationNewTeam){
+				// новое сообщество необходимо рассмотреть модератору
+				$isModer = true;
 			}
-			TeamQuery::UserRoleUpdate($this->db, $d->id, $this->userid, 1, 1);
+
+			// TODO: необходимо реализовать ограничение на количество сообществ для участника
+			$teamid = TeamQuery::TeamAppend($this->db, $this->modname, $this->userid, $isModer, $d);
+			if ($teamid == 0){ return null; }
+			
+			TeamQuery::UserRoleUpdate($this->db, $teamid, $this->userid, 1, 1);
 		} else {
 			
-			$team = $this->Team($d->id);
+			$team = $this->Team($teamid);
 			
 			if (empty($team) || !$team->role->IsAdmin()){ return null; }
 				
@@ -330,14 +350,32 @@ class TeamManager {
 			TeamQuery::TeamUpdate($this->db, $d);
 		}
 		
-		$this->TeamMemberCountRecalc($d->id);
+		$this->TeamMemberCountRecalc($teamid);
 		
 		Abricos::GetModule('team');
 		
 		TeamModule::$instance->GetManager()->FileBufferClear();
+		
+		$this->TeamCacheClear();
+		
+		if ($isNewTeam){
+			// выполнить событие (отправка уведомлений и т.п.)
+			$this->OnTeamAppend($teamid, $isModer);
+		}
 	
-		return $d->id;
+		return $teamid;
 	}
+	
+	/**
+	 * Событие на создание нового сообщества
+	 * Используется для отправки необходимых уведомлений
+	 * 
+	 * Если $isModer=true, новое сообщество требует модерацию
+	 * 
+	 * @param integer $teamid
+	 * @param integer $isModer 
+	 */
+	protected function OnTeamAppend($teamid, $isModer){ }
 	
 	public function TeamRemove($teamid){
 		$team = $this->Team($teamid);

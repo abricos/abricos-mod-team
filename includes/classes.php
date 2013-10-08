@@ -8,8 +8,36 @@
 
 require_once 'classesman.php';
 
+class TeamConfig {
+
+	/**
+	 * @var TeamConfig
+	 */
+	public static $instance;
+	
+	/**
+	 * Модерация новых сообществ
+	 * 
+	 * @var boolean
+	 */
+	public $moderationNewTeam = true;
+
+	public function __construct($cfg){
+		TeamConfig::$instance = $this;
+
+		if (empty($cfg)){
+			$cfg = array();
+		}
+
+		if (isset($cfg['moderationNewTeam'])){
+			$this->moderationNewTeam = $cfg['moderationNewTeam'];
+		}
+	}
+}
+
+
 /**
- * Команда (сообщество, компания, клубы и т.п.)
+ * Сообщество (облако, компания, клубы и т.п.)
  */
 abstract class Team extends TeamItem {
 
@@ -27,6 +55,12 @@ abstract class Team extends TeamItem {
 	public $logo = '';
 	public $anyjoin = 0;
 	public $memberCount = 0;
+	
+	/**
+	 * Статус модерации. 1 - ожидает модерации
+	 * @var boolean
+	 */
+	public $moderStatus = 0;
 
 	/**
 	 * Роль текущего пользователя в этой группе
@@ -50,6 +84,7 @@ abstract class Team extends TeamItem {
 		$this->site			= strval($d['site']);
 		$this->logo			= strval($d['logo']);
 		$this->memberCount	= intval($d['mcnt']);
+		$this->moderStatus	= intval($d['mdr']);
 		
 		$this->role = $this->Manager()->NewTeamUserRole($this, Abricos::$user->id, $d);
 		
@@ -60,6 +95,14 @@ abstract class Team extends TeamItem {
 	 * @return TeamManager
 	 */
 	public abstract function Manager();
+	
+	/**
+	 * True - ожидает модерацию
+	 * @return boolean
+	 */
+	public function IsModeration(){
+		return $this->moderStatus;
+	}
 
 	public function ToAJAX(){
 		$ret = parent::ToAJAX();
@@ -72,7 +115,7 @@ abstract class Team extends TeamItem {
 		$ret->logo		= $this->logo;
 		$ret->anj		= $this->anyjoin;
 		$ret->mcnt		= $this->memberCount;
-		
+		$ret->mdr		= $this->ismoder ? 1 : 0;
 		$ret->role		= $this->role->ToAJAX();
 
 		if (!empty($this->detail)){
@@ -93,6 +136,9 @@ abstract class Team extends TeamItem {
 	}
 }
 
+/**
+ * Детальная информация сообщества
+ */
 class TeamDetail {
 	
 	public $team;
@@ -118,7 +164,7 @@ class TeamDetail {
 }
 
 /**
- * Роль участника к группе
+ * Роль участника в сообществе
  */
 class TeamUserRole {
 
@@ -172,14 +218,14 @@ class TeamUserRole {
 	}
 	
 	/**
-	 * Пользователь участник группы
+	 * Пользователь участник сообщества
 	 */
 	public function IsMember(){
 		return $this->_isMember == 1;
 	}
 
 	/**
-	 * Пользовтель админ группы
+	 * Пользовтель админ сообещства
 	 */
 	public function IsAdmin(){
 		// глобальный админ всем админам админ
@@ -328,6 +374,9 @@ class TeamUserManager {
 	}
 }
 
+/**
+ * Участник сообщества
+ */
 class Member extends TeamItem {
 	
 	/**
@@ -336,7 +385,7 @@ class Member extends TeamItem {
 	public $team = null;
 
 	/**
-	 * Роль пользователя в группе
+	 * Роль пользователя в сообществе
 	 * @var TeamUserRole
 	 */
 	public $role;
@@ -383,7 +432,7 @@ class MemberList extends TeamItemList {
 }
 
 /**
- * Приложение
+ * Приложение для сообщества
  */
 class TeamAppInfo extends AbricosItem {
 	
@@ -487,26 +536,6 @@ class TeamInitData {
 		$apps = $this->appList->ToAJAX();
 		$ret->apps = $apps->list;
 		return $ret;
-	}
-}
-
-class TeamConfig {
-	
-	/**
-	 * @var TeamConfig
-	 */
-	public static $instance;
-
-	public function __construct($cfg){
-		ScorebConfig::$instance = $this;
-		
-		if (empty($cfg)){ $cfg = array(); }
-		
-		/*
-		if (isset($cfg['subscribeSendLimit'])){
-			$this->subscribeSendLimit = intval($cfg['subscribeSendLimit']);
-		}
-		/**/
 	}
 }
 

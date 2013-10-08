@@ -38,6 +38,7 @@ class TeamQuery {
 			SELECT
 				t.teamid as id,
 				t.module as m,
+				t.ismoder as mdr,
 				t.userid as auid,
 				t.title as tl,
 				t.email as eml,
@@ -111,6 +112,20 @@ class TeamQuery {
 			WHERE t.deldate=0 AND t.module='".bkstr($module)."'
 		";
 		
+		if (!$man->IsAdminRole()){
+			// не админу доступны только группы прошедшии модерацию или ожидающие модерацию,
+			// но только для авторов
+			if (Abricos::$user->id > 0){
+				$sql .= "
+					AND (t.ismoder=0 OR (t.ismoder=1 AND t.userid=".bkint(Abricos::$user->id)."))
+				";
+			}else{
+				$sql .= "
+					AND t.ismoder=0
+				";
+			}
+		}
+		
 		if ($memberid>0){
 			$sql .= "
 				AND urm.ismember=1
@@ -159,12 +174,13 @@ class TeamQuery {
 		return $cnt;
 	}
 	
-	public static function TeamAppend(Ab_Database $db, $module, $userid, $d){
+	public static function TeamAppend(Ab_Database $db, $module, $userid, $isModer, $d){
 		$sql = "
 			INSERT INTO ".$db->prefix."team
-				(module, userid, title, email, descript, site, logo, isanyjoin, dateline, upddate) VALUES (
+				(module, userid, ismoder, title, email, descript, site, logo, isanyjoin, dateline, upddate) VALUES (
 				'".bkstr($module)."',
 				".bkint($userid).",
+				".($isModer ? 1 : 0).",
 				'".bkstr($d->tl)."',
 				'".bkstr($d->eml)."',
 				'".bkstr($d->dsc)."',
