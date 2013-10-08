@@ -462,7 +462,13 @@ class TeamAppInfo extends AbricosItem {
 	 */
 	public $title;
 	
-	public function __construct($modName, $name = '', $widget = '', $title = ''){
+	/**
+	 * Использовать приложение только для определенного модуля
+	 * @var string
+	 */
+	public $onlyModule = '';
+	
+	public function __construct($modName, $name = '', $widget = '', $title = '', $onlyModule = ''){
 		$this->id = TeamAppInfo::$idCounter++;
 		$this->moduleName = $modName;
 		
@@ -474,6 +480,8 @@ class TeamAppInfo extends AbricosItem {
 		
 		if (empty($title)){ $title = $modName; }
 		$this->title = $title;
+		
+		$this->onlyModule = $onlyModule;
 	}
 	
 	public function ToAJAX(){
@@ -496,8 +504,14 @@ class TeamInitData {
 	 */
 	public $appList;
 	
+	/**
+	 * @var TeamManager
+	 */
+	public $manager;
+	
 	public function __construct(TeamManager $man){
-		
+
+		$this->manager = $man;
 		$this->appList = new TeamAppInfoList();
 		
 		// зарегистрировать все модули
@@ -527,6 +541,13 @@ class TeamInitData {
 				$this->Reg($item);
 			}
 		}else if ($appInfo instanceof TeamAppInfo){
+			
+			$modName = $this->manager->modManager->module->name;
+			
+			if (!empty($appInfo->onlyModule) 
+					&& $appInfo->onlyModule != $modName){
+				return;
+			}
 			$this->appList->Add($appInfo);
 		}
 	}
