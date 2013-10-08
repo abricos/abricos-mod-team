@@ -496,6 +496,43 @@ class TeamAppInfo extends AbricosItem {
 
 class TeamAppInfoList extends AbricosList { }
 
+class TeamTypeInfo extends AbricosItem {
+	
+	private static $idCounter = 1;
+	
+	/**
+	 * Имя типа (соответсвует имени модуля)
+	 * @var string
+	 */
+	public $name;
+	
+	/**
+	 * Имя модуля сообещства для которого определяется этот тип 
+	 * @var string
+	 */
+	public $teamModName;
+	public $title;
+
+	public function __construct($name, $teamModName, $title = ''){
+		$this->id = TeamAppInfo::$idCounter++;
+		$this->name = $name;
+		$this->teamModName = $teamModName;
+		
+		if (empty($title)){ $title = $name; }
+		$this->title = $title;
+	}
+	
+	public function ToAJAX(){
+		$ret = parent::ToAJAX();
+		$ret->nm = $this->name;
+		$ret->tnm = $this->teamModName;
+		$ret->tl = $this->title;
+		return $ret;
+	}
+}
+
+class TeamTypeInfoList extends  AbricosList {}
+
 class TeamInitData {
 	
 	/**
@@ -503,6 +540,12 @@ class TeamInitData {
 	 * @var TeamAppInfoList
 	 */
 	public $appList;
+	
+	/**
+	 * Типы сообществ
+	 * @var TeamTypeInfoList
+	 */
+	public $typeList;
 	
 	/**
 	 * @var TeamManager
@@ -523,7 +566,7 @@ class TeamInitData {
 		$module = $man->modManager->module;
 		if (method_exists($module, 'Team_GetAppInfo')){
 			$appInfo = $module->Team_GetAppInfo();
-			$this->Reg($appInfo);
+			$this->RegApp($appInfo);
 		}
 		foreach ($modules as $name => $module){
 			if ($name == $man->modname){ continue; }
@@ -531,14 +574,22 @@ class TeamInitData {
 				continue;
 			}
 			$appInfo = $module->Team_GetAppInfo();
-			$this->Reg($appInfo);
+			$this->RegApp($appInfo);
+		}
+		
+		// зарегистрировать типы сообществ
+		$this->typeList = new TeamTypeInfoList();
+		foreach ($modules as $name => $module){
+			if (!method_exists($module, 'Team_GetTypeInfo')){
+				continue;
+			}
 		}
 	}
 	
-	public function Reg($appInfo){
+	public function RegApp($appInfo){
 		if (is_array($appInfo)){
 			foreach($appInfo as $item){
-				$this->Reg($item);
+				$this->RegApp($item);
 			}
 		}else if ($appInfo instanceof TeamAppInfo){
 			
@@ -552,10 +603,20 @@ class TeamInitData {
 		}
 	}
 	
+	public function RegType($typeInfo){
+		$modName = $this->manager->modManager->module->name;
+		
+		if ($typeInfo instanceof TeamTypeInfo){
+			if ($typeInfo->teamModName != $modName){ return; }
+			$this->typeList->Add($typeInfo);
+		}
+	}
+	
 	public function ToAJAX(){
 		$ret = new stdClass();
 		$apps = $this->appList->ToAJAX();
 		$ret->apps = $apps->list;
+		$ret->types = $this->typeList->ToAJAX();
 		return $ret;
 	}
 }

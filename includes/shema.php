@@ -20,6 +20,7 @@ if ($updateManager->isInstall()){
 		CREATE TABLE IF NOT EXISTS ".$pfx."team (
 			`teamid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
 			`module` varchar(25) NOT NULL DEFAULT '' COMMENT 'Модуль создатель',
+			`teamtype` varchar(25) NOT NULL DEFAULT '' COMMENT 'Тип сообщества - содержит имя модуля (обработчик типа)',
 			
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Основатель',
 			
@@ -107,6 +108,7 @@ if ($updateManager->isUpdate('0.1.2')){
 
 	$db->query_write("
 		ALTER TABLE `".$pfx."team`
+		ADD `teamtype` varchar(25) NOT NULL DEFAULT '' COMMENT 'Тип сообщества - содержит имя модуля (обработчик типа)',
 		ADD `ismoder` tinyint(1) UNSIGNED NOT NULL default '0' COMMENT '1-ожидает модерацию',
 		DROP INDEX `team`,
 		ADD INDEX `team` (`ismoder`, `module`, `deldate`)

@@ -76,7 +76,32 @@ Component.entryPoint = function(NS){
 		}
 	});
 	NS.AppInfoList = AppInfoList;
+	
+	var TypeInfo = function(d){
+		d = L.merge({
+			'nm': '',
+			'tnm': '',
+			'tl': ''
+		}, d || {});
+		TypeInfo.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(TypeInfo, SysNS.Item, {
+		update: function(d){
+			this.name = d['nm'];
+			this.teamModName = d['tnm'];
+			this.title = d['tl'];
+		}
+	});
+	NS.TypeInfo = TypeInfo;
 
+	var TypeInfoList = function(d){
+		TypeInfoList.superclass.constructor.call(this, d, TypeInfo);
+	};
+	YAHOO.extend(TypeInfoList, SysNS.ItemList, {
+		
+	});
+	NS.TypeInfoList = TypeInfoList;
+	
 	var InitData = function(d){
 		d = L.merge({
 			'apps': []
@@ -86,6 +111,7 @@ Component.entryPoint = function(NS){
 	InitData.prototype = {
 		init: function(d){
 			this.appInfoList = new NS.AppInfoList(d['apps']);
+			this.typeInfoList = new NS.TypeInfoList(d['types']);
 		}
 	};
 	NS.InitData = InitData;
