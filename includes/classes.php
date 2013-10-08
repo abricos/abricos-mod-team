@@ -20,7 +20,7 @@ class TeamConfig {
 	 * 
 	 * @var boolean
 	 */
-	public $moderationNewTeam = true;
+	public $moderationNewTeam = false;
 
 	public function __construct($cfg){
 		TeamConfig::$instance = $this;
