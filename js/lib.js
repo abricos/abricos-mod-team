@@ -120,6 +120,7 @@ Component.entryPoint = function(NS){
 		d = L.merge({
 			'id': 0,
 			'm': 'team',
+			'tp': '',
 			'nm': '',
 			'eml': '',
 			'tl': '',
@@ -147,6 +148,7 @@ Component.entryPoint = function(NS){
 		},
 		update: function(d){
 			this.module		= d['m'];
+			this.type		= d['tp'];
 			this.name		= d['nm'];
 			this.authorid	= d['auid'];			// создатель сообщества
 			this.title		= d['tl'];

@@ -10,7 +10,8 @@ Component.entryPoint = function(NS){
 		E = YAHOO.util.Event,
 		L = YAHOO.lang;
 
-	var buildTemplate = this.buildTemplate;
+	var BW = Brick.mod.widget.Widget,
+		buildTemplate = this.buildTemplate;
 	
 	var UserFindByEmail = function(startCallback, finishCallback){
 		this.init(startCallback, finishCallback);
@@ -157,5 +158,47 @@ Component.entryPoint = function(NS){
 		}
 	};
 	NS.LogoWidget = LogoWidget;
+	
+	
+	var TeamTypeSelectWidget = function(container, manager, cfg){
+		cfg = L.merge({
+			'value': '',
+			'onChange': null
+		}, cfg || {});
+		
+		TeamTypeSelectWidget.superclass.constructor.call(this, container, {
+			'buildTemplate': buildTemplate, 'tnames': 'select,option'
+		}, manager, cfg);
+	};
+	YAHOO.extend(TeamTypeSelectWidget, BW, {
+		buildTData: function(manager, cfg){
+			var lst = "", TM = this._TM;
+			
+			manager.initData.typeInfoList.foreach(function(tType){
+				lst += TM.replace('option', {
+					'id': tType.name,
+					'tl': tType.title
+				});
+			});
+			return {
+				'rows': lst
+			};
+		},
+		onLoad: function(manager, cfg){
+			this.setValue(cfg['value']);
+
+			var __self = this;
+			E.on(this.gel('id'), 'change', function(e){
+				NS.life(cfg['onChange'], __self.getValue());
+			});
+		},
+		setValue: function(value){
+			this.elSetValue('id', value);
+		},
+		getValue: function(){
+			return this.gel('id').value;
+		}
+	});
+	NS.TeamTypeSelectWidget = TeamTypeSelectWidget;	
 
 };

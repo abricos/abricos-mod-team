@@ -47,6 +47,12 @@ abstract class Team extends TeamItem {
 	 */
 	public $module = '';
 	
+	/**
+	 * Тип сообещства
+	 * @var string
+	 */
+	public $type = '';
+	
 	public $title = '';
 	public $authorid = 0;
 	public $email = '';
@@ -77,6 +83,7 @@ abstract class Team extends TeamItem {
 		parent::__construct($d);
 		
 		$this->module		= strval($d['m']);
+		$this->type			= strval($d['tp']);
 		$this->title		= strval($d['tl']);
 		$this->authorid		= intval($d['auid']);
 		$this->email		= strval($d['eml']);
@@ -107,6 +114,7 @@ abstract class Team extends TeamItem {
 	public function ToAJAX(){
 		$ret = parent::ToAJAX();
 		$ret->m			= $this->module;
+		$ret->tp		= $this->type;
 		$ret->auid		= $this->authorid;
 		$ret->tl		= $this->title;
 		$ret->eml		= $this->email;
@@ -514,7 +522,7 @@ class TeamTypeInfo extends AbricosItem {
 	public $title;
 
 	public function __construct($name, $teamModName, $title = ''){
-		$this->id = TeamAppInfo::$idCounter++;
+		$this->id = TeamTypeInfo::$idCounter++;
 		$this->name = $name;
 		$this->teamModName = $teamModName;
 		
@@ -583,6 +591,8 @@ class TeamInitData {
 			if (!method_exists($module, 'Team_GetTypeInfo')){
 				continue;
 			}
+			$typeInfo =  $module->Team_GetTypeInfo();
+			$this->RegType($typeInfo);
 		}
 	}
 	
@@ -614,9 +624,13 @@ class TeamInitData {
 	
 	public function ToAJAX(){
 		$ret = new stdClass();
+		
 		$apps = $this->appList->ToAJAX();
 		$ret->apps = $apps->list;
-		$ret->types = $this->typeList->ToAJAX();
+		
+		$types = $this->typeList->ToAJAX();
+		$ret->types = $types->list;
+		
 		return $ret;
 	}
 }

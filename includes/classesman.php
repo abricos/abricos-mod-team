@@ -302,7 +302,16 @@ class TeamManager {
 		$d->tl = $utmf->Parser($d->tl);
 		$d->eml = $utmf->Parser($d->eml);
 		$d->site = $utmf->Parser($d->site);
-	
+
+		// проверка типа сообщества
+		if (!empty($d->tp)){
+			$d->tp = translateruen($d->tp);
+			$tpMod = Abricos::GetModule($d->tp);
+			if (empty($tpMod)){
+				$d->tp = '';
+			}
+		}
+		
 		// $utm = Abricos::TextParser();
 		// $utm->jevix->cfgSetAutoBrMode(true);
 	

@@ -38,6 +38,7 @@ class TeamQuery {
 			SELECT
 				t.teamid as id,
 				t.module as m,
+				t.teamtype as tp,
 				t.ismoder as mdr,
 				t.userid as auid,
 				t.title as tl,
@@ -177,8 +178,9 @@ class TeamQuery {
 	public static function TeamAppend(Ab_Database $db, $module, $userid, $isModer, $d){
 		$sql = "
 			INSERT INTO ".$db->prefix."team
-				(module, userid, ismoder, title, email, descript, site, logo, isanyjoin, dateline, upddate) VALUES (
+				(module, teamtype, userid, ismoder, title, email, descript, site, logo, isanyjoin, dateline, upddate) VALUES (
 				'".bkstr($module)."',
+				'".bkstr($d->tp)."',
 				".bkint($userid).",
 				".($isModer ? 1 : 0).",
 				'".bkstr($d->tl)."',
@@ -200,6 +202,7 @@ class TeamQuery {
 			UPDATE ".$db->prefix."team
 			SET
 				title='".bkstr($d->tl)."',
+				teamtype='".bkstr($d->tp)."',
 				email='".bkstr($d->eml)."',
 				descript='".bkstr($d->dsc)."',
 				site='".bkstr($d->site)."',
