@@ -106,12 +106,18 @@ class TeamModuleManager extends Ab_ModuleManager {
 		return TeamQuery::TeamModuleName($this->db, $teamid);
 	}
 	
+	private $_cacheTeam = array();
+	
 	/**
+	 * Сообщество
 	 * 
 	 * @param integer $teamid
 	 * @return Team
 	 */
 	public function Team($teamid){
+		if (isset($this->_cacheTeam[$teamid])){
+			return $this->_cacheTeam[$teamid];
+		}
 		$modName = TeamQuery::TeamModuleName($this->db, $teamid);
 		if (empty($modName)){ return null; }
 
@@ -119,9 +125,14 @@ class TeamModuleManager extends Ab_ModuleManager {
 		if (empty($mod)){ return null; }
 		
 		$modMan = $mod->GetManager();
-		if (empty($modMan) || empty($modMan->teamManager)){ return null; }
-
-		return $modMan->teamManager->Team($teamid);
+		
+		$tMan = @$modMan->GetTeamManager();
+		if (empty($tMan)){
+			$this->_cacheTeam[$teamid] = null;
+			return null;
+		}
+		
+		return $this->_cacheTeam[$teamid] = $tMan->Team($teamid);
 	}
 	
 	public function FileAddToBuffer($fhash, $fname){

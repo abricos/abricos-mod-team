@@ -284,6 +284,7 @@ class TeamManager {
 		}
 		return $logo;
 	}
+	
 	public function TeamSave($d){
 		if (!$this->IsWriteRole()){ return null; }
 	
@@ -356,12 +357,40 @@ class TeamManager {
 		$cnt = TeamQuery::TeamMemberCountRecalc($this->db, $teamid);
 		return $cnt;
 	}
-		
+	
+	private $_cacheTeamUserRole = array();
+	
 	/**
+	 * Роль участника в сообществе 
 	 * 
 	 * @param integer $teamid
 	 * @param integer $memberid
-	 * @param string $invite
+	 * @return TeamUserRole
+	 */
+	public function TeamUserRole($teamid, $memberid){
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+		
+		$cache = &$this->_cacheTeamUserRole;
+		if (!is_array($cache[$teamid])){
+			$cache[$teamid] = array();
+		}
+		if (isset($cache[$teamid][$memberid])){ return $cache[$teamid][$memberid]; }
+		
+		$row = TeamQuery::Member($this, $team, $memberid);
+		if (empty($row)){
+			$cache[$teamid][$memberid] = null;
+			return null; 
+		}
+		
+		return $cache[$teamid][$memberid] = $this->NewTeamUserRole($team, $memberid, $row);
+	}
+		
+	/**
+	 * Участник сообщества
+	 * 
+	 * @param integer $teamid
+	 * @param integer $memberid
 	 * @return Member
 	 */
 	public function Member($teamid, $memberid){
