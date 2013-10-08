@@ -44,7 +44,8 @@ Component.entryPoint = function(NS){
 			'mnm': '',
 			'nm': '',
 			'w': '',
-			'tl': ''
+			'tl': '',
+			'pnm': ''
 		}, d || {});
 		AppInfo.superclass.constructor.call(this, d);
 	};
@@ -54,6 +55,7 @@ Component.entryPoint = function(NS){
 			this.name = d['nm'];
 			this.widgetName = d['w'];
 			this.title = d['tl'];
+			this.parentName = d['pnm'];
 		}
 	});
 	NS.AppInfo = AppInfo;
@@ -62,12 +64,11 @@ Component.entryPoint = function(NS){
 		AppInfoList.superclass.constructor.call(this, d, AppInfo);
 	};
 	YAHOO.extend(AppInfoList, SysNS.ItemList, {
-		getBy: function(mname, cname, wname){
+		getBy: function(mname, cname){
 			var ret = null;
 			this.foreach(function(app){
 				if (app.moduleName == mname
-						&& app.name == cname 
-						&& app.widgetName == wname){
+						&& app.name == cname){ 
 					ret = app;
 					return true;
 				}

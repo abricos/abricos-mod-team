@@ -476,8 +476,21 @@ class TeamAppInfo extends AbricosItem {
 	 */
 	public $onlyModule = '';
 	
-	public function __construct($modName, $name = '', $widget = '', $title = '', $onlyModule = ''){
+	public $parent = '';
+	
+	public function __construct($modName, $name = '', $widget = '', $title = '', $onlyModule = '', $parent = ''){
 		$this->id = TeamAppInfo::$idCounter++;
+		
+		if (is_array($modName)){
+			$a = $modName;
+			$modName = $a['modName'];
+			$name = $a['name'];
+			$widget = $a['widget'];
+			$title = $a['title'];
+			$onlyModule = $a['onlyModule'];
+			$parent = $a['parent'];
+		}
+		
 		$this->moduleName = $modName;
 		
 		if (empty($name)){ $name = $modName; }
@@ -486,10 +499,10 @@ class TeamAppInfo extends AbricosItem {
 		if (empty($widget)){ $widget = $modName; }
 		$this->widget = $widget;
 		
-		if (empty($title)){ $title = $modName; }
-		$this->title = $title;
+		$this->title = strval($title);
 		
 		$this->onlyModule = $onlyModule;
+		$this->parent = $parent;
 	}
 	
 	public function ToAJAX(){
@@ -498,6 +511,7 @@ class TeamAppInfo extends AbricosItem {
 		$ret->nm = $this->name;
 		$ret->w = $this->widget;
 		$ret->tl = $this->title;
+		$ret->pnm = $this->parent;
 		return $ret;
 	}
 }
