@@ -562,6 +562,5 @@ Component.entryPoint = function(NS){
 				}
 			}
 		});		
-		
 	};
 };

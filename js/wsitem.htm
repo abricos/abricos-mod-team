@@ -1,0 +1,54 @@
+<!--{panel}-->
+<div class='hd'>{v#modtitle}</div>
+<div class='bd aw-team aw-sportclub'>
+
+	<div id="{i#gloading}" class="loading">
+		<img src="/images/loading.gif" /> Идет загрузка данных <br />Пожалуйста, подождите...
+	</div>
+
+	<div id="{i#error}" class="loading" style="display: none">
+		{v#modtitle} не найден или недостаточно прав для просмотра
+	</div>
+
+	<div id="{i#cont}" style="display: none">
+
+		<div id="{i#gmenu}">
+		
+			<div class="gheadermenu">
+				<h2 id="{i#title}">{v#modtitle}</h2>
+
+				<div class="tmb tmb100 logo">
+					<a id="{i#logo}" href="{v#urlhome}" class="tmbpre">
+						<img src="/modules/team/images/logo-96x96.png" />
+					</a>
+				</div>
+				
+				<div id="{i#topmenu}" class="topmenu"></div>
+				<div class="clear"></div>
+			</div>
+			
+			<div class="gbmenu">
+				<br class="clear" />
+				<div class="line"></div>
+			</div>
+		
+		</div>
+		
+		<div id="{i#loading}" class="ws-loading">
+			<img src="/images/loading.gif" /> Идет загрузка данных <br />Пожалуйста, подождите...
+		</div>
+		
+		<div id="{i#board}" class="board" style="display: none"></div>
+	
+	</div>
+</div>
+
+<!--{menuitem}-->
+<div id="{i#id}-{v#id}" class="mitem">
+	<a href="{v#url}">{v#tl}</a>
+</div>
+
+<!--{page}--><div id="{i#id}" class='wspage'></div>
+
+<!--{img}-->
+<img src="/filemanager/i/{v#fid}/w_100-h_100/teamlogo/" />
