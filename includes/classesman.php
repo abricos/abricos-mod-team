@@ -213,14 +213,21 @@ class TeamManager {
 
 		$row = TeamQuery::Team($this, $teamid);
 		if (empty($row)){ return null; }
+		
+		$team = $this->NewTeam($row);
+		if ($team->module != $this->modname){
+			// сообщество перегружено еще одним модулем
+			// необходимо проверить доступ к этому сообществу
+			$mod = Abricos::GetModule($team->module);
+			if (empty($mod)){ return null; }
+			if (!$mod->GetManager()->IsViewRole()) { return null; }
+		}
 
 		if ($this->userid > 0){
 			// сделан запрос авторизованным пользователем
 			// нужно отметить что он смотрел эту группу
 			TeamQuery::UserTeamView($this->db, $teamid);
 		}
-		
-		$team = $this->NewTeam($row);
 		
 		$detail = $this->NewTeamDetail($team, $row);
 		

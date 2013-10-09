@@ -105,6 +105,8 @@ if ($updateManager->isUpdate('0.1.2')){
 			KEY `dateline` (`dateline`)
 		)". $charset
 	);
+}
+if ($updateManager->isUpdate('0.1.2') && !$updateManager->isInstall()){
 
 	$db->query_write("
 		ALTER TABLE `".$pfx."team`

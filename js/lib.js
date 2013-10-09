@@ -37,7 +37,7 @@ Component.entryPoint = function(NS){
 	};
 	
 	// глобальный кеш сообществ
-	NS.teamCache = {};
+	// NS.teamCache = {};
 	
 	var AppInfo = function(d){
 		d = L.merge({
@@ -133,9 +133,11 @@ Component.entryPoint = function(NS){
 			'role': {}
 		}, d || {});
 
+		/*
 		if (d['id'] > 0){
 			NS.teamCache[d['id']] = this;
 		}
+		/**/
 		
 		Team.superclass.constructor.call(this, d);
 	};
@@ -349,7 +351,7 @@ Component.entryPoint = function(NS){
 			var list = new this.TeamListClass();
 			
 			for (var i=0;i<dList.length;i++){
-				var di = dList[i], team = NS.teamCache[di['id']];
+				var di = dList[i], team = this._cacheTeam[di['id']];
 				
 				if (!L.isValue(team)){
 					team = new this.TeamClass(di);
@@ -393,7 +395,7 @@ Component.entryPoint = function(NS){
 			}, cfg || {});
 			
 			var __self = this,
-				team = NS.teamCache[teamid];
+				team = this._cacheTeam[teamid];
 
 			if (L.isValue(team) && !L.isNull(team.detail) && !cfg['reload']){
 				NS.life(callback, team);
@@ -411,6 +413,7 @@ Component.entryPoint = function(NS){
 				if (d && !L.isNull(d) && d['team']){
 					if (!L.isValue(team)){
 						team = new __self.TeamClass(d['team']);
+						__self._cacheTeam[teamid] = team;
 					}else{
 						team.update(d['team']);
 					}
@@ -529,12 +532,14 @@ Component.entryPoint = function(NS){
 	NS.Manager = Manager;
 
 	NS.getTeam = function(teamid, callback){
+		/*
 		var team = NS.teamCache[teamid];
 		
 		if (L.isValue(team)){
 			NS.life(callback, team);
 			return;
 		}
+		/**/
 
 		Brick.ajax('team', {
 			'data': {
