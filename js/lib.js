@@ -117,7 +117,7 @@ Component.entryPoint = function(NS){
 	};
 	NS.InitData = InitData;
 
-	var Team = function(d){
+	var Team = function(d, man){
 		d = L.merge({
 			'id': 0,
 			'm': 'team',
@@ -132,24 +132,21 @@ Component.entryPoint = function(NS){
 			'auid': Brick.env.user.id,
 			'role': {}
 		}, d || {});
-
-		/*
-		if (d['id'] > 0){
-			NS.teamCache[d['id']] = this;
-		}
-		/**/
 		
+		this.manager = man || Manager.get(d['m']);
+
 		Team.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(Team, SysNS.Item, {
 		init: function(d){
-			this.manager = Manager.get(d['m']);
 			this.role = new this.manager['TeamUserRoleClass'](d['role']);
+			this.navigator = new this.manager['NavigatorClass'](this);
 			this.detail = null;
 			
 			Team.superclass.init.call(this, d);
 		},
 		update: function(d){
+			
 			this.module		= d['m'];
 			this.type		= d['tp'];
 			this.name		= d['nm'];
@@ -171,10 +168,12 @@ Component.entryPoint = function(NS){
 			if (d['dtl'] && !L.isNull(d['dtl'])){
 				this.detail = new this.manager['TeamDetailClass'](d['dtl']);
 			}
-		},
+		}
+		/*,
 		load: function(callback, reload){ // загрузить полные данные
 			NS.Manager.fire(this.module, 'teamLoad', this.id, callback, reload);
 		}
+		/**/
 	});
 	NS.Team = Team;
 	
@@ -266,6 +265,19 @@ Component.entryPoint = function(NS){
 		}
 	};
 	NS.UserConfig = UserConfig;
+	
+	var Navigator = function(team){
+		this.init(team);
+	};
+	Navigator.prototype = {
+		init: function(team){
+			this.team = team;
+		},
+		URI: function(){
+			return "#app="+this.team.module+'/wsitem/wsi/'+this.team.id+'/';
+		}
+	};
+	NS.Navigator = Navigator;
 
 	var Manager = function(modname, callback, cfg){
 		this.modname = modname;
@@ -277,7 +289,8 @@ Component.entryPoint = function(NS){
 			'TeamListClass':		TeamList,
 			'TeamUserRoleClass':	TeamUserRole,
 			'MemberClass':			Member,
-			'MemberListClass':		MemberList
+			'MemberListClass':		MemberList,
+			'NavigatorClass':		Navigator
 		}, cfg || {});
 		
 		this.init(callback, cfg);
@@ -295,6 +308,7 @@ Component.entryPoint = function(NS){
 			
 			this.MemberClass		= cfg['MemberClass'];
 			this.MemberListClass	= cfg['MemberListClass'];
+			this.NavigatorClass		= cfg['NavigatorClass'];
 
 			this.invite = null;
 			this.userConfig = new this.UserConfigClass();
