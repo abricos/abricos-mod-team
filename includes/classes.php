@@ -212,6 +212,12 @@ class TeamUserRole {
 	 * @var boolean
 	 */
 	protected $_isRemove = 0;
+	
+	/**
+	 * Виртуальный пользователь
+	 * @var boolean
+	 */
+	protected $_isVirtual = 0;
 
 	public function __construct(Team $team, $userid, $d){
 		$this->team				= $team;
@@ -223,6 +229,7 @@ class TeamUserRole {
 		$this->_isJoinRequest	= intval($d['isjoinrequest']);
 		$this->_isRemove		= intval($d['isremove']);
 		$this->_relUserId		= intval($d['reluserid']);
+		$this->_isVirtual		= intval($d['isvirtual']);
 	}
 	
 	/**
@@ -243,12 +250,20 @@ class TeamUserRole {
 
 		return $this->_isAdmin == 1;
 	}
+	
+	/**
+	 * Виртуальный участник сообщества
+	 */
+	public function IsVirtual(){
+		return $this->_isVirtual == 1;
+	}
 
 	public function ToAJAX(){
 
 		$ret = new stdClass();
 		$ret->ismbr = $this->_isMember;
 		$ret->isadm = $this->_isAdmin;
+		$ret->isvrt = $this->_isVirtual;
 
 		// Полные данные по ролям может получить админ группы или пользователь свои
 		if ($this->userid == Abricos::$user->id || $this->team->role->IsAdmin()){
@@ -270,6 +285,7 @@ class TeamUser extends TeamItem {
 	public $firstName = '';
 	public $lastName = '';
 	public $avatar = '';
+	public $isVirtual = false;
 
 	public function __construct($d){
 		parent::__construct($d);
@@ -278,6 +294,7 @@ class TeamUser extends TeamItem {
 		$this->firstName	= strval($d['fnm']);
 		$this->lastName		= strval($d['lnm']);
 		$this->avatar		= strval($d['avt']);
+		$this->isVirtual	= intval($d['vrt']) == 1;
 	}
 	
 	public function UserNameBuild(){
@@ -292,6 +309,7 @@ class TeamUser extends TeamItem {
 		$ret->fnm = $this->firstName;
 		$ret->lnm = $this->lastName;
 		$ret->avt = $this->avatar;
+		$ret->vrt = $this->isVirtual ? 1 : 0;
 	
 		return $ret;
 	}
@@ -402,7 +420,7 @@ class Member extends TeamItem {
 	 * @var MemberDetail
 	 */
 	public $detail = null;
-
+	
 	public function __construct(Team $team, $d){
 		parent::__construct($d);
 

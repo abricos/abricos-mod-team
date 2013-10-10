@@ -284,9 +284,11 @@ class TeamQuery {
 				ur.isadmin,
 				ur.isjoinrequest,
 				ur.isinvite,
-				ur.reluserid
+				ur.reluserid,
+				u.isvirtual
 				".$flds."
 			FROM ".$db->prefix."team_userrole ur
+			INNER JOIN ".$db->prefix."user u ON u.userid=ur.userid
 				".$ljoin."
 			WHERE ur.userid=".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)."
 				AND (ur.ismember=1 OR ur.isjoinrequest=1 OR ur.isinvite=1) AND ur.isremove=0
@@ -304,10 +306,12 @@ class TeamQuery {
 					ur.isadmin,
 					ur.isjoinrequest,
 					ur.isinvite,
-					ur.reluserid
-				".$flds."
+					ur.reluserid,
+					u.isvirtual
+					".$flds."
 				FROM ".$db->prefix."team_userrole ur
-				".$ljoin."
+				INNER JOIN ".$db->prefix."user u ON u.userid=ur.userid
+					".$ljoin."
 				WHERE ur.userid<>".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)." 
 					AND ur.ismember=0 AND (ur.isjoinrequest=1 OR ur.isinvite=1) AND ur.isremove=0
 			");
@@ -321,9 +325,11 @@ class TeamQuery {
 				ur.isadmin,
 				ur.isjoinrequest,
 				ur.isinvite,
-				ur.reluserid
+				ur.reluserid,
+				u.isvirtual
 				".$flds."
 			FROM ".$db->prefix."team_userrole ur
+			INNER JOIN ".$db->prefix."user u ON u.userid=ur.userid
 				".$ljoin."
 			WHERE ur.userid<>".bkint(Abricos::$user->id)." AND ur.teamid=".bkint($team->id)." 
 				AND ur.ismember=1 
@@ -592,7 +598,7 @@ class TeamQuery {
 	public static function UserSetMember(Ab_Database $db, $teamid, $userid){
 		$sql = "
 			INSERT INTO ".$db->prefix."team_userrole
-			(teamid, userid, ismemeber, dateline, upddate) VALUES (
+			(teamid, userid, ismember, dateline, upddate) VALUES (
 				".bkint($teamid).",
 				".bkint($userid).",
 				1,
@@ -632,7 +638,8 @@ class TeamQuery {
 				u.avatar as avt,
 				u.username as unm,
 				u.firstname as fnm,
-				u.lastname as lnm
+				u.lastname as lnm,
+				u.isvirtual as vrt
 			FROM ".$db->prefix."user u
 			WHERE ".implode(" OR ", $wh)."
 		";

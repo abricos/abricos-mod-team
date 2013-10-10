@@ -513,56 +513,68 @@ class TeamManager {
 		$d->id = intval($d->id);
 		
 		if ($d->id == 0){ // Добавление участника
-
-			// приглашение участника в группу по email
-			$d->email = strtolower($d->email);
-			if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
-				return null;
-			}
-			Abricos::GetModule('team')->GetManager();
-			$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
+			
+			if ($d->vrt == 1){ // Добавление виртуального участника
 				
-			if (empty($rd)){ return null; }
-		
-			if (!empty($rd->user) && $rd->user['id'] == $this->userid){
-				if ($team->role->IsMember()){
-					// уже участник группы
-					// return null;
-				}
-				// добавляем себя в участники
-				$d->id = $rd->user['id'];
-			}else{
-				// есть ли лимит на кол-во приглашений
-				$ucfg = $this->UserConfig();
-		
-				if ($ucfg->inviteWaitLimit > -1 &&
-						($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
-					// нужно подтвердить других участников, чтобы иметь возможность добавить еще
+				$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm, true);
+				if (is_null($invite)){
 					return null;
 				}
-					
-				if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
-					// сгенерировать учетку с паролем и выслать приглашение пользователю
-					$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm);
-					if (is_null($invite)){
-						return null;
-					}
-					$d->id = $invite->user['id'];
-				}else{
-					// выслать приглашение существующему пользователю
-					$d->id = $rd->user['id'];
-	
-					$member = $this->Member($teamid, $rd->user['id']);
-						
-					if (!empty($member) && $member->role->IsMember()){
-						// этот пользователь уже участник группы
-						sleep(1);
-						return null;
-					}
-					// приглашение существующего пользователя в группу
-					$this->MemberInvite($team, $d->id);
+				$d->id = $invite->user['id'];
+				
+			}else{
+				
+				// приглашение участника в группу по email
+				$d->email = strtolower($d->email);
+				if (!Abricos::$user->GetManager()->EmailValidate($d->email)){
+					return null;
 				}
+				Abricos::GetModule('team')->GetManager();
+				$rd = TeamModuleManager::$instance->UserFindByEmail($d->email);
+				
+				if (empty($rd)){ return null; }
+				
+				if (!empty($rd->user) && $rd->user['id'] == $this->userid){
+					if ($team->role->IsMember()){
+						// уже участник группы
+						// return null;
+					}
+					// добавляем себя в участники
+					$d->id = $rd->user['id'];
+				}else{
+					// есть ли лимит на кол-во приглашений
+					$ucfg = $this->UserConfig();
+				
+					if ($ucfg->inviteWaitLimit > -1 &&
+							($ucfg->inviteWaitLimit - $ucfg->inviteWaitCount) < 1){
+						// нужно подтвердить других участников, чтобы иметь возможность добавить еще
+						return null;
+					}
+						
+					if (empty($rd->user)){ // не найден такой пользователь в системе по емайл
+						// сгенерировать учетку с паролем и выслать приглашение пользователю
+						$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm, false);
+						if (is_null($invite)){
+							return null;
+						}
+						$d->id = $invite->user['id'];
+					}else{
+						// выслать приглашение существующему пользователю
+						$d->id = $rd->user['id'];
+				
+						$member = $this->Member($teamid, $rd->user['id']);
+				
+						if (!empty($member) && $member->role->IsMember()){
+							// этот пользователь уже участник группы
+							sleep(1);
+							return null;
+						}
+						// приглашение существующего пользователя в группу
+						$this->MemberInvite($team, $d->id);
+					}
+				}				
 			}
+
 		}else{
 			
 		}
@@ -583,24 +595,37 @@ class TeamManager {
 	
 	/**
 	 * Зарегистрировать нового пользователя
+	 * 
+	 * Если пользователь виртуальный, то его можно будет пригласить позже.
+	 * Виртаульный пользователь необходим для того, чтобы можно было работать с 
+	 * его учеткой как с реальным пользователем. Допустим, создается список сотрудников
+	 * компании. Выяснять их существующие емайлы или регить новые - процесс длительный,
+	 * а работать в системе уже нужно сейчас. Поэтому сначало создается виртуальный
+	 * пользователь, а уже потом, если будет он переводиться в статус реального
+	 * с формированием пароля и отправкой приглашения.
 	 *
 	 * @param string $email
 	 * @param string $fname Имя
 	 * @param string $lname Фамилия
+	 * @param boolean $isVirtual True-виртуальный пользователь
 	 */
-	protected function MemberNewInvite(Team $team, $email, $fname, $lname){
+	protected function MemberNewInvite(Team $team, $email, $fname, $lname, $isVirtual = false){
 	
 		Abricos::GetModule('invite');
 		$manInv = InviteModule::$instance->GetManager();
 	
 		// зарегистрировать пользователя (будет сгенерировано имя и пароль)
-		$invite = $manInv->UserRegister($this->modname, $email, $fname, $lname);
+		$invite = $manInv->UserRegister($this->modname, $email, $fname, $lname, $isVirtual);
 	
 		if ($invite->error == 0){
-				
-			// пометка пользователя флагом приглашенного
-			// (система ожидает подтверждение от пользователя)
-			TeamQuery::MemberInviteSetWait($this->db, $team->id, $invite->user['id'], $this->userid);
+			if ($isVirtual){
+				// виртуальному пользователю сразу ставим статус подвержденного свою учетку
+				TeamQuery::UserSetMember($this->db, $team->id, $invite->user['id']);
+			}else{
+				// пометка пользователя флагом приглашенного
+				// (система ожидает подтверждение от пользователя)
+				TeamQuery::MemberInviteSetWait($this->db, $team->id, $invite->user['id'], $this->userid);
+			}
 		}
 	
 		return $invite;

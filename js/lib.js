@@ -205,6 +205,7 @@ Component.entryPoint = function(NS){
 			'isadm': 0,
 			'isinv': 0,
 			'isjrq': 0,
+			'isvrt': 0,
 			'ruid': 0
 		}, d || {});
 		this.init(d);
@@ -216,6 +217,7 @@ Component.entryPoint = function(NS){
 		update: function(d){
 			this.isMember = d['ismbr']|0==1;
 			this.isAdmin = d['isadm']|0==1;
+			this.isVirtual = d['isvrt']|0==1;
 			
 			this.isJoinRequest = !this.isMember && d['isjrq']|0==1;
 			this.isInvite = !this.isMember && d['isinv']|0==1;
