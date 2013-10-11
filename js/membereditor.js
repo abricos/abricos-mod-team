@@ -93,10 +93,12 @@ Component.entryPoint = function(NS){
 					var extMemberId = this.existJoinWidget.getValue();
 					if (extMemberId > 0){
 						this.elEnable('bcreate');
-						this.elHide('bskip');
+						this.elHide('bskip,invite,empunm');
+						this.elShow('empinfo');
 					}else{
 						this.elDisable('bcreate');
-						this.elShow('bskip');
+						this.elShow('bskip,invite,empunm');
+						this.elHide('empinfo');
 					}
 					
 					var inv = this.inviteWidget.getValue();
@@ -175,16 +177,22 @@ Component.entryPoint = function(NS){
 			var sd = this.getSaveData();
 
 			var inv = null;
-			if (this.member.id == 0 && !this._isVirtual){
-				inv = this.inviteWidget.getValue();
-				if (L.isNull(inv)){ return; }
-				sd['email'] = inv['email'];
-				
-				if (L.isNull(inv['user']) && 
-					(sd['fnm'].length == 0 || sd['lnm'].length == 0)){
-					this.showError(0);
-					return;
-					
+			if (this.member.id == 0){
+				if (!this._isVirtual){
+					var extMemberId = this.existJoinWidget.getValue();
+					if (extMemberId > 0){
+						sd['extmemberid'] = extMemberId;
+					}else {
+						inv = this.inviteWidget.getValue();
+						if (L.isNull(inv)){ return; }
+						sd['email'] = inv['email'];
+						
+						if (L.isNull(inv['user']) && 
+							(sd['fnm'].length == 0 || sd['lnm'].length == 0)){
+							this.showError(0);
+							return;
+						}
+					}
 				}
 			}
 			
