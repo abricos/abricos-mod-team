@@ -44,6 +44,9 @@ Component.entryPoint = function(NS){
 						__self.render();
 					}
 				);
+				this.existJoinWidget = new NS.MemberExistingJoinWidget(this.gel('existjoin'), team, function(){
+					__self.render();
+				});
 			}
 		},
 		onClick: function(el, tp){
@@ -86,6 +89,16 @@ Component.entryPoint = function(NS){
 			
 			if (member.id == 0){ // добавление сотрудника (приглашение)
 				if (!this._isVirtual){
+					
+					var extMemberId = this.existJoinWidget.getValue();
+					if (extMemberId > 0){
+						this.elEnable('bcreate');
+						this.elHide('bskip');
+					}else{
+						this.elDisable('bcreate');
+						this.elShow('bskip');
+					}
+					
 					var inv = this.inviteWidget.getValue();
 					
 					if (L.isNull(inv)){ // не осуществлен поиск пользователя по емайл 
@@ -100,6 +113,7 @@ Component.entryPoint = function(NS){
 						this.elEnable('bcreate');
 						this.elHide('bskip');
 					}
+					this.elHide('existjoin');					
 					this.elShow('empinfo');
 					
 					user = inv['user'];
@@ -116,7 +130,7 @@ Component.entryPoint = function(NS){
 						this.elEnable('userfname,userlname');
 					}
 				}else{
-					this.elHide('bskip,invite');
+					this.elHide('bskip,invite,existjoin');
 					this.elShow('empinfo');
 					this.elEnable('bcreate,userfname,userlname');
 				}
@@ -246,6 +260,37 @@ Component.entryPoint = function(NS){
 		}
 	});
 	NS.MyNameEditorWidget = MyNameEditorWidget;
+	
+	var MemberExistingJoinWidget = function(container, team, callback){
+		MemberExistingJoinWidget.superclass.constructor.call(this, container, {
+			'buildTemplate': buildTemplate, 'tnames': 'existjoin' 
+		}, team, callback);
+	};
+	YAHOO.extend(MemberExistingJoinWidget, Brick.mod.widget.Widget, {
+		init: function(team, callback){
+			this.team = team;
+			this.callback = callback;
+		},
+		onLoad: function(team, callback){
+			var gMemberList = NS.Team.globalMemberList.get(team.id);
+			
+			var exc = [];
+			team.memberList.foreach(function(member){
+				if (!member.role.isModMember){ return; }
+				exc[exc.length] = member.id;
+			});
+			this.selectWidget = new NS.MemberSelectWidget(this.gel('select'), gMemberList, {
+				'exclude': exc,
+				'onChange': function(){
+					NS.life(callback);
+				}
+			});
+		},
+		getValue: function(){
+			return this.selectWidget.getValue();
+		}
+	});
+	NS.MemberExistingJoinWidget = MemberExistingJoinWidget;
 	
 	var MemberInviteWidget = function(container, team, startCallback, finishCallback){
 		MemberInviteWidget.superclass.constructor.call(this, container, {

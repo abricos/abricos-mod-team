@@ -7,7 +7,28 @@
  */
 require_once 'dbquery.php';
 
+class TeamDebugLogger {
+	
+	public $enable = false;
+	public $log = array();
+	
+	public function __construct(){
+		$this->enable = Abricos::$config['Misc']['develop_mode'];
+	}
+	
+	public function Add($text){
+		if ($this->enable){
+			array_push($this->log, $text);
+		}
+	}
+}
+
 class TeamManager {
+	
+	/**
+	 * @var TeamDebugLogger
+	 */
+	public static $log;
 	
 	/**
 	 * @var Ab_ModuleManager
@@ -67,6 +88,7 @@ class TeamManager {
 	 * @param TeamModuleManager $modManager
 	 */
 	public function __construct(Ab_ModuleManager $mman){
+		TeamManager::$log = new TeamDebugLogger();
 		$this->modManager = $mman;
 		$this->modname = $mman->module->name;
 		$this->db = $mman->db;
@@ -131,6 +153,22 @@ class TeamManager {
 	public final function AJAX($d){
 		$ret = new stdClass();
 		$ret->result = $this->AJAXMethod($d);
+		
+		if ($d->globalmemberlist && $d->teamid > 0){
+			$team = $this->Team($d->teamid);
+			if ($team->module == $this->modname && $d->do == 'memberlist'){
+				// TODO: убрать дубликат данных
+			}
+			$mod = Abricos::GetModule($team->module);
+			if (!empty($mod)){
+				$man = $mod->GetManager()->GetTeamManager();
+				$obj = $man->MemberListToAJAX($team->id);
+				if (!empty($obj)){
+					$ret->globalmemberlist = $obj->members;
+				}
+			}
+		}
+		
 		$users = TeamUserManager::ToAJAX();
 		if (!empty($users)){
 			$ret->users = $users;
@@ -146,6 +184,11 @@ class TeamManager {
 				$ret->initdata = $idAX->initdata;
 			}
 		}
+		
+		if (Abricos::$config['Misc']['develop_mode']){
+			TeamManager::$log->Add("SQL = ".Abricos::$db->querycount);
+			$ret->log = TeamManager::$log->log;
+		} 
 		
 		return $ret;
 	}
@@ -194,10 +237,10 @@ class TeamManager {
 		return $ret;
 	}
 	
-	private $_teamCache = array();
+	private $_cacheTeam = array();
 	
 	public function TeamCacheClear(){
-		$this->_teamCache = array();
+		$this->_cacheTeam = array();
 	}
 
 	/**
@@ -207,10 +250,20 @@ class TeamManager {
 	public function Team($teamid, $clearCache = false){
 		if (!$this->IsViewRole()){ return null; }
 		
-		if (isset($this->_teamCache[$teamid])){
-			return $this->_teamCache[$teamid];
+		if ($clearCache){
+			$this->TeamCacheClear();
+		}
+		$teamid = intval($teamid);
+		if (empty($teamid)){ return null; }
+		
+// TeamManager::$log->Add("Team Get $this->modname = $teamid");		
+		
+		if (!empty($this->_cacheTeam[$teamid])){
+			return $this->_cacheTeam[$teamid];
 		}
 
+// TeamManager::$log->Add("Team Load $this->modname = $teamid");
+		
 		$row = TeamQuery::Team($this, $teamid);
 		if (empty($row)){ return null; }
 		
@@ -236,7 +289,7 @@ class TeamManager {
 		}
 		$team->detail = $detail;
 		
-		$this->_teamCache[$teamid] = $team;
+		$this->_cacheTeam[$teamid] = $team;
 		
 		return $team;
 	}
@@ -475,13 +528,24 @@ class TeamManager {
 		return $ret;
 	}
 	
+	private $_cacheMemberList;
+	
 	/**
 	 * @param integer $teamid
 	 * @return MemberList
 	 */
-	public function MemberList($teamid){
+	public function MemberList($teamid, $clearCache = false){
 		$team = $this->Team($teamid);
+
 		if (empty($team)){ return null; }
+		
+		if ($clearCache){
+			$this->_cacheMemberList = null;
+		}
+		
+		if (!empty($this->_cacheMemberList)){
+			return $this->_cacheMemberList;
+		}
 		
 		$rows = TeamQuery::MemberList($this, $team);
 		$list = $this->NewMemberList();
@@ -491,6 +555,7 @@ class TeamManager {
 			
 			TeamUserManager::AddId($member->id);
 		}
+		$this->_cacheMemberList = $list;
 		return $list;
 	}
 	

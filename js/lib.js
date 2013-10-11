@@ -142,6 +142,7 @@ Component.entryPoint = function(NS){
 			this.role = new this.manager['TeamUserRoleClass'](d['role']);
 			this.navigator = new this.manager['NavigatorClass'](this);
 			this.detail = null;
+			this.memberList = null;
 			
 			Team.superclass.init.call(this, d);
 		},
@@ -176,6 +177,25 @@ Component.entryPoint = function(NS){
 		/**/
 	});
 	NS.Team = Team;
+	
+	// все участники сообещства
+	NS.Team.globalMemberList = function(){
+		
+		var cache = {};
+		
+		return {
+			get: function(teamid){
+				if (!L.isValue(cache[teamid])){
+					cache[teamid] = null;
+				}
+				return cache[teamid];
+			},
+			set: function(teamid, memberList){
+				cache[teamid] = memberList;
+			}
+		};
+		
+	}();
 	
 	var TeamList = function(d, teamClass){
 		TeamList.superclass.constructor.call(this, d, teamClass || Team);
@@ -216,6 +236,7 @@ Component.entryPoint = function(NS){
 		},
 		update: function(d){
 			this.isMember = d['ismbr']|0==1;
+			this.isModMember = this.isMember;
 			this.isAdmin = d['isadm']|0==1;
 			this.isVirtual = d['isvrt']|0==1;
 			
@@ -238,7 +259,11 @@ Component.entryPoint = function(NS){
 			Member.superclass.init.call(this, d);
 		},
 		update: function(d){
-			this.role = new this.team.manager.TeamUserRoleClass(d['role']);
+			if (L.isValue(this.team)){
+				this.role = new this.team.manager.TeamUserRoleClass(d['role']);
+			}else{
+				this.role = new NS.TeamUserRole(d['role']);
+			}
 		}
 	});
 	NS.Member = Member;
@@ -246,7 +271,11 @@ Component.entryPoint = function(NS){
 	var MemberList = function(d){
 		MemberList.superclass.constructor.call(this, d, Member);
 	};
-	YAHOO.extend(MemberList, SysNS.ItemList, {});
+	YAHOO.extend(MemberList, SysNS.ItemList, {
+		createItem: function(di){
+			return new NS.Member(null, di);
+		}
+	});
 	NS.MemberList = MemberList;
 	
 	var UserConfig = function(d){
@@ -319,29 +348,38 @@ Component.entryPoint = function(NS){
 			this.users = UP.viewer.users;
 			
 			this.initData = null;
+			
+			// при очередном запросе данных подгрузить еще и список 
+			// всех участников сообщества, если он не подгружен ранее
+			this.requestGlobalMemberList = false;
 		},
 		
-		ajax: function(d, callback){
-			d = d || {};
-			d['tm'] = Math.round((new Date().getTime())/1000);
+		ajax: function(req, callback){
+			req = req || {};
+			req['tm'] = Math.round((new Date().getTime())/1000);
 			
 			var userConfig = this.userConfig;
 			if (userConfig.needUpdate){
-				d['userconfigupdate'] = true;
+				req['userconfigupdate'] = true;
 				userConfig.needUpdate = false;
 			}
 			if (!L.isValue(this.initData)){
-				d['initdataupdate'] = true;
+				req['initdataupdate'] = true;
+			}
+			
+			if (this.requestGlobalMemberList && req['teamid']>0 
+					&& !L.isValue(NS.Team.globalMemberList.get(req['teamid']))){
+				req['globalmemberlist'] = true;
 			}
 			
 			var __self = this;
 			Brick.ajax(this.modname, {
-				'data': d,
+				'data': req,
 				'event': function(request){
-					var d = !L.isNull(request) && !L.isNull(request.data) ? request.data : null,
-						result = !L.isNull(d) ? (d.result ? d.result : null) : null;
+					var d = L.isValue(request) && L.isValue(request.data) ? request.data : null,
+						result = L.isValue(d) ? (d.result ? d.result : null) : null;
 		
-					if (!L.isNull(d)){
+					if (L.isValue(d)){
 						if (L.isValue(d['userconfig'])){
 							userConfig.update(d['userconfig']);
 						}
@@ -351,6 +389,13 @@ Component.entryPoint = function(NS){
 						if (L.isValue(d['initdata'])){
 							__self.initData = new __self.InitDataClass(d['initdata']);
 						}
+						if (req['teamid'] && L.isValue(d['globalmemberlist']) && L.isArray(d['globalmemberlist']['list'])){
+							var list = new NS.MemberList(d['globalmemberlist']['list']);
+							NS.Team.globalMemberList.set(req['teamid'], list);
+						}
+					}
+					if (L.isArray(d['log'])){
+						Brick.console(d['log']);
 					}
 					NS.life(callback, result);
 				}
@@ -472,28 +517,34 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
+		_updateMemberList: function(team, d){
+			if (!L.isValue(d) || !L.isValue(d['members']) || !L.isArray(d['members']['list'])){
+				return null;
+			}
+				
+			var list = new this.MemberListClass();
+			
+			var dList = d['members']['list'];
+			for (var i=0; i<dList.length; i++){
+				list.add(new this.MemberClass(team, dList[i]));
+			}
+			return list;
+		},
+		
 		memberListLoad: function(team, callback){
 			if (L.isNull(team)){
 				NS.life(callback, null);
 				return;
 			}
+			// запросить весь список участников сообещства
+			this.requestGlobalMemberList = true;
 			var __self = this;
 			this.ajax({
 				'do': 'memberlist',
 				'teamid': team.id
 			}, function(d){
-				var list = null;
-				
-				if (L.isValue(d) && L.isValue(d['members'])){
-					
-					list = new __self.MemberListClass();
-					
-					var dList = d['members']['list'];
-					for (var i=0; i<dList.length; i++){
-						list.add(new __self.MemberClass(team, dList[i]));
-					}
-				}
-				
+				var list = __self._updateMemberList(team, d);
+				team.memberList = list;
 				NS.life(callback, list);
 			});
 		},

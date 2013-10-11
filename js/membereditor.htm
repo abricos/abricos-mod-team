@@ -1,12 +1,12 @@
 <!--{widget}-->
-<div class="aw-company aw-team" id="{i#id}">
+<div class="aw-team" id="{i#id}">
 
 	<div id="{i#loading}" class="loading">
 		<img src="/images/loading.gif" />
 		Идет загрузка данных. Пожалуйста, подождите...
 	</div>
 	
-	<div id="{i#editor}" class="empeditor editform" style="display: none">
+	<div id="{i#editor}" class="membereditor editform" style="display: none">
 	
 		<div class="{v#cledst}">
 			<div class="group">
@@ -18,6 +18,7 @@
 
 			<div id="{i#profileok}" style="display: none">
 
+				<div id="{i#existjoin}"></div>
 				<div id="{i#invite}"></div>
 
 				<div id="{i#empinfo}" style="display: none">
@@ -106,9 +107,24 @@
 	</dl>	
 </div>
 
+<!--{existjoin}-->
+<div id="{i#id}" class="group existjoin">
+
+	<h4>Добавление из списка существующих участников</h4>
+	
+	<dl class="email">
+		<dt>Выберите участника</dt>
+		<dd>
+			<div id="{i#select}"></div>
+		</dd>
+	</dl>
+	
+</div>
 
 <!--{invite}-->
 <div id="{i#id}" class="group invite">
+
+	<h4>Приглашение по адресу электронной почты</h4>
 
 	<dl class="email">
 		<dt>Введите существующий email участника</dt>
