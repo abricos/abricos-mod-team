@@ -39,7 +39,7 @@ class TeamManager {
 	 * Имя управляющего модуля
 	 * @var string
 	 */
-	public $modname = '';
+	public $moduleName = '';
 
 	/**
 	 * @var Ab_Database
@@ -70,6 +70,9 @@ class TeamManager {
 	public $MemberDetailClass	= MemberDetail;
 	public $MemberListClass		= MemberList;
 	
+	public $MemberGroupClass	= MemberGroup;
+	public $MemberGroupListClass= MemberGroupList;
+	
 	public $TeamUserConfigClass	= TeamUserConfig;
 		
 	/**
@@ -90,7 +93,7 @@ class TeamManager {
 	public function __construct(Ab_ModuleManager $mman){
 		TeamManager::$log = new TeamDebugLogger();
 		$this->modManager = $mman;
-		$this->modname = $mman->module->name;
+		$this->moduleName = $mman->module->name;
 		$this->db = $mman->db;
 		$this->user = $mman->user;
 		$this->userid = $mman->userid;
@@ -140,11 +143,23 @@ class TeamManager {
 	public function NewMemberDetail(Member $member){
 		return new $this->MemberDetailClass($member);
 	}
-	
+
 	/**
 	 * @return MemberList
 	 */
 	public function NewMemberList(){ return new $this->MemberListClass(); }
+	
+	/**
+	 * @param Team $team
+	 * @param array $d
+	 * @return MemberGroup
+	 */
+	// public function NewMemberGroup(Team $team, $d){ return new $this->MemberGroupClass($team, $d); }
+	
+	/**
+	 * @return MemberGroupList
+	 */
+	// public function NewMemberGroupList(){ return new $this->MemberGroupListClass(); }
 	
 	public function IsAdminRole(){ return $this->modManager->IsAdminRole(); }
 	public function IsWriteRole(){ return $this->modManager->IsWriteRole(); }
@@ -156,7 +171,7 @@ class TeamManager {
 		
 		if ($d->globalmemberlist && $d->teamid > 0){
 			$team = $this->Team($d->teamid);
-			if ($team->module == $this->modname && $d->do == 'memberlist'){
+			if ($team->module == $this->moduleName && $d->do == 'memberlist'){
 				// TODO: убрать дубликат данных
 			}
 			$mod = Abricos::GetModule($team->module);
@@ -205,6 +220,9 @@ class TeamManager {
 			case 'membersave': 	return $this->MemberSaveToAJAX($d->teamid, $d);
 			case 'memberremove':return $this->MemberRemove($d->teamid, $d->memberid);
 			
+			case 'membergrouplist':	return $this->MemberGroupListToAJAX($d->teamid);
+			case 'membergroupsave': return $this->MemberGroupSave($d->teamid, $d);
+			
 			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
 			
 			case 'mynamesave': return $this->MyNameSave($d);
@@ -239,8 +257,26 @@ class TeamManager {
 	
 	private $_cacheTeam = array();
 	
-	public function TeamCacheClear(){
-		$this->_cacheTeam = array();
+	public function TeamCacheClear($teamid = 0){
+		if ($teamid == 0){
+			$this->_cacheTeam = array();
+		}else{
+			$this->_cacheTeam[$teamid] = array();
+		}
+	}
+	
+	protected  function TeamCacheAdd($cacheName, $teamid, $object){
+		if (!is_array($this->_cacheTeam[$teamid])){
+			$this->_cacheTeam[$teamid] = array();
+		}
+		$this->_cacheTeam[$teamid][$cacheName] = $object;
+	}
+	
+	public function TeamCache($cacheName, $teamid){
+		if (!is_array($this->_cacheTeam[$teamid])){
+			$this->_cacheTeam[$teamid] = array();
+		}
+		return $this->_cacheTeam[$teamid][$cacheName];
 	}
 
 	/**
@@ -251,24 +287,24 @@ class TeamManager {
 		if (!$this->IsViewRole()){ return null; }
 		
 		if ($clearCache){
-			$this->TeamCacheClear();
+			$this->TeamCacheClear($teamid);
 		}
 		$teamid = intval($teamid);
 		if (empty($teamid)){ return null; }
 		
-// TeamManager::$log->Add("Team Get $this->modname = $teamid");		
+// TeamManager::$log->Add("Team Get $this->moduleName = $teamid");
 		
-		if (!empty($this->_cacheTeam[$teamid])){
-			return $this->_cacheTeam[$teamid];
-		}
+		$team = $this->TeamCache("team", $teamid);
+		
+		if (!empty($team)){ return $team; }
 
-// TeamManager::$log->Add("Team Load $this->modname = $teamid");
+// TeamManager::$log->Add("Team Load $this->moduleName = $teamid");
 		
 		$row = TeamQuery::Team($this, $teamid);
 		if (empty($row)){ return null; }
 		
 		$team = $this->NewTeam($row);
-		if ($team->module != $this->modname){
+		if ($team->module != $this->moduleName){
 			// сообщество перегружено еще одним модулем
 			// необходимо проверить доступ к этому сообществу
 			$mod = Abricos::GetModule($team->module);
@@ -288,6 +324,8 @@ class TeamManager {
 			$detail->inviteWaitCount = TeamQuery::MemberInviteWaitCountByTeam($this->db, $teamid);
 		}
 		$team->detail = $detail;
+		
+		$this->TeamCacheAdd("team", $teamid, $team);
 		
 		$this->_cacheTeam[$teamid] = $team;
 		
@@ -397,7 +435,7 @@ class TeamManager {
 			}
 
 			// TODO: необходимо реализовать ограничение на количество сообществ для участника
-			$teamid = TeamQuery::TeamAppend($this->db, $this->modname, $this->userid, $isModer, $d);
+			$teamid = TeamQuery::TeamAppend($this->db, $this->moduleName, $this->userid, $isModer, $d);
 			if ($teamid == 0){ return null; }
 			
 			TeamQuery::UserRoleUpdate($this->db, $teamid, $this->userid, 1, 1);
@@ -528,7 +566,7 @@ class TeamManager {
 		return $ret;
 	}
 	
-	private $_cacheMemberList;
+	private $_cacheMemberList = array();
 	
 	/**
 	 * @param integer $teamid
@@ -540,11 +578,11 @@ class TeamManager {
 		if (empty($team)){ return null; }
 		
 		if ($clearCache){
-			$this->_cacheMemberList = null;
+			$this->_cacheMemberList = array();
 		}
 		
-		if (!empty($this->_cacheMemberList)){
-			return $this->_cacheMemberList;
+		if (!empty($this->_cacheMemberList[$teamid])){
+			return $this->_cacheMemberList[$teamid];
 		}
 		
 		$rows = TeamQuery::MemberList($this, $team);
@@ -555,7 +593,7 @@ class TeamManager {
 			
 			TeamUserManager::AddId($member->id);
 		}
-		$this->_cacheMemberList = $list;
+		$this->_cacheMemberList[$teamid] = $list;
 		return $list;
 	}
 	
@@ -565,6 +603,12 @@ class TeamManager {
 		
 		$ret = new stdClass();
 		$ret->members = $list->ToAJAX();
+		
+		$obj = $this->MemberGroupListToAJAX($teamid);
+		$ret->membergroups = $obj->membergroups;
+
+		$obj = $this->MemberInGroupListToAJAX($teamid);
+		$ret->memberingroups = $obj->memberingroups;
 		
 		return $ret;
 	}
@@ -644,6 +688,32 @@ class TeamManager {
 			
 		}
 		
+		$memberid = $d->id;
+		
+		// сохранение группы пользователя
+		$groupid = intval($d->gid);
+		
+		$mgList = $this->MemberGroupList($teamid);
+		$mg = $mgList->Get($groupid);
+		if (empty($mg)){
+			$groupid = 0;
+		}
+		
+		$migList = $this->MemberInGroupList($teamid);
+		$mig = $migList->GetByMemberId($memberid);
+		$curgroupid = empty($mig) ? 0 : $mig->groupid;
+		
+		if ($groupid != $curgroupid){ // изменения по группе
+			
+			// удалить из текущей
+			TeamQuery::MemberRemoveFromGroup($this->db, $curgroupid, $memberid);
+			
+			// добавить в новую
+			if ($groupid > 0){
+				TeamQuery::MemberAddToGroup($this->db, $groupid, $memberid);
+			}
+		}
+		
 		$this->TeamMemberCountRecalc($teamid);
 		
 		return $d->id;		
@@ -680,7 +750,7 @@ class TeamManager {
 		$manInv = InviteModule::$instance->GetManager();
 	
 		// зарегистрировать пользователя (будет сгенерировано имя и пароль)
-		$invite = $manInv->UserRegister($this->modname, $email, $fname, $lname, $isVirtual);
+		$invite = $manInv->UserRegister($this->moduleName, $email, $fname, $lname, $isVirtual);
 	
 		if ($invite->error == 0){
 			if ($isVirtual){
@@ -738,6 +808,103 @@ class TeamManager {
 		$this->TeamMemberCountRecalc($teamid);
 		
 		return true;
+	}
+	
+	private $_cacheMemberGroupList = array();
+	
+	/**
+	 * Список групп участников
+	 * @param integer $teamid
+	 * @return MemberGroup
+	 */
+	public function MemberGroupList($teamid, $clearCache = false){
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+		
+		if ($clearCache){
+			$this->_cacheMemberGroupList = array();
+		}
+		
+		if (!empty($this->_cacheMemberGroupList[$teamid])){
+			return $this->_cacheMemberGroupList[$teamid];
+		}
+			
+		$list = new MemberGroupList();
+		$rows = TeamQuery::MemberGroupList($this->db, $teamid, $this->moduleName);
+		while (($d = $this->db->fetch_array($rows))){
+			$list->Add(new MemberGroup($d));
+		}
+		
+		$this->_cacheMemberGroupList[$teamid] = $list;
+		
+		return $list;
+	}
+	
+	public function MemberGroupListToAJAX($teamid){
+		$list = $this->MemberGroupList($teamid);
+		if (empty($list)){ return null; }
+		
+		$ret = new stdClass();
+		$ret->membergroups = $list->ToAJAX();
+		
+		return $ret;
+	}
+	
+	public function MemberGroupSave($teamid, $d){
+		$team = $this->Team($teamid);
+		if (empty($team) || !$team->role->IsAdmin()){
+			return null;
+		}
+	
+		$utmf = Abricos::TextParser(true);
+		$d->tl = $utmf->Parser($d->tl);
+	
+		if (empty($d->tl)){ return null; }
+	
+		if ($d->id == 0){
+			$d->id = TeamQuery::MemberGroupAppend($this->db, $teamid, $this->moduleName, $d);
+		}else{
+			TeamQuery::MemberGroupUpdate($this->db, $teamid, $d);
+		}
+	
+		$ret = new stdClass();
+		$ret->groupid = $d->id;
+		$ret->depts = $this->DeptList($teamid)->ToAJAX();
+	
+		return $ret;
+	}
+	
+	private static $_cacheMemberInGroupList = array();
+	
+	public function MemberInGroupList($teamid, $clearCache = false){
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+		
+		if ($clearCache){
+			$this->_cacheMemberInGroupList = array();
+		}
+		
+		if (!empty($this->_cacheMemberInGroupList[$teamid])){
+			return $this->_cacheMemberInGroupList[$teamid];
+		}
+		
+		$list = new MemberInGroupList();
+		$rows = TeamQuery::MemberInGroupList($this->db, $teamid, $this->moduleName);
+		while (($d = $this->db->fetch_array($rows))){
+			$list->Add(new MemberInGroup($d));
+		}
+		$this->_cacheMemberInGroupList[$teamid] = $list;
+		return $list;
+	}
+	
+	public function MemberInGroupListToAJAX($teamid){
+		$list = $this->MemberInGroupList($teamid);
+		if (empty($list)){ return null; }
+	
+		$ret = new stdClass();
+		$ret->memberingroups = $list->ToAJAX();
+	
+		return $ret;
 	}
 	
 	/**

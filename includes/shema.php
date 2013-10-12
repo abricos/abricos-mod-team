@@ -91,6 +91,37 @@ if ($updateManager->isInstall()){
 	
 }
 if ($updateManager->isUpdate('0.1.2')){
+	
+	$db->query_write("
+		CREATE TABLE IF NOT EXISTS ".$pfx."team_membergroup (
+			`membergroupid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор группы',
+			`parentgroupid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Родитель',
+				
+			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
+			`module` varchar(25) NOT NULL DEFAULT '' COMMENT 'Модуль создатель',
+			
+			`title` varchar(50) NOT NULL DEFAULT '' COMMENT 'Название',
+			`descript` TEXT NOT NULL  COMMENT 'Описание',
+				
+			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
+			`deldate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
+			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
+	
+			PRIMARY KEY  (`membergroupid`),
+			KEY (`teamid`, `module`, `deldate`)
+		)".$charset
+	);
+	
+	$db->query_write("
+		CREATE TABLE IF NOT EXISTS ".$pfx."team_memberingroup (
+			`groupid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Группа',
+			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
+	
+			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
+	
+			UNIQUE KEY `memberingroup` (`membergroupid`)
+		)".$charset
+	);
 
 	// файлы
 	$db->query_write("

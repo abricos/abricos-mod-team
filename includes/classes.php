@@ -457,6 +457,66 @@ class MemberList extends TeamItemList {
 	}
 }
 
+class MemberGroup extends TeamItem {
+
+	public $title;
+
+	public function __construct($d){
+		parent::__construct($d);
+		$this->title = strval($d['tl']);
+	}
+
+	public function ToAJAX(){
+		$ret = parent::ToAJAX();
+		$ret->tl = $this->title;
+		return $ret;
+	}
+}
+class MemberGroupList extends TeamItemList { }
+
+class MemberInGroup extends  TeamItem {
+	private static $_id = 1;
+	public $groupid;
+	public $memberid;
+	
+	public function __construct($d){
+		$this->id = MemberInGroup::$_id++;
+		$this->memberid = intval($d['uid']);
+		$this->groupid = intval($d['gid']);
+	}
+	
+	public function ToAJAX(){
+		$ret = parent::ToAJAX();
+		$ret->uid = $this->memberid;
+		$ret->gid = $this->groupid;
+		return $ret;
+	}
+}
+
+class MemberInGroupList extends TeamItemList {
+	
+	/**
+	 * @return MemberInGroup
+	 */
+	public function GetByIndex($i){
+		return parent::GetByIndex($i);
+	}
+	
+	/**
+	 * Проверка существование пользователя в группе
+	 * @param integer $userid
+	 * @return MemberInGroup
+	 */
+	public function GetByMemberId($memberid){
+		for ($i=0;$i<$this->Count();$i++){
+			$item = $this->GetByIndex($i);
+			if ($item->memberid == $memberid){ return $item; }
+		}
+		return null;
+	}
+}
+
+
 /**
  * Приложение для сообщества
  */
@@ -496,12 +556,12 @@ class TeamAppInfo extends AbricosItem {
 	
 	public $parent = '';
 	
-	public function __construct($modName, $name = '', $widget = '', $title = '', $onlyModule = '', $parent = ''){
+	public function __construct($moduleName, $name = '', $widget = '', $title = '', $onlyModule = '', $parent = ''){
 		$this->id = TeamAppInfo::$idCounter++;
 		
-		if (is_array($modName)){
-			$a = $modName;
-			$modName = $a['modName'];
+		if (is_array($moduleName)){
+			$a = $moduleName;
+			$moduleName = $a['moduleName'];
 			$name = $a['name'];
 			$widget = $a['widget'];
 			$title = $a['title'];
@@ -509,12 +569,12 @@ class TeamAppInfo extends AbricosItem {
 			$parent = $a['parent'];
 		}
 		
-		$this->moduleName = $modName;
+		$this->moduleName = $moduleName;
 		
-		if (empty($name)){ $name = $modName; }
+		if (empty($name)){ $name = $moduleName; }
 		$this->name = $name;
 		
-		if (empty($widget)){ $widget = $modName; }
+		if (empty($widget)){ $widget = $moduleName; }
 		$this->widget = $widget;
 		
 		$this->title = strval($title);
@@ -609,7 +669,7 @@ class TeamInitData {
 			$this->RegApp($appInfo);
 		}
 		foreach ($modules as $name => $module){
-			if ($name == $man->modname){ continue; }
+			if ($name == $man->moduleName){ continue; }
 			if (!method_exists($module, 'Team_GetAppInfo')){
 				continue;
 			}
@@ -635,10 +695,10 @@ class TeamInitData {
 			}
 		}else if ($appInfo instanceof TeamAppInfo){
 			
-			$modName = $this->manager->modManager->module->name;
+			$moduleName = $this->manager->modManager->module->name;
 			
 			if (!empty($appInfo->onlyModule) 
-					&& $appInfo->onlyModule != $modName){
+					&& $appInfo->onlyModule != $moduleName){
 				return;
 			}
 			$this->appList->Add($appInfo);
@@ -646,10 +706,10 @@ class TeamInitData {
 	}
 	
 	public function RegType($typeInfo){
-		$modName = $this->manager->modManager->module->name;
+		$moduleName = $this->manager->modManager->module->name;
 		
 		if ($typeInfo instanceof TeamTypeInfo){
-			if ($typeInfo->teamModName != $modName){ return; }
+			if ($typeInfo->teamModName != $moduleName){ return; }
 			$this->typeList->Add($typeInfo);
 		}
 	}

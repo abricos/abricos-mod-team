@@ -1,0 +1,20 @@
+.aw-team .deptlist .deptrow {
+	border: 1px solid #E3E3D7;
+	margin-bottom: 10px;
+}
+
+.aw-team .deptlist .deptrow .ihd,
+.aw-team .deptlist .deptrow .ibd {
+    padding: 6px 9px;
+}
+.aw-team .deptlist .deptrow .ihd {
+	position: relative;
+	color: #303021;
+	background-color: #F7F7F3;
+	border-bottom: 1px solid #E3E3D7;
+}
+
+.aw-team .deptlist .deptrow .ihd .rbtns {
+    right: 5px;
+    top: 4px;
+}

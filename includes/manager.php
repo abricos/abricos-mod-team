@@ -122,16 +122,16 @@ class TeamModuleManager extends Ab_ModuleManager {
 	 * @param integer $teamid
 	 * @return Team
 	 */
-	public function Team($teamid, $modName = ''){
+	public function Team($teamid, $moduleName = ''){
 		if (isset($this->_cacheTeam[$teamid])){
 			return $this->_cacheTeam[$teamid];
 		}
-		if (empty($modName)){
-			$modName = TeamQuery::TeamModuleName($this->db, $teamid);
-			if (empty($modName)){ return null; }
+		if (empty($moduleName)){
+			$moduleName = TeamQuery::TeamModuleName($this->db, $teamid);
+			if (empty($moduleName)){ return null; }
 		}
 
-		$mod = Abricos::GetModule($modName);
+		$mod = Abricos::GetModule($moduleName);
 		if (empty($mod)){ return null; }
 		
 		$modMan = $mod->GetManager();

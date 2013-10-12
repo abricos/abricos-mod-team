@@ -30,7 +30,7 @@ class TeamQuery {
 	 */
 	public static function TeamList(TeamManager $man, $page = 1, $memberid = 0, $teamid = 0){
 		$db = $man->db;
-		$module = $man->modname;
+		$module = $man->moduleName;
 		$memberid = intval($memberid);
 		$teamid = intval($teamid);
 		
@@ -356,19 +356,85 @@ class TeamQuery {
 		$rows = TeamQuery::MemberList($man, $team, $memberid);
 		return $man->db->fetch_array($rows);
 	}
+	
+	public static function MemberInGroupList(Ab_Database $db, $teamid, $moduleName){
+		$sql = "
+			SELECT 
+				mg.groupid as gid,
+				mg.userid as uid
+			FROM ".$db->prefix."team_membergroup g
+			INNER JOIN ".$db->prefix."team_memberingroup mg ON g.groupid=mg.groupid
+			WHERE g.teamid=".bkint($teamid)." AND g.module='".bkstr($moduleName)."' AND g.deldate=0
+		";
+		return $db->query_write($sql);
+	}
+	
+	public static function MemberAddToGroup(Ab_Database $db, $groupid, $memberid){
+		$sql = "
+			INSERT IGNORE INTO ".$db->prefix."team_memberingroup (groupid, userid, dateline) VALUES (
+				".bkint($groupid).",
+				".bkint($memberid).",
+				".TIMENOW."
+			)
+		";
+		$db->query_write($sql);
+	}
+	
+	public static function MemberRemoveFromGroup(Ab_Database $db, $groupid, $memberid){
+		$sql = "
+			DELETE FROM ".$db->prefix."team_memberingroup 
+			WHERE groupid=".bkint($groupid)." AND memberid=".bkint($memberid)."
+		";
+		$db->query_write($sql);
+	}
+	
+	public static function MemberGroupList(Ab_Database $db, $teamid, $moduleName){
+		$sql = "
+			SELECT
+				g.membergroupid as id,
+				g.parentgroupid as pid,
+				g.title as tl
+			FROM ".$db->prefix."team_membergroup g
+			WHERE g.teamid=".bkint($teamid)." AND g.module='".bkstr($moduleName)."' AND g.deldate=0
+		";
+		return $db->query_read($sql);
+	}
 
+	public static function MemberGroupAppend(Ab_Database $db, $teamid, $moduleName, $d){
+		$sql = "
+			INSERT INTO ".$db->prefix."team_membergroup (teamid, module, title, dateline) VALUES (
+				".bkint($teamid).",
+				'".$moduleName."',
+				'".$d->tl."',
+				".TIMENOW."
+			)
+		";
+		$db->query_write($sql);
+		return $db->insert_id();
+	}
+	
+	public static function MemberGroupUpdate(Ab_Database $db, $teamid, $moduleName, $memberGroupId, $d){
+		$sql = "
+			UPDATE ".$db->prefix."team_membergroup
+			SET title='".$d->tl."',
+				upddate=".TIMENOW."
+			WHERE teamid=".bkint($teamid)." AND module='".bkstr($moduleName)."' AND membergroupid=".bkint($memberGroupId)."
+			LIMIT 1
+		";
+		$db->query_write($sql);
+	}
 		
 	/**
 	 * Список сообществ пользователя
 	 * 
 	 * @param Ab_Database $db
 	 * @param integer $userid
-	 * @param string $modname
+	 * @param string $moduleName
 	 * @param integer $currentUserId
 	 * @param mixed $tids группы где текущий пользователь админ
 	 */
 	/*
-	public static function TeamListByMember(Ab_Database $db, $userid, $modname = '', $currentUserId = 0, $admtms = ''){
+	public static function TeamListByMember(Ab_Database $db, $userid, $moduleName = '', $currentUserId = 0, $admtms = ''){
 		$isMyInfo = $userid == $currentUserId;
 		
 		$sql = "
@@ -389,7 +455,7 @@ class TeamQuery {
 			LEFT JOIN ".$db->prefix."team t ON ur.teamid=t.teamid
 			WHERE ur.userid=".bkint($userid)." 
 				AND (ismember=1 ".($isMyInfo ? " OR isinvite=1 OR isjoinrequest=1" : "").")
-				".(!empty($modname) ? " AND t.module='".bkstr($modname)."'" : "")."
+				".(!empty($moduleName) ? " AND t.module='".bkstr($moduleName)."'" : "")."
 		";
 		
 		if (is_array($admtms) && count($admtms)>0){
@@ -411,7 +477,7 @@ class TeamQuery {
 				LEFT JOIN ".$db->prefix."team t ON ur.teamid=t.teamid
 				WHERE ur.userid=".bkint($userid)." AND (".implode(" OR ", $arr).")
 					AND (ismember=1 OR isinvite=1 OR isjoinrequest=1)
-					".(!empty($modname) ? " AND t.module='".bkstr($modname)."'" : "")."
+					".(!empty($moduleName) ? " AND t.module='".bkstr($moduleName)."'" : "")."
 			";
 			
 			$sql = "
@@ -513,7 +579,6 @@ class TeamQuery {
 		return intval($row['cnt']);
 	}
 	
-
 	/**
 	 * Пользователь принял приглашение вступить в группу
 	 *
