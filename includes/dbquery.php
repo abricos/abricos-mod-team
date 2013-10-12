@@ -391,7 +391,7 @@ class TeamQuery {
 	public static function MemberGroupList(Ab_Database $db, $teamid, $moduleName){
 		$sql = "
 			SELECT
-				g.membergroupid as id,
+				g.groupid as id,
 				g.parentgroupid as pid,
 				g.title as tl
 			FROM ".$db->prefix."team_membergroup g
@@ -418,7 +418,7 @@ class TeamQuery {
 			UPDATE ".$db->prefix."team_membergroup
 			SET title='".$d->tl."',
 				upddate=".TIMENOW."
-			WHERE teamid=".bkint($teamid)." AND module='".bkstr($moduleName)."' AND membergroupid=".bkint($memberGroupId)."
+			WHERE teamid=".bkint($teamid)." AND module='".bkstr($moduleName)."' AND groupid=".bkint($memberGroupId)."
 			LIMIT 1
 		";
 		$db->query_write($sql);

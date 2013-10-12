@@ -17,14 +17,24 @@ Component.entryPoint = function(NS){
 
 	var buildTemplate = this.buildTemplate;
 	
-	var MemberGroupWidget = function(container, teamid){
-		MemberGroupWidget.superclass.constructor.call(this, container, {
+	var MemberGroupListWidget = function(container, teamid, cfg){
+		cfg = L.merge({
+			'modName': 'team',
+			'sEditorWidget': 'MemberEditorWidget',
+			'sEditorComponent': 'membereditor',
+			'sEditorModule': 'team',
+			'act': '',
+			'param': ''
+		}, cfg || {});
+
+		MemberGroupListWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'widget' 
-		}, teamid);
+		}, teamid, cfg);
 	};
-	YAHOO.extend(MemberGroupWidget, Brick.mod.widget.Widget, {
-		init: function(teamid){
+	YAHOO.extend(MemberGroupListWidget, Brick.mod.widget.Widget, {
+		init: function(teamid, cfg){
 			this.teamid = teamid;
+			this.cfg = cfg;
 			
 			this.team = null;
 			this.list = null;
@@ -32,9 +42,9 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 			this._wList = [];
 		},
-		onLoad: function(teamid){
+		onLoad: function(teamid, cfg){
 			var __self = this;
-			NS.initManager(function(man){
+			Brick.mod[cfg['modName']].initManager(function(man){
 				man.teamLoad(teamid, function(team){
 					man.memberListLoad(team, function(list){
 						__self._onLoadManager(team, list);
@@ -54,7 +64,6 @@ Component.entryPoint = function(NS){
 		_onLoadManager: function(team, list){
 			this.team = team;
 			this.list = list;
-			team.sportsmanList = list;
 			
 			this.elHide('loading,rlwrap,nullitem');
 			
@@ -79,8 +88,8 @@ Component.entryPoint = function(NS){
 			}
 
 			switch(el.id){
-			case tp['bempadd']: this.showEmpEditor(); return true;
-			case tp['bdeptadd']: this.showDeptEditor(); return true;
+			case tp['bempadd']: this.showMemberEditor(); return true;
+			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
 			}
 			return false;
 		},
@@ -90,16 +99,13 @@ Component.entryPoint = function(NS){
 			
 			this.elSetVisible('btns', team.role.isAdmin);
 
-			// DEBUG
-			// this.showEmpEditor();
-			
 			var __self = this;
 			
 			this._clearWS();
 
 			var ws = this._wList, elList = this.gel('list');
-			team.detail.deptList.foreach(function(dept){
-				ws[ws.length] = new NS.DeptRowWidget(elList, team, list, dept, {
+			team.memberGropuList.foreach(function(group){
+				ws[ws.length] = new NS.MemberGroupRowWidget(elList, team, list, group, {
 					'onReloadList': function(){
 						__self.reloadList();
 					}
@@ -110,8 +116,8 @@ Component.entryPoint = function(NS){
 				ws[i].render();
 			}
 
-			this.empListWidget = new NS.SportsmanListWidget(this.gel('emplist'), team, list, {
-				'deptid': 0
+			this.memberListWidget = new NS.SportsmanListWidget(this.gel('emplist'), team, list, {
+				'groupid': 0
 			});
 		},
 		closeEditors: function(){
@@ -120,92 +126,92 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 			this.elShow('btns,list,emplist');
 		},
-		_loadEditor: function(component, callback){
-			this.closeEditors();
-			this.componentLoad('{C#MODNAME}', component, callback, {
-				'hide': 'bbtns', 'show': 'edloading'
-			});
-		},
-		showDeptEditor: function(deptid){
-			deptid = deptid || 0;
+		/*
+		showMemberGroupEditor: function(groupid){
+			groupid = groupid || 0;
 			
 			var __self = this;
-			this._loadEditor('depteditor', function(){
-				__self.showDeptEditorMethod(deptid);
+			this._loadEditor('groupeditor', function(){
+				__self.showMemberGroupEditorMethod(groupid);
 			});
 		},
-		showDeptEditorMethod: function(deptid){
+		showMemberGroupEditorMethod: function(groupid){
 			this.elHide('btns,list,emplist');
 
-			var dept = deptid==0 ? new NS.Dept() : this.team.detail.deptList.get(deptid);
+			var group = groupid==0 ? new NS.Dept() : this.team.detail.groupList.get(groupid);
 			var __self = this;
-			this._editor = new NS.DeptEditorWidget(this.gel('editor'), this.team, dept, function(act){
+			this._editor = new NS.DeptEditorWidget(this.gel('editor'), this.team, group, function(act){
 				__self.closeEditors();
 				if (act == 'save'){ __self.render(); }
 			});
 		},
-		showEmpEditor: function(empid){
-			var __self = this;
-			this._loadEditor('membereditor', function(){
-				__self.showEmpEditorMethod();
-			});
+		/**/
+		showMemberEditor: function(memberid){
+			this.closeEditors();
+			
+			var __self = this, cfg = this.cfg;
+
+			this.componentLoad(cfg['sEditorModule'], cfg['sEditorComponent'], function(){
+				__self.showMemberEditorMethod(memberid);
+			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
-		showEmpEditorMethod: function(empid){
-			empid = empid||0;
-			this.elHide('btns,list,emplist');
-
-			var list = this.team.sportsmanList;
-			var emp = empid==0 ? new NS.Sportsman(this.team) : list.get(empid);
-
-			var __self = this;
-			this._editor = new NS.MemberEditorWidget(this.gel('editor'), this.team, emp, function(act, semp){
+		showMemberEditorMethod: function(memberid){
+			memberid = memberid||0;
+			this.elHide('btns,list,view');
+			
+			var __self = this, cfg = this.cfg, team = this.team,
+				member = memberid==0 ? new team.manager.MemberClass(team, dList[i]) : list.get(memberid);
+			this._editor = new Brick.mod[cfg['sEditorModule']][cfg['sEditorWidget']](this.gel('editor'), team, member, function(act, newMember){
 				__self.closeEditors();
 				if (act == 'save'){
-					list.remove(emp.id);
-					list.add(semp);
-					__self.render(); 
-					__self.reloadList();
+					if (L.isValue(member)){
+						list.remove(member.id);
+						list.add(newMember);
+						__self.render(); 
+						__self.reloadList();
+					}
+					__self.renderDetail();
 				}
 			});
-		}		
+		}
 	});
-	NS.MemberGroupWidget = MemberGroupWidget;
+	NS.MemberGroupListWidget = MemberGroupListWidget;
 
-	var DeptRowWidget = function(container, team, list, dept, cfg){
+	var MemberGroupRowWidget = function(container, team, list, group, cfg){
 		cfg = L.merge({
 			'onReloadList': null
 		}, cfg || {});
-		DeptRowWidget.superclass.constructor.call(this, container, {
+		MemberGroupRowWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'row', 'isRowWidget': true
-		}, team, list, dept, cfg);
+		}, team, list, group, cfg);
 	};
-	YAHOO.extend(DeptRowWidget, Brick.mod.widget.Widget, {
-		init: function(team, list, dept, cfg){
+	YAHOO.extend(MemberGroupRowWidget, Brick.mod.widget.Widget, {
+		init: function(team, list, group, cfg){
 			this.team = team;
 			this.list = list;
-			this.dept = dept;
+			this.group = group;
 			this.cfg = cfg;
 			this._editor = null;
 		},
-		buildTData: function(team, list, dept){
-			return {'tl': dept.title};
+		buildTData: function(team, list, group){
+			return {'tl': group.title};
 		},
 		onClick: function(el){
 			var tp = this._TId['row'];
 			switch(el.id){
-			case tp['bempadd']: this.showEmpEditor(); return true;
-			case tp['bdeptadd']: this.showDeptEditor(); return true;
+			case tp['bempadd']: this.showMemberEditor(); return true;
+			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
 			}
 			return false;
 		},
 		render: function(){
-			var team = this.team, dept = this.dept;
+			var team = this.team, group = this.group;
 			
 			this.elSetVisible('btns', team.role.isAdmin);
-			this.elSetHTML('depttl', dept.title);
+			this.elSetHTML('grouptl', group.title);
 
-			this.empListWidget = new NS.SportsmanListWidget(this.gel('emplist'), team, this.list, {
-				'deptid': dept.id
+			this.memberListWidget = new NS.SportsmanListWidget(this.gel('emplist'), team, this.list, {
+				'groupid': group.id
 			});
 		},
 		closeEditors: function(){
@@ -220,32 +226,32 @@ Component.entryPoint = function(NS){
 				'hide': 'bbtns', 'show': 'edloading'
 			});
 		},
-		showDeptEditor: function(){
+		showMemberGroupEditor: function(){
 			var __self = this;
-			this._loadEditor('depteditor', function(){
-				__self.showDeptEditorMethod();
+			this._loadEditor('groupeditor', function(){
+				__self.showMemberGroupEditorMethod();
 			});
 		},
-		showDeptEditorMethod: function(){
+		showMemberGroupEditorMethod: function(){
 			this.elHide('btns,list,emplist');
 
 			var __self = this;
-			this._editor = new NS.DeptEditorWidget(this.gel('editor'), this.team, this.dept, function(act){
+			this._editor = new NS.DeptEditorWidget(this.gel('editor'), this.team, this.group, function(act){
 				__self.closeEditors();
 				if (act == 'save'){ __self.render(); }
 			});
 		},
-		showEmpEditor: function(empid){
+		showMemberEditor: function(memberid){
 			var __self = this;
 			this._loadEditor('membereditor', function(){
-				__self.showEmpEditorMethod();
+				__self.showMemberEditorMethod();
 			});
 		},
-		showEmpEditorMethod: function(empid){
-			empid = empid||0;
+		showMemberEditorMethod: function(memberid){
+			memberid = memberid||0;
 			this.elHide('btns,list,emplist');
 
-			var emp = empid==0 ? new NS.Sportsman(this.team, {'deptid': this.dept.id}) : this.team.sportsmanList.get(empid);
+			var emp = memberid==0 ? new NS.Sportsman(this.team, {'groupid': this.group.id}) : this.team.memberList.get(memberid);
 
 			var __self = this;
 			this._editor = new NS.MemberEditorWidget(this.gel('editor'), this.team, emp, function(act){
@@ -257,5 +263,5 @@ Component.entryPoint = function(NS){
 			});
 		}
 	});
-    NS.DeptRowWidget = DeptRowWidget;	
+    NS.MemberGroupRowWidget = MemberGroupRowWidget;	
 };

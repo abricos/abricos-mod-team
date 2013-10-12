@@ -94,7 +94,7 @@ if ($updateManager->isUpdate('0.1.2')){
 	
 	$db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team_membergroup (
-			`membergroupid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор группы',
+			`groupid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор группы',
 			`parentgroupid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Родитель',
 				
 			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
@@ -107,7 +107,7 @@ if ($updateManager->isUpdate('0.1.2')){
 			`deldate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
 			`upddate` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
 	
-			PRIMARY KEY  (`membergroupid`),
+			PRIMARY KEY  (`groupid`),
 			KEY (`teamid`, `module`, `deldate`)
 		)".$charset
 	);
@@ -119,7 +119,7 @@ if ($updateManager->isUpdate('0.1.2')){
 	
 			`dateline` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Дата создания',
 	
-			UNIQUE KEY `memberingroup` (`membergroupid`)
+			UNIQUE KEY `memberingroup` (`groupid`, `userid`)
 		)".$charset
 	);
 

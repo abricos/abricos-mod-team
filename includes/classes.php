@@ -451,7 +451,7 @@ class MemberList extends TeamItemList {
 		parent::__construct();
 	}
 
-	public function Add(Member $item){
+	public function Add($item = null){
 		parent::Add($item);
 		
 	}
@@ -789,7 +789,7 @@ class TeamItemList {
 		$this->_map = array();
 	}
 
-	public function Add(TeamItem $item = null){
+	public function Add($item = null){
 		if (empty($item)){ return; }
 
 		if ($this->isCheckDouble){

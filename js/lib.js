@@ -142,7 +142,10 @@ Component.entryPoint = function(NS){
 			this.role = new this.manager['TeamUserRoleClass'](d['role']);
 			this.navigator = new this.manager['NavigatorClass'](this);
 			this.detail = null;
+			
 			this.memberList = null;
+			this.memberGroupList = null;
+			this.memberInGroup = null;
 			
 			Team.superclass.init.call(this, d);
 		},
@@ -246,6 +249,48 @@ Component.entryPoint = function(NS){
 		}
 	};
 	NS.TeamUserRole = TeamUserRole;
+	
+	var MemberGroup = function(d){
+		d = L.merge({
+			'tl': '',
+			'pid': 0
+		}, d || {});
+		Post.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(MemberGroup, SysNS.Item, {
+		update: function(d){
+			this.parentid = d['pid']|0;
+			this.title = d['tl'];
+		}
+	});
+	NS.MemberGroup = MemberGroup;
+
+	var MemberGroupList = function(d){
+		MemberGroupList.superclass.constructor.call(this, d, MemberGroup);
+	};
+	YAHOO.extend(MemberGroupList, SysNS.ItemList, {});
+	NS.MemberGroupList = MemberGroupList;
+	
+	var MemberInGroup = function(d){
+		d = L.merge({
+			'gid': 0,
+			'uid': 0
+		}, d || {});
+		Post.superclass.constructor.call(this, d);
+	};
+	YAHOO.extend(MemberInGroup, SysNS.Item, {
+		update: function(d){
+			this.groupid = d['gid']|0;
+			this.memberid = d['uid']|0;
+		}
+	});
+	NS.MemberInGroup = MemberInGroup;
+
+	var MemberInGroupList = function(d){
+		MemberInGroupList.superclass.constructor.call(this, d, MemberInGroup);
+	};
+	YAHOO.extend(MemberInGroupList, SysNS.ItemList, {});
+	NS.MemberInGroupList = MemberInGroupList;
 
 	var Member = function(team, d){
 		this.team = team;
@@ -517,6 +562,34 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
+		_updateMemberGroupList: function(team, d){
+			if (!L.isValue(d) || !L.isValue(d['membergroups']) || !L.isArray(d['membergroups']['list'])){
+				return null;
+			}
+				
+			var list = new NS.MemberGroupList();
+			
+			var dList = d['membergroups']['list'];
+			for (var i=0; i<dList.length; i++){
+				list.add(new NS.MemberGroup(dList[i]));
+			}
+			return list;
+		},
+
+		_updateMemberInGroupList: function(team, d){
+			if (!L.isValue(d) || !L.isValue(d['memberingroups']) || !L.isArray(d['memberingroups']['list'])){
+				return null;
+			}
+				
+			var list = new NS.MemberGroupList();
+			
+			var dList = d['memberingroups']['list'];
+			for (var i=0; i<dList.length; i++){
+				list.add(new NS.MemberInGroup(dList[i]));
+			}
+			return list;
+		},
+		
 		_updateMemberList: function(team, d){
 			if (!L.isValue(d) || !L.isValue(d['members']) || !L.isArray(d['members']['list'])){
 				return null;
@@ -545,6 +618,9 @@ Component.entryPoint = function(NS){
 			}, function(d){
 				var list = __self._updateMemberList(team, d);
 				team.memberList = list;
+				
+				team.memberGroupList = __self._updateMemberGroupList(team, d);
+				team.memberInGroupList = __self._updateMemberInGroupList(team, d);
 				NS.life(callback, list);
 			});
 		},
