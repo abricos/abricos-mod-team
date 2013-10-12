@@ -6,7 +6,7 @@
 var Component = new Brick.Component();
 Component.requires = {
 	mod:[
-		{name: '{C#MODNAME}', files: ['member.js']}
+		{name: '{C#MODNAME}', files: ['memberview.js']}
 	]
 };
 Component.entryPoint = function(NS){
@@ -20,9 +20,12 @@ Component.entryPoint = function(NS){
 	var MemberGroupListWidget = function(container, teamid, cfg){
 		cfg = L.merge({
 			'modName': 'team',
-			'sEditorWidget': 'MemberEditorWidget',
-			'sEditorComponent': 'membereditor',
+			'sEditorWidget': 'MemberGroupEditorWidget',
+			'sEditorComponent': 'mgroupeditor',
 			'sEditorModule': 'team',
+			'sMemberEditorWidget': 'MemberEditorWidget',
+			'sMemberEditorComponent': 'membereditor',
+			'sMemberEditorModule': 'team',
 			'act': '',
 			'param': ''
 		}, cfg || {});
@@ -104,7 +107,7 @@ Component.entryPoint = function(NS){
 			this._clearWS();
 
 			var ws = this._wList, elList = this.gel('list');
-			team.memberGropuList.foreach(function(group){
+			team.memberGroupList.foreach(function(group){
 				ws[ws.length] = new NS.MemberGroupRowWidget(elList, team, list, group, {
 					'onReloadList': function(){
 						__self.reloadList();
@@ -116,7 +119,7 @@ Component.entryPoint = function(NS){
 				ws[i].render();
 			}
 
-			this.memberListWidget = new NS.SportsmanListWidget(this.gel('emplist'), team, list, {
+			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, list, {
 				'groupid': 0
 			});
 		},
@@ -126,32 +129,33 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 			this.elShow('btns,list,emplist');
 		},
-		/*
+		
 		showMemberGroupEditor: function(groupid){
 			groupid = groupid || 0;
+			this.closeEditors();
+			var __self = this, cfg = this.cfg;
 			
-			var __self = this;
-			this._loadEditor('groupeditor', function(){
+			this.componentLoad(cfg['sEditorModule'], cfg['sEditorComponent'], function(){
 				__self.showMemberGroupEditorMethod(groupid);
-			});
+			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
 		showMemberGroupEditorMethod: function(groupid){
 			this.elHide('btns,list,emplist');
 
-			var group = groupid==0 ? new NS.Dept() : this.team.detail.groupList.get(groupid);
-			var __self = this;
-			this._editor = new NS.DeptEditorWidget(this.gel('editor'), this.team, group, function(act){
+			var group = groupid==0 ? new NS.MemberGroup() : this.team.memberGroupList.get(groupid);
+			var __self = this, cfg = this.cfg, team = this.team;
+			
+			this._editor = new Brick.mod[cfg['sEditorModule']][cfg['sEditorWidget']](this.gel('editor'), team, group, function(act){
 				__self.closeEditors();
 				if (act == 'save'){ __self.render(); }
 			});
 		},
-		/**/
 		showMemberEditor: function(memberid){
 			this.closeEditors();
 			
 			var __self = this, cfg = this.cfg;
 
-			this.componentLoad(cfg['sEditorModule'], cfg['sEditorComponent'], function(){
+			this.componentLoad(cfg['sMemberEditorModule'], cfg['sMemberEditorComponent'], function(){
 				__self.showMemberEditorMethod(memberid);
 			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
@@ -161,7 +165,7 @@ Component.entryPoint = function(NS){
 			
 			var __self = this, cfg = this.cfg, team = this.team,
 				member = memberid==0 ? new team.manager.MemberClass(team, dList[i]) : list.get(memberid);
-			this._editor = new Brick.mod[cfg['sEditorModule']][cfg['sEditorWidget']](this.gel('editor'), team, member, function(act, newMember){
+			this._editor = new Brick.mod[cfg['sMemberEditorModule']][cfg['sMemberEditorWidget']](this.gel('editor'), team, member, function(act, newMember){
 				__self.closeEditors();
 				if (act == 'save'){
 					if (L.isValue(member)){
@@ -210,7 +214,7 @@ Component.entryPoint = function(NS){
 			this.elSetVisible('btns', team.role.isAdmin);
 			this.elSetHTML('grouptl', group.title);
 
-			this.memberListWidget = new NS.SportsmanListWidget(this.gel('emplist'), team, this.list, {
+			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, this.list, {
 				'groupid': group.id
 			});
 		},

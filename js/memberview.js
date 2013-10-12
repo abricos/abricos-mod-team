@@ -292,7 +292,7 @@ Component.entryPoint = function(NS){
     NS.MemberListRowWidget = MemberListRowWidget;
 
 	var MemberListWidget = function(container, team, list, cfg){
-		cfg = L.merge({'deptid': 0}, cfg || {});
+		cfg = L.merge({'groupid': 0}, cfg || {});
 
 		MemberListWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'list'
@@ -324,12 +324,11 @@ Component.entryPoint = function(NS){
 		},
 		render: function(){
 			this._clearWS();
-			
 			var TM = this._TM, gel = function(n){ return TM.getEl('list.'+n);};
 			var cfg = this.cfg, ws = this._wList, team = this.team;
 
 			this.list.foreach(function(member){
-				if (!member.role.isMember || member.deptid != cfg['deptid']){ return; }
+				if (!member.role.isMember || member.groupid != cfg['groupid']){ return; }
 				ws[ws.length] = new NS.MemberListRowWidget(gel('list'), team, member);
 			});
 			

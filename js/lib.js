@@ -255,7 +255,7 @@ Component.entryPoint = function(NS){
 			'tl': '',
 			'pid': 0
 		}, d || {});
-		Post.superclass.constructor.call(this, d);
+		MemberGroup.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(MemberGroup, SysNS.Item, {
 		update: function(d){
