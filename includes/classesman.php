@@ -221,8 +221,9 @@ class TeamManager {
 			case 'memberremove':return $this->MemberRemove($d->teamid, $d->memberid);
 			
 			case 'membergrouplist':	return $this->MemberGroupListToAJAX($d->teamid);
-			case 'membergroupsave': return $this->MemberGroupSave($d->teamid, $d);
-			
+			case 'membergroupsave': return $this->MemberGroupSaveToAJAX($d->teamid, $d->savedata);
+			case 'membergroupremove': return $this->MemberGroupRemoveToAJAX($d->teamid, $d->groupid);
+
 			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
 			
 			case 'mynamesave': return $this->MyNameSave($d);
@@ -257,22 +258,26 @@ class TeamManager {
 	
 	private $_cacheTeam = array();
 	
-	public function TeamCacheClear($teamid = 0){
+	public function TeamCacheClear($teamid = 0, $cacheName = ''){
 		if ($teamid == 0){
 			$this->_cacheTeam = array();
 		}else{
-			$this->_cacheTeam[$teamid] = array();
+			if (!empty($cacheName)){
+				$this->_cacheTeam[$teamid][$cacheName] = null;
+			}else{
+				$this->_cacheTeam[$teamid] = array();
+			}
 		}
 	}
 	
-	protected  function TeamCacheAdd($cacheName, $teamid, $object){
+	protected  function TeamCacheAdd($teamid, $cacheName, $object){
 		if (!is_array($this->_cacheTeam[$teamid])){
 			$this->_cacheTeam[$teamid] = array();
 		}
 		$this->_cacheTeam[$teamid][$cacheName] = $object;
 	}
 	
-	public function TeamCache($cacheName, $teamid){
+	public function TeamCache($teamid, $cacheName){
 		if (!is_array($this->_cacheTeam[$teamid])){
 			$this->_cacheTeam[$teamid] = array();
 		}
@@ -294,7 +299,7 @@ class TeamManager {
 		
 // TeamManager::$log->Add("Team Get $this->moduleName = $teamid");
 		
-		$team = $this->TeamCache("team", $teamid);
+		$team = $this->TeamCache($teamid, "team");
 		
 		if (!empty($team)){ return $team; }
 
@@ -325,9 +330,7 @@ class TeamManager {
 		}
 		$team->detail = $detail;
 		
-		$this->TeamCacheAdd("team", $teamid, $team);
-		
-		$this->_cacheTeam[$teamid] = $team;
+		$this->TeamCacheAdd($teamid, "team", $team);
 		
 		return $team;
 	}
@@ -490,6 +493,7 @@ class TeamManager {
 			return null;
 		}
 		TeamQuery::TeamRemove($this->db, $teamid);
+		$this->TeamCacheClear($teamid);
 		return true;
 	}
 	
@@ -503,8 +507,6 @@ class TeamManager {
 		return $cnt;
 	}
 	
-	private $_cacheTeamUserRole = array();
-	
 	/**
 	 * Роль участника в сообществе 
 	 * 
@@ -516,19 +518,20 @@ class TeamManager {
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
 		
-		$cache = &$this->_cacheTeamUserRole;
-		if (!is_array($cache[$teamid])){
-			$cache[$teamid] = array();
-		}
-		if (isset($cache[$teamid][$memberid])){ return $cache[$teamid][$memberid]; }
+		$cacheName = "teamuserrole".$memberid;
+		
+		$role = $this->TeamCache($teamid, $cacheName);
+		if (!empty($role)){ return $role; }
 		
 		$row = TeamQuery::Member($this, $team, $memberid);
 		if (empty($row)){
-			$cache[$teamid][$memberid] = null;
+			$this->TeamCacheClear($teamid, $cacheName);
 			return null; 
 		}
+		$role = $this->NewTeamUserRole($team, $memberid, $row);
+		$this->TeamCacheAdd($teamid, $cacheName, $role);
 		
-		return $cache[$teamid][$memberid] = $this->NewTeamUserRole($team, $memberid, $row);
+		return $role; 
 	}
 		
 	/**
@@ -566,8 +569,6 @@ class TeamManager {
 		return $ret;
 	}
 	
-	private $_cacheMemberList = array();
-	
 	/**
 	 * @param integer $teamid
 	 * @return MemberList
@@ -577,13 +578,15 @@ class TeamManager {
 
 		if (empty($team)){ return null; }
 		
+		$cacheName = "memberlist";
+		
 		if ($clearCache){
-			$this->_cacheMemberList = array();
+			$this->TeamCacheClear($teamid, $cacheName);
 		}
 		
-		if (!empty($this->_cacheMemberList[$teamid])){
-			return $this->_cacheMemberList[$teamid];
-		}
+		$list = $this->TeamCache($teamid, $cacheName);
+		
+		if (!empty($list)){ return $list; }
 		
 		$rows = TeamQuery::MemberList($this, $team);
 		$list = $this->NewMemberList();
@@ -593,7 +596,8 @@ class TeamManager {
 			
 			TeamUserManager::AddId($member->id);
 		}
-		$this->_cacheMemberList[$teamid] = $list;
+		$this->TeamCacheAdd($teamid, $cacheName, $list);
+
 		return $list;
 	}
 	
@@ -687,6 +691,8 @@ class TeamManager {
 		}else{
 			
 		}
+		
+		$this->TeamCacheClear($teamid);
 		
 		$memberid = $d->id;
 		
@@ -810,8 +816,6 @@ class TeamManager {
 		return true;
 	}
 	
-	private $_cacheMemberGroupList = array();
-	
 	/**
 	 * Список групп участников
 	 * @param integer $teamid
@@ -820,14 +824,15 @@ class TeamManager {
 	public function MemberGroupList($teamid, $clearCache = false){
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
+
+		$cacheName = "mglist";
 		
 		if ($clearCache){
-			$this->_cacheMemberGroupList = array();
+			$this->TeamCacheClear($teamid, $cacheName);
 		}
-		
-		if (!empty($this->_cacheMemberGroupList[$teamid])){
-			return $this->_cacheMemberGroupList[$teamid];
-		}
+		$list = $this->TeamCache($teamid, $cacheName);
+	
+		if (!empty($list)){ return $list; }
 			
 		$list = new MemberGroupList();
 		$rows = TeamQuery::MemberGroupList($this->db, $teamid, $this->moduleName);
@@ -835,7 +840,7 @@ class TeamManager {
 			$list->Add(new MemberGroup($d));
 		}
 		
-		$this->_cacheMemberGroupList[$teamid] = $list;
+		$this->TeamCacheAdd($teamid, $cacheName, $list);
 		
 		return $list;
 	}
@@ -866,34 +871,42 @@ class TeamManager {
 		}else{
 			TeamQuery::MemberGroupUpdate($this->db, $teamid, $d);
 		}
-	
-		$ret = new stdClass();
-		$ret->groupid = $d->id;
-		$ret->depts = $this->DeptList($teamid)->ToAJAX();
-	
-		return $ret;
+		
+		$this->TeamCacheClear($teamid);
+		
+		return $d->id;
 	}
 	
-	private static $_cacheMemberInGroupList = array();
+	public function MemberGroupSaveToAJAX($teamid, $d){
+		$groupid = $this->MemberGroupSave($teamid, $d);
+		if (empty($groupid)){ return null; }
+		
+		$ret = $this->MemberGroupListToAJAX($teamid);
+		$ret->groupid = $groupid;
+		
+		return $ret;
+	}
 	
 	public function MemberInGroupList($teamid, $clearCache = false){
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
 		
+		$cacheName = "miglist";
+		
 		if ($clearCache){
-			$this->_cacheMemberInGroupList = array();
+			$this->TeamCacheClear($teamid, $cacheName);
 		}
 		
-		if (!empty($this->_cacheMemberInGroupList[$teamid])){
-			return $this->_cacheMemberInGroupList[$teamid];
-		}
+		$list = $this->TeamCache($teamid, $cacheName);
+		
+		if (!empty($list)){ return $list; }
 		
 		$list = new MemberInGroupList();
 		$rows = TeamQuery::MemberInGroupList($this->db, $teamid, $this->moduleName);
 		while (($d = $this->db->fetch_array($rows))){
 			$list->Add(new MemberInGroup($d));
 		}
-		$this->_cacheMemberInGroupList[$teamid] = $list;
+		$this->TeamCacheAdd($teamid, $cacheName, $list);
 		return $list;
 	}
 	

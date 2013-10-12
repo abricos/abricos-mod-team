@@ -94,7 +94,7 @@ Component.entryPoint = function(NS){
 				'tl': this.gel('title').value
 			};
 			
-			NS.manager.groupSave(team, sd, function(group){
+			team.manager.memberGroupSave(team, sd, function(group){
 				NS.life(__self.callback, 'save', group);
 			});
 		}		

@@ -21,12 +21,6 @@ Component.entryPoint = function(NS){
 	var MemberViewWidgetAbstract = function(container, teamid, memberid, cfg){
 		cfg = L.merge({
 			'modName': 'team',
-			'sEditorWidget': 'MemberEditorWidget',
-			'sEditorComponent': 'membereditor',
-			'sEditorModule': 'team',
-			'sRemovePanel': 'MemberRemovePanel',
-			'sRemoveComponent': 'membereditor',
-			'sRemoveModule': 'team',
 			'act': '',
 			'param': ''
 		}, cfg || {});
@@ -133,17 +127,17 @@ Component.entryPoint = function(NS){
 		showMemberEditor: function(){
 			this.closeEditors();
 			
-			var __self = this, cfg = this.cfg;
+			var __self = this, mcfg = this.team.manager.cfg['memberEditor'];
 
-			this.componentLoad(cfg['sEditorModule'], cfg['sEditorComponent'], function(){
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
 				__self.showMemberEditorMethod();
 			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
 		showMemberEditorMethod: function(){
 			this.elHide('btns,list,view');
 
-			var __self = this, cfg = this.cfg;
-			this._editor = new Brick.mod[cfg['sEditorModule']][cfg['sEditorWidget']](this.gel('editor'), this.team, this.member, function(act, member){
+			var __self = this, mcfg = this.team.manager.cfg['memberEditor'];
+			this._editor = new Brick.mod[mcfg['module']][mcfg['widget']](this.gel('editor'), this.team, this.member, function(act, member){
 				__self.closeEditors();
 				if (act == 'save'){
 					if (L.isValue(member)){
@@ -156,17 +150,13 @@ Component.entryPoint = function(NS){
 		showMemberRemovePanel: function(){
 			this.closeEditors();
 			
-			var __self = this, cfg = this.cfg;
-			this.componentLoad(cfg['sRemoveModule'], cfg['sRemoveComponent'], function(){
-				__self.showMemberRemovePanelMethod();
+			var mcfg = this.team.manager.cfg['memberRemove'];
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+				new new Brick.mod[mcfg['module']][mcfg['panel']](team, member, function(act){
+					Brick.Page.reload(NS.navigator.company.depts.view(team.id));
+				});
 			}, {'hide': 'bbtns', 'show': 'edloading'});
-		},
-		showMemberRemovePanelMethod: function(){
-			var team = this.team, member = this.member;
-			new new Brick.mod[cfg['sRemoveModule']][cfg['sRemovePanel']](team, member, function(act){
-				Brick.Page.reload(NS.navigator.company.depts.view(team.id));
-			});
-		}		
+		}
 	});
 	NS.MemberViewWidgetAbstract = MemberViewWidgetAbstract;
 	

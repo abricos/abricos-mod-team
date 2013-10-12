@@ -1,4 +1,4 @@
-/* * * * * * * Список сотрудников * * * * * * * */
+/* * * * * * * Список участников * * * * * * * */
 .aw-team .employeelist .emprow {
 	width: 29%;
 	float: left;
@@ -21,9 +21,6 @@
 	font-size: 1.2em;
 	display: block;
 }
-.aw-team .emprow .post {
-	margin-top: 7px;
-}
 
 .aw-team .emprow .isinvite {
 	position: absolute;	top: 1px; right: 1px;
@@ -34,25 +31,25 @@
 	cursor: default;
 }
 
-/* * * * * * Страница сотрудника * * * * * */
-.aw-team .empview .empavt,
-.aw-team .empview .empinfo {
+/* * * * * * Страница участника * * * * * */
+.aw-team .memberview .empavt,
+.aw-team .memberview .empinfo {
 	float: left;
 }
 
 /* * * * * * Приглашение, подтверждение * * * * * */
-.aw-team .empview .empstat dl {
+.aw-team .memberview .empstat dl {
 	color: red;
 }
-.aw-team .empview .inviteact {
+.aw-team .memberview .inviteact {
 	width: 500px;
 	margin: 20px 0 20px 130px;
 }
-.aw-team .empview .inviteact p {
+.aw-team .memberview .inviteact p {
 	color: red;
 	font-size: 1.3em;
 }
-.aw-team .empview .inviteact .agreement,
-.aw-team .empview .inviteact .baction {
+.aw-team .memberview .inviteact .agreement,
+.aw-team .memberview .inviteact .baction {
 	margin-top: 10px;
 }

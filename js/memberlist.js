@@ -19,15 +19,7 @@ Component.entryPoint = function(NS){
 	
 	var MemberGroupListWidget = function(container, teamid, cfg){
 		cfg = L.merge({
-			'modName': 'team',
-			'sEditorWidget': 'MemberGroupEditorWidget',
-			'sEditorComponent': 'mgroupeditor',
-			'sEditorModule': 'team',
-			'sMemberEditorWidget': 'MemberEditorWidget',
-			'sMemberEditorComponent': 'membereditor',
-			'sMemberEditorModule': 'team',
-			'act': '',
-			'param': ''
+			'modName': 'team'
 		}, cfg || {});
 
 		MemberGroupListWidget.superclass.constructor.call(this, container, {
@@ -133,9 +125,9 @@ Component.entryPoint = function(NS){
 		showMemberGroupEditor: function(groupid){
 			groupid = groupid || 0;
 			this.closeEditors();
-			var __self = this, cfg = this.cfg;
+			var __self = this, mcfg = this.team.manager.cfg['memberGroupEditor'];
 			
-			this.componentLoad(cfg['sEditorModule'], cfg['sEditorComponent'], function(){
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
 				__self.showMemberGroupEditorMethod(groupid);
 			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
@@ -143,9 +135,9 @@ Component.entryPoint = function(NS){
 			this.elHide('btns,list,emplist');
 
 			var group = groupid==0 ? new NS.MemberGroup() : this.team.memberGroupList.get(groupid);
-			var __self = this, cfg = this.cfg, team = this.team;
+			var __self = this, team = this.team, mcfg = this.team.manager.cfg['memberGroupEditor'];
 			
-			this._editor = new Brick.mod[cfg['sEditorModule']][cfg['sEditorWidget']](this.gel('editor'), team, group, function(act){
+			this._editor = new Brick.mod[mcfg['module']][mcfg['widget']](this.gel('editor'), team, group, function(act){
 				__self.closeEditors();
 				if (act == 'save'){ __self.render(); }
 			});
@@ -153,9 +145,9 @@ Component.entryPoint = function(NS){
 		showMemberEditor: function(memberid){
 			this.closeEditors();
 			
-			var __self = this, cfg = this.cfg;
+			var __self = this, mcfg = this.team.manager.cfg['memberEditor'];
 
-			this.componentLoad(cfg['sMemberEditorModule'], cfg['sMemberEditorComponent'], function(){
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
 				__self.showMemberEditorMethod(memberid);
 			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
@@ -163,9 +155,9 @@ Component.entryPoint = function(NS){
 			memberid = memberid||0;
 			this.elHide('btns,list,view');
 			
-			var __self = this, cfg = this.cfg, team = this.team,
+			var __self = this, team = this.team, mcfg = this.team.manager.cfg['memberEditor'],
 				member = memberid==0 ? new team.manager.MemberClass(team, dList[i]) : list.get(memberid);
-			this._editor = new Brick.mod[cfg['sMemberEditorModule']][cfg['sMemberEditorWidget']](this.gel('editor'), team, member, function(act, newMember){
+			this._editor = new Brick.mod[mcfg['module']][cfg['widget']](this.gel('editor'), team, member, function(act, newMember){
 				__self.closeEditors();
 				if (act == 'save'){
 					if (L.isValue(member)){
@@ -200,8 +192,7 @@ Component.entryPoint = function(NS){
 		buildTData: function(team, list, group){
 			return {'tl': group.title};
 		},
-		onClick: function(el){
-			var tp = this._TId['row'];
+		onClick: function(el, tp){
 			switch(el.id){
 			case tp['bempadd']: this.showMemberEditor(); return true;
 			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;

@@ -369,10 +369,31 @@ Component.entryPoint = function(NS){
 			'NavigatorClass':		Navigator
 		}, cfg || {});
 		
+		// специализированный виджеты в перегруженном модуле
+		cfg['memberGroupEditor'] = L.merge({
+			'module': 'team',
+			'component': 'mgroupeditor',
+			'widget': 'MemberGroupEditorWidget'
+		}, cfg['memberGroupEditor'] || {});
+
+		cfg['memberEditor'] = L.merge({
+			'module': 'team',
+			'component': 'membereditor',
+			'widget': 'MemberEditorWidget'
+		}, cfg['memberEditor'] || {});
+		
+		cfg['memberRemove'] = L.merge({
+			'module': 'team',
+			'component': 'membereditor',
+			'panel': 'MemberRemovePanel'
+		}, cfg['memberEditor'] || {});
+
 		this.init(callback, cfg);
 	};
 	Manager.prototype = {
 		init: function(callback, cfg){
+			
+			this.cfg = cfg;
 
 			this.InitDataClass		= cfg['InitDataClass'];
 			this.UserConfigClass	= cfg['UserConfigClass'];
@@ -604,6 +625,34 @@ Component.entryPoint = function(NS){
 			return list;
 		},
 		
+		memberGroupSave: function(team, sd, callback){
+			var __self = this;
+			this.ajax({
+				'do': 'membergroupsave',
+				'teamid': team.id,
+				'savedata': sd
+			}, function(d){
+				__self._updateMemberGroupList(team, d);
+				var group = null;
+				if (L.isValue(d) && d['groupid'] > 0){
+					group = team.memberGroupList.get(d['groupid']);
+				}
+				NS.life(callback, group);
+			});
+		},
+
+		memberGroupRemove: function(team, groupid, callback){
+			var __self = this;
+			this.ajax({
+				'do': 'membergroupremove',
+				'teamid': team.id,
+				'groupid': groupid
+			}, function(d){
+				__self._updateMemberGroupList(team, d);
+				NS.life(callback);
+			});
+		},
+
 		memberListLoad: function(team, callback){
 			if (L.isNull(team)){
 				NS.life(callback, null);
