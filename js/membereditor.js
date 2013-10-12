@@ -143,7 +143,7 @@ Component.entryPoint = function(NS){
 				if (member.id == UID){
 					this.elEnable('userfname,userlname');
 				}
-				var user = NS.manager.users.get(member.id);
+				var user = this.team.manager.users.get(member.id);
 				if (!L.isNull(user)){
 					this.elSetValue({
 						'userfname': user.firstName,
@@ -434,7 +434,7 @@ Component.entryPoint = function(NS){
 				__self = this;
 			Dom.setStyle(gel('btns'), 'display', 'none');
 			Dom.setStyle(gel('bloading'), 'display', '');
-			NS.manager.memberRemove(this.team, this.member, function(){
+			this.team.memberRemove(this.team, this.member, function(){
 				__self.close();
 				NS.life(__self.callback);
 			});
