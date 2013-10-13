@@ -238,13 +238,13 @@ Component.entryPoint = function(NS){
 			this.update(d);
 		},
 		update: function(d){
-			this.isMember = d['ismbr']|0==1;
+			this.isMember = (d['ismbr']|0)==1;
 			this.isModMember = this.isMember;
-			this.isAdmin = d['isadm']|0==1;
-			this.isVirtual = d['isvrt']|0==1;
+			this.isAdmin = (d['isadm']|0)==1;
+			this.isVirtual = (d['isvrt']|0)==1;
 			
-			this.isJoinRequest = !this.isMember && d['isjrq']|0==1;
-			this.isInvite = !this.isMember && d['isinv']|0==1;
+			this.isJoinRequest = !this.isMember && (d['isjrq']|0)==1;
+			this.isInvite = !this.isMember && (d['isinv']|0)==1;
 			this.relUserId = d['ruid']|0;
 		}
 	};
@@ -276,7 +276,7 @@ Component.entryPoint = function(NS){
 			'gid': 0,
 			'uid': 0
 		}, d || {});
-		Post.superclass.constructor.call(this, d);
+		MemberInGroup.superclass.constructor.call(this, d);
 	};
 	YAHOO.extend(MemberInGroup, SysNS.Item, {
 		update: function(d){
@@ -289,7 +289,22 @@ Component.entryPoint = function(NS){
 	var MemberInGroupList = function(d){
 		MemberInGroupList.superclass.constructor.call(this, d, MemberInGroup);
 	};
-	YAHOO.extend(MemberInGroupList, SysNS.ItemList, {});
+	YAHOO.extend(MemberInGroupList, SysNS.ItemList, {
+		getMemberGroupId: function(memberid){
+			var groupid = 0;
+			this.foreach(function(mig){
+				if (mig.memberid == memberid){
+					groupid = mig.groupid;
+					return true;
+				}
+			});
+			return groupid;
+		},
+		checkMemberInGroup: function(memberid, groupid){
+			var mgid = this.getMemberGroupId(memberid);
+			return mgid == groupid;
+		}
+	});
 	NS.MemberInGroupList = MemberInGroupList;
 
 	var Member = function(team, d){
@@ -578,7 +593,7 @@ Component.entryPoint = function(NS){
 				return null;
 			}
 				
-			var list = team.memberInGroupList = new NS.MemberGroupList();
+			var list = team.memberInGroupList = new NS.MemberInGroupList();
 			
 			var dList = d['memberingroups']['list'];
 			for (var i=0; i<dList.length; i++){

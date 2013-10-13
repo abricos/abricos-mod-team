@@ -14,7 +14,8 @@ Component.entryPoint = function(NS){
 	var Dom = YAHOO.util.Dom,
 		E = YAHOO.util.Event,
 		L = YAHOO.lang;
-
+	
+	var BW = Brick.mod.widget.Widget;
 	var buildTemplate = this.buildTemplate;
 	
 	var MemberGroupListWidget = function(container, teamid, cfg){
@@ -26,13 +27,12 @@ Component.entryPoint = function(NS){
 			'buildTemplate': buildTemplate, 'tnames': 'widget' 
 		}, teamid, cfg);
 	};
-	YAHOO.extend(MemberGroupListWidget, Brick.mod.widget.Widget, {
+	YAHOO.extend(MemberGroupListWidget, BW, {
 		init: function(teamid, cfg){
 			this.teamid = teamid;
 			this.cfg = cfg;
 			
 			this.team = null;
-			this.list = null;
 			
 			this._editor = null;
 			this._wList = [];
@@ -58,7 +58,6 @@ Component.entryPoint = function(NS){
 		},
 		_onLoadManager: function(team, list){
 			this.team = team;
-			this.list = list;
 			
 			this.elHide('loading,rlwrap,nullitem');
 			
@@ -77,20 +76,21 @@ Component.entryPoint = function(NS){
 			this._wList = [];
 		},
 		onClick: function(el, tp){
-			var ws = this._wList;
-			for (var i=0;i<ws.length;i++){
-				// if (ws[i].onClick(el)){ return true; }
-			}
-
 			switch(el.id){
 			case tp['bempadd']: this.showMemberEditor(); return true;
 			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
 			}
+
+			var ws = this._wList;
+			for (var i=0;i<ws.length;i++){
+				if (ws[i].onClick(el)){ return true; }
+			}
+
 			return false;
 		},
 		render: function(){
-			var team = this.team, list = this.list;
-			if (L.isNull(team) || L.isNull(list)){ return; }
+			var team = this.team;
+			if (!L.isValue(team) || !L.isValue(team.memberGroupList)){ return; }
 			
 			this.elSetVisible('btns', team.role.isAdmin);
 
@@ -98,9 +98,9 @@ Component.entryPoint = function(NS){
 			
 			this._clearWS();
 
-			var ws = this._wList, elList = this.gel('list');
+			var ws = this._wList;
 			team.memberGroupList.foreach(function(group){
-				ws[ws.length] = new NS.MemberGroupRowWidget(elList, team, list, group, {
+				ws[ws.length] = new NS.MemberGroupRowWidget(__self.gel('list'), team, group, {
 					'onReloadList': function(){
 						__self.reloadList();
 					}
@@ -111,7 +111,7 @@ Component.entryPoint = function(NS){
 				ws[i].render();
 			}
 
-			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, list, {
+			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, {
 				'groupid': 0
 			});
 		},
@@ -150,6 +150,8 @@ Component.entryPoint = function(NS){
 				__self.elHide('btns,list,view');
 				
 				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), team, member, function(act, newMember){
+					__self.closeEditors();
+					
 					if (act == 'save'){
 						__self.render(); 
 					}
@@ -159,23 +161,22 @@ Component.entryPoint = function(NS){
 	});
 	NS.MemberGroupListWidget = MemberGroupListWidget;
 
-	var MemberGroupRowWidget = function(container, team, list, group, cfg){
+	var MemberGroupRowWidget = function(container, team, group, cfg){
 		cfg = L.merge({
 			'onReloadList': null
 		}, cfg || {});
 		MemberGroupRowWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'row', 'isRowWidget': true
-		}, team, list, group, cfg);
+		}, team, group, cfg);
 	};
-	YAHOO.extend(MemberGroupRowWidget, Brick.mod.widget.Widget, {
-		init: function(team, list, group, cfg){
+	YAHOO.extend(MemberGroupRowWidget, BW, {
+		init: function(team, group, cfg){
 			this.team = team;
-			this.list = list;
 			this.group = group;
 			this.cfg = cfg;
 			this._editor = null;
 		},
-		buildTData: function(team, list, group){
+		buildTData: function(team, group, cfg){
 			return {'tl': group.title};
 		},
 		onClick: function(el, tp){
@@ -192,7 +193,7 @@ Component.entryPoint = function(NS){
 			this.elSetVisible('btns', team.role.isAdmin);
 			this.elSetHTML('grouptl', group.title);
 
-			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, this.list, {
+			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, {
 				'groupid': group.id
 			});
 		},
@@ -202,48 +203,42 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 			this.elShow('btns,list,emplist');
 		},
-		_loadEditor: function(component, callback){
-			this.closeEditors();
-			this.componentLoad('{C#MODNAME}', component, callback, {
-				'hide': 'bbtns', 'show': 'edloading'
-			});
-		},
 		showMemberGroupEditor: function(){
-			var __self = this;
-			this._loadEditor('groupeditor', function(){
-				__self.showMemberGroupEditorMethod();
-			});
-		},
-		showMemberGroupEditorMethod: function(){
-			this.elHide('btns,list,emplist');
+			this.closeEditors();
+			var __self = this, team = this.team, group = this.group,
+				mcfg = team.manager.cfg['memberGroupEditor'];
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+				__self.elHide('btns,list,emplist');
 
-			var __self = this;
-			this._editor = new NS.DeptEditorWidget(this.gel('editor'), this.team, this.group, function(act){
-				__self.closeEditors();
-				if (act == 'save'){ __self.render(); }
-			});
+				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), team, group, function(act){
+					__self.closeEditors();
+					if (act == 'save'){ __self.render(); }
+				});
+				
+			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
 		showMemberEditor: function(memberid){
-			var __self = this;
-			this._loadEditor('membereditor', function(){
-				__self.showMemberEditorMethod();
-			});
-		},
-		showMemberEditorMethod: function(memberid){
 			memberid = memberid||0;
-			this.elHide('btns,list,emplist');
+			this.closeEditors();
+			
+			var __self = this, team = this.team, group = this.group, 
+				mcfg = this.team.manager.cfg['memberEditor'],
+				member = memberid==0 ? new team.manager.MemberClass(team) : list.get(memberid);
 
-			var emp = memberid==0 ? new NS.Sportsman(this.team, {'groupid': this.group.id}) : this.team.memberList.get(memberid);
-
-			var __self = this;
-			this._editor = new NS.MemberEditorWidget(this.gel('editor'), this.team, emp, function(act){
-				__self.closeEditors();
-				if (act == 'save'){ 
-					__self.render();
-					NS.life(__self.cfg['onReloadList']);
-				}
-			});
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+				__self.elHide('btns,list,view');
+				
+				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), team, member, function(act, newMember){
+					__self.closeEditors();
+					
+					if (act == 'save'){
+						__self.render(); 
+					}
+				});
+				__self._editor.groupSelectWidget.setValue(group.id);
+			}, {'hide': 'bbtns', 'show': 'edloading'});
 		}
+		
 	});
     NS.MemberGroupRowWidget = MemberGroupRowWidget;	
 };

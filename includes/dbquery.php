@@ -383,7 +383,7 @@ class TeamQuery {
 	public static function MemberRemoveFromGroup(Ab_Database $db, $groupid, $memberid){
 		$sql = "
 			DELETE FROM ".$db->prefix."team_memberingroup 
-			WHERE groupid=".bkint($groupid)." AND memberid=".bkint($memberid)."
+			WHERE groupid=".bkint($groupid)." AND userid=".bkint($memberid)."
 		";
 		$db->query_write($sql);
 	}

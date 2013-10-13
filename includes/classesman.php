@@ -245,7 +245,7 @@ class TeamManager {
 			
 			case 'member':	 	return $this->MemberToAJAX($d->teamid, $d->memberid);
 			case 'memberlist': 	return $this->MemberListToAJAX($d->teamid);
-			case 'membersave': 	return $this->MemberSaveToAJAX($d->teamid, $d);
+			case 'membersave': 	return $this->MemberSaveToAJAX($d->teamid, $d->savedata);
 			case 'memberremove':return $this->MemberRemove($d->teamid, $d->memberid);
 			
 			case 'membergrouplist':	return $this->MemberGroupListToAJAX($d->teamid);
@@ -658,6 +658,7 @@ class TeamManager {
 			if ($d->vrt == 1){ // Добавление виртуального участника
 				
 				$invite = $this->MemberNewInvite($team, $d->email, $d->fnm, $d->lnm, true);
+				
 				if (is_null($invite)){
 					return null;
 				}
@@ -725,7 +726,7 @@ class TeamManager {
 		$memberid = $d->id;
 		
 		// сохранение группы пользователя
-		$groupid = intval($d->gid);
+		$groupid = intval($d->groupid);
 		
 		$mgList = $this->MemberGroupList($teamid);
 		$mg = $mgList->Get($groupid);
@@ -902,7 +903,7 @@ class TeamManager {
 		if ($d->id == 0){
 			$d->id = TeamQuery::MemberGroupAppend($this->db, $teamid, $this->moduleName, $d);
 		}else{
-			TeamQuery::MemberGroupUpdate($this->db, $teamid, $d);
+			TeamQuery::MemberGroupUpdate($this->db, $teamid, $this->moduleName, $d->id, $d);
 		}
 		
 		$this->TeamCacheClear($teamid);

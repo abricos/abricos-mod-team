@@ -7,7 +7,7 @@ var Component = new Brick.Component();
 Component.requires = {
 	mod:[
 		{name: 'uprofile', files: ['users.js']},
-		{name: 'team', files: ['editor.js']}
+		{name: 'team', files: ['mgroupeditor.js', 'editor.js']}
 	]
 };
 Component.entryPoint = function(NS){
@@ -48,6 +48,8 @@ Component.entryPoint = function(NS){
 					__self.render();
 				});
 			}
+			var groupid = team.memberInGroupList.getMemberGroupId(member.id);
+			this.groupSelectWidget = new NS.MemberGroupSelectWidget(this.gel('groups'), team, groupid);
 		},
 		onClick: function(el, tp){
 			this.clearError();
@@ -167,8 +169,9 @@ Component.entryPoint = function(NS){
 		getSaveData: function(){
 			return sd = {
 				'id': this.member.id,
-				'vrt': this._isVirtual ? 1 : 0,
 				'teamid': this.team.id,
+				'groupid': this.groupSelectWidget.getValue(),
+				'vrt': this._isVirtual ? 1 : 0,
 				'fnm': this.gel('userfname').value,
 				'lnm': this.gel('userlname').value
 			};

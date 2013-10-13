@@ -260,7 +260,7 @@ Component.entryPoint = function(NS){
 		},
 		render: function(){
 			var team = this.team, member = this.member,
-				user = NS.manager.users.get(member.id);
+				user = team.manager.users.get(member.id);
 			
 			var TM = this._TM;
 			
@@ -281,17 +281,18 @@ Component.entryPoint = function(NS){
 	});
     NS.MemberListRowWidget = MemberListRowWidget;
 
-	var MemberListWidget = function(container, team, list, cfg){
-		cfg = L.merge({'groupid': 0}, cfg || {});
+	var MemberListWidget = function(container, team, cfg){
+		cfg = L.merge({
+			'groupid': 0
+		}, cfg || {});
 
 		MemberListWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'list'
-		}, team, list, cfg);
+		}, team, cfg);
 	};
 	YAHOO.extend(MemberListWidget, Brick.mod.widget.Widget, {
-		init: function(team, list, cfg){
+		init: function(team, cfg){
 			this.team = team;
-			this.list = list;
 			this.cfg = cfg;
 			this._wList = [];
 		},
@@ -305,7 +306,7 @@ Component.entryPoint = function(NS){
 				ws[i].destroy();
 			}
 		},
-		onClick: function(el){
+		onClick: function(el, tp){
 			var ws = this._wList;
 			for (var i=0;i<ws.length;i++){
 				if (ws[i].onClick(el)){ return true; }
@@ -314,13 +315,13 @@ Component.entryPoint = function(NS){
 		},
 		render: function(){
 			this._clearWS();
-			var TM = this._TM, gel = function(n){ return TM.getEl('list.'+n);};
-			var cfg = this.cfg, ws = this._wList, team = this.team;
+			var __self = this, cfg = this.cfg, ws = this._wList, team = this.team;
 
-			this.list.foreach(function(member){
-				if (!member.role.isMember || member.groupid != cfg['groupid']){ return; }
-				ws[ws.length] = new NS.MemberListRowWidget(gel('list'), team, member);
-			});
+			team.memberList.foreach(function(member){
+				if (!member.role.isMember 
+					|| !team.memberInGroupList.checkMemberInGroup(member.id, cfg['groupid'])){ return; }
+				ws[ws.length] = new NS.MemberListRowWidget(__self.gel('list'), team, member);
+ 			});
 			
 			for (var i=0;i<ws.length;i++){
 				ws[i].render();
