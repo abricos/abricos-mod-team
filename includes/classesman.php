@@ -167,7 +167,35 @@ class TeamManager {
 	
 	public final function AJAX($d){
 		$ret = new stdClass();
-		$ret->result = $this->AJAXMethod($d);
+		$aDo = explode("|", $d->do);
+
+		$aResult = array();
+		for ($i=0;$i<count($aDo);$i++){
+			$sDo = trim($aDo[$i]);
+			if (empty($sDo)){ continue; }
+			
+			$d->do = $sDo;
+			array_push($aResult,  $this->AJAXMethod($d));
+		}
+		
+		$ret->result = null;
+		for ($i=0;$i<count($aResult);$i++){
+			$result = $aResult[$i];
+			if (!is_object($result)){ continue; }
+			
+			if (!is_object($ret->result)){
+				$ret->result = $result;
+				continue;
+			}
+			
+			$vars = get_object_vars($result);
+			for ($ii=0;$ii<count($vars);$ii++){
+				$var = $vars[$ii];
+				$ret->result->$var = $result->$var;
+			}
+		}
+		
+		// $ret->result = $this->AJAXMethod($d);
 		
 		if ($d->globalmemberlist && $d->teamid > 0){
 			$team = $this->Team($d->teamid);
@@ -601,8 +629,8 @@ class TeamManager {
 		return $list;
 	}
 	
-	public function MemberListToAJAX($teamid){
-		$list = $this->MemberList($teamid);
+	public function MemberListToAJAX($teamid, $clearCache = false){
+		$list = $this->MemberList($teamid, $clearCache);
 		if (empty($list)){ return null; }
 		
 		$ret = new stdClass();
@@ -729,8 +757,13 @@ class TeamManager {
 		$memberid = $this->MemberSave($teamid, $d);
 		if (empty($memberid)){ return null; }
 		
-		$ret = $this->MemberToAJAX($teamid, $memberid);
+		$ret = $this->MemberListToAJAX($teamid);
 		$ret->memberid = $memberid;
+		
+		$obj = $this->MemberToAJAX($teamid, $memberid);
+		$ret->memberid = $memberid;
+		$ret->member = $obj->member;
+		
 		return $ret;
 	}
 	

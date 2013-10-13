@@ -559,36 +559,12 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
-		_updateMember: function(team, d){
-			if (!(L.isValue(d) && L.isValue(d['member']))){
-				return null;
-			}
-			return new this.MemberClass(team, d['member']);
-		},
-		
-		memberLoad: function(team, memberid, callback){
-			if (L.isNull(team)){
-				NS.life(callback, null);
-				return;
-			}
-			var __self = this;
-			this.ajax({
-				'do': 'member',
-				'teamid': team.id,
-				'memberid': memberid
-			}, function(d){
-				var member = __self._updateMember(team, d);
-
-				NS.life(callback, member);
-			});
-		},
-		
 		_updateMemberGroupList: function(team, d){
 			if (!L.isValue(d) || !L.isValue(d['membergroups']) || !L.isArray(d['membergroups']['list'])){
 				return null;
 			}
 				
-			var list = new NS.MemberGroupList();
+			var list = team.memberGroupList = new NS.MemberGroupList();
 			
 			var dList = d['membergroups']['list'];
 			for (var i=0; i<dList.length; i++){
@@ -602,7 +578,7 @@ Component.entryPoint = function(NS){
 				return null;
 			}
 				
-			var list = new NS.MemberGroupList();
+			var list = team.memberInGroupList = new NS.MemberGroupList();
 			
 			var dList = d['memberingroups']['list'];
 			for (var i=0; i<dList.length; i++){
@@ -612,11 +588,14 @@ Component.entryPoint = function(NS){
 		},
 		
 		_updateMemberList: function(team, d){
+			this._updateMemberGroupList(team, d);
+			this._updateMemberInGroupList(team, d);
+			
 			if (!L.isValue(d) || !L.isValue(d['members']) || !L.isArray(d['members']['list'])){
 				return null;
 			}
 				
-			var list = new this.MemberListClass();
+			var list = team.memberList = new this.MemberListClass();
 			
 			var dList = d['members']['list'];
 			for (var i=0; i<dList.length; i++){
@@ -666,25 +645,63 @@ Component.entryPoint = function(NS){
 				'teamid': team.id
 			}, function(d){
 				var list = __self._updateMemberList(team, d);
-				team.memberList = list;
-				
-				team.memberGroupList = __self._updateMemberGroupList(team, d);
-				team.memberInGroupList = __self._updateMemberInGroupList(team, d);
 				NS.life(callback, list);
 			});
 		},
-
-		memberSave: function(team, sd, callback){
-			sd['do'] = 'membersave';
-			sd['teamid'] = team.id;
+		
+		_updateMember: function(team, d){
+			this._updateMemberList(team, d);
+			if (!L.isValue(d) || !L.isValue(d['member']) || d['member']['id']|0 == 0){
+				return null;
+			}
+			var memberid = d['member']['id']|0,
+				member = team.memberList.get(memberid);
+			
+			if (L.isValue(member)){
+				member.update(d['member']);
+			}
+			
+			return member;
+		},
+		
+		memberLoad: function(team, memberid, callback){
+			if (L.isNull(team)){
+				NS.life(callback, null);
+				return;
+			}
+			var sDo = 'member';
+			if (!L.isValue(team.memberList)){
+				sDo += '|memberlist';
+			}
 			var __self = this;
-			this.ajax(sd, function(d){
+			this.ajax({
+				'do': 'member',
+				'teamid': team.id,
+				'memberid': memberid
+			}, function(d){
+				var member = __self._updateMember(team, d);
+
+				NS.life(callback, member);
+			});
+		},
+		
+		memberSave: function(team, sd, callback){
+			this.requestGlobalMemberList = true;
+
+			var __self = this;
+			this.ajax({
+				'do': 'membersave',
+				'teamid': team.id,
+				'savedata': sd
+			}, function(d){
 				var member = __self._updateMember(team, d);
 				NS.life(callback, member);
 			});
 		},
 		
 		memberInviteAccept: function(team, sd, callback){
+			this.requestGlobalMemberList = true;
+			
 			var __self = this;
 			sd['do'] = 'memberinviteact';
 			this.ajax(sd, function(d){
@@ -694,15 +711,15 @@ Component.entryPoint = function(NS){
 		},
 		
 		memberRemove: function(team, member, callback){
-			if (L.isNull(team)){
-				NS.life(callback);
-				return;
-			}
+			this.requestGlobalMemberList = true;
+			
+			var __self = this;
 			this.ajax({
 				'do': 'memberremove', 
 				'teamid': team.id,
 				'memberid': member.id
 			}, function(d){
+				__self._updateMemberList(team, d);
 				NS.life(callback);
 			});
 		}
