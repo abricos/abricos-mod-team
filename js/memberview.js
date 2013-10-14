@@ -72,12 +72,18 @@ Component.entryPoint = function(NS){
 			if (L.isNull(team) || L.isNull(member)){ return; }
 
 			this.elSetVisible('btns', team.role.isAdmin);
+			
+			this.gel('urlmemberlist').href = team.navigator.memberListURI();
 
 			var user = team.manager.users.get(member.id);
+
+			var groupid = team.memberInGroupList.getMemberGroupId(member.id),
+				group = team.memberGroupList.get(groupid);
 			
 			this.elSetHTML({
 				'unm': user.getUserName(),
-				'avatar': user.avatar180()
+				'avatar': user.avatar180(),
+				'grouptitle': L.isValue(group) ? group.title : ''
 			});
 			
 			this.elHide('empstat,btnisjrq,infoisjrq');

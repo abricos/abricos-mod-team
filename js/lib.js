@@ -367,6 +367,10 @@ Component.entryPoint = function(NS){
 		URI: function(){
 			return "#app="+this.team.module+'/wsitem/wsi/'+this.team.id+'/';
 		},
+		memberListURI: function(memberid){
+			var man = this.team.manager;
+			return this.URI()+man.modname+'/memberlist/MemberGroupListWidget/';
+		},
 		memberViewURI: function(memberid){
 			var man = this.team.manager;
 			return this.URI()+man.modname+'/memberview/MemberViewWidget/'+memberid+'/';
@@ -400,13 +404,7 @@ Component.entryPoint = function(NS){
 			'component': 'membereditor',
 			'widget': 'MemberEditorWidget'
 		}, cfg['memberEditor'] || {});
-		/*
-		cfg['memberView'] = L.merge({
-			'module': 'team',
-			'component': 'memberview',
-			'widget': 'MemberViewWidget'
-		}, cfg['memberView'] || {});
-		/**/
+		
 		cfg['memberRemove'] = L.merge({
 			'module': 'team',
 			'component': 'membereditor',
