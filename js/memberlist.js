@@ -24,7 +24,7 @@ Component.entryPoint = function(NS){
 		}, cfg || {});
 
 		MemberGroupListWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'widget' 
+			'buildTemplate': buildTemplate, 'tnames': 'grouplist' 
 		}, teamid, cfg);
 	};
 	YAHOO.extend(MemberGroupListWidget, BW, {
@@ -166,7 +166,7 @@ Component.entryPoint = function(NS){
 			'onReloadList': null
 		}, cfg || {});
 		MemberGroupRowWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'row', 'isRowWidget': true
+			'buildTemplate': buildTemplate, 'tnames': 'grouprow', 'isRowWidget': true
 		}, team, group, cfg);
 	};
 	YAHOO.extend(MemberGroupRowWidget, BW, {
@@ -180,7 +180,7 @@ Component.entryPoint = function(NS){
 			return {'tl': group.title};
 		},
 		onClick: function(el, tp){
-			var tp = this._TId['row'];
+			var tp = this._TId['grouprow'];
 			switch(el.id){
 			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
 			case tp['bempadd']: this.showMemberEditor(); return true;
@@ -240,5 +240,85 @@ Component.entryPoint = function(NS){
 		}
 		
 	});
-    NS.MemberGroupRowWidget = MemberGroupRowWidget;	
+    NS.MemberGroupRowWidget = MemberGroupRowWidget;
+    
+	var MemberListRowWidget = function(container, team, member){
+		MemberListRowWidget.superclass.constructor.call(this, container, {
+			'buildTemplate': buildTemplate, 'tnames': 'row,rowview,isinvite', 
+			'isRowWidget': true
+		}, team, member);
+	};
+	YAHOO.extend(MemberListRowWidget, Brick.mod.widget.Widget, {
+		init: function(team, member){
+			this.team = team;
+			this.member = member;
+		},
+		render: function(){
+			var team = this.team, member = this.member,
+				user = team.manager.users.get(member.id);
+			
+			var TM = this._TM;
+			
+			this.elSetHTML('view', TM.replace('rowview', {
+				'id': member.id,
+				'avatar': user.avatar45(),
+				'unm':  user.getUserName(),
+				'urlview': team.navigator.memberViewURI(member.id),
+				'isinvite': member.role.isInvite ? TM.replace('isinvite') : ""
+			}));
+		},
+		onClick: function(el){
+			return false;
+		}
+	});
+    NS.MemberListRowWidget = MemberListRowWidget;
+
+	var MemberListWidget = function(container, team, cfg){
+		cfg = L.merge({
+			'groupid': 0
+		}, cfg || {});
+
+		MemberListWidget.superclass.constructor.call(this, container, {
+			'buildTemplate': buildTemplate, 'tnames': 'list'
+		}, team, cfg);
+	};
+	YAHOO.extend(MemberListWidget, Brick.mod.widget.Widget, {
+		init: function(team, cfg){
+			this.team = team;
+			this.cfg = cfg;
+			this._wList = [];
+		},
+		destroy: function(){
+			this._clearWS();
+			MemberListWidget.superclass.destroy.call(this);
+		},
+		_clearWS: function(){
+			var ws = this._wList;
+			for (var i=0;i<ws.length;i++){
+				ws[i].destroy();
+			}
+		},
+		onClick: function(el, tp){
+			var ws = this._wList;
+			for (var i=0;i<ws.length;i++){
+				if (ws[i].onClick(el)){ return true; }
+			}
+			return false;
+		},
+		render: function(){
+			this._clearWS();
+			var __self = this, cfg = this.cfg, ws = this._wList, team = this.team;
+
+			team.memberList.foreach(function(member){
+				if (!member.role.isMember 
+					|| !team.memberInGroupList.checkMemberInGroup(member.id, cfg['groupid'])){ return; }
+				ws[ws.length] = new NS.MemberListRowWidget(__self.gel('list'), team, member);
+ 			});
+			
+			for (var i=0;i<ws.length;i++){
+				ws[i].render();
+			}
+		}
+	});
+    NS.MemberListWidget = MemberListWidget;    
 };

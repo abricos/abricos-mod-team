@@ -366,6 +366,10 @@ Component.entryPoint = function(NS){
 		},
 		URI: function(){
 			return "#app="+this.team.module+'/wsitem/wsi/'+this.team.id+'/';
+		},
+		memberViewURI: function(memberid){
+			var man = this.team.manager;
+			return this.URI()+man.modname+'/memberview/MemberViewWidget/'+memberid+'/';
 		}
 	};
 	NS.Navigator = Navigator;
@@ -396,7 +400,13 @@ Component.entryPoint = function(NS){
 			'component': 'membereditor',
 			'widget': 'MemberEditorWidget'
 		}, cfg['memberEditor'] || {});
-		
+		/*
+		cfg['memberView'] = L.merge({
+			'module': 'team',
+			'component': 'memberview',
+			'widget': 'MemberViewWidget'
+		}, cfg['memberView'] || {});
+		/**/
 		cfg['memberRemove'] = L.merge({
 			'module': 'team',
 			'component': 'membereditor',
@@ -666,12 +676,12 @@ Component.entryPoint = function(NS){
 		
 		_updateMember: function(team, d){
 			this._updateMemberList(team, d);
-			if (!L.isValue(d) || !L.isValue(d['member']) || d['member']['id']|0 == 0){
+			if (!L.isValue(d) || !L.isValue(d['member']) || (d['member']['id']|0) == 0){
 				return null;
 			}
 			var memberid = d['member']['id']|0,
 				member = team.memberList.get(memberid);
-			
+
 			if (L.isValue(member)){
 				member.update(d['member']);
 			}
@@ -690,7 +700,7 @@ Component.entryPoint = function(NS){
 			}
 			var __self = this;
 			this.ajax({
-				'do': 'member',
+				'do': sDo,
 				'teamid': team.id,
 				'memberid': memberid
 			}, function(d){

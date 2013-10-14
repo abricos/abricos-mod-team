@@ -1,36 +1,3 @@
-/* * * * * * * Список участников * * * * * * * */
-.aw-team .memberlist .memberrow {
-	width: 29%;
-	float: left;
-	margin-right: 10px;
-	height: 65px;
-}
-.aw-team .memberrow .view {
-	position: relative;
-}
-.aw-team .memberrow {
-    border: 1px solid #E3E3D7;
-    margin-bottom: 10px;
-    padding: 10px 15px;
-}
-.aw-team .memberrow .avtr {
-    float: left;
-    margin-right: 10px;
-}
-.aw-team .memberrow .unm {
-	font-size: 1.2em;
-	display: block;
-}
-
-.aw-team .memberrow .isinvite {
-	position: absolute;	top: 1px; right: 1px;
-	width: 10px;
-	text-align: center;
-	font-weight: bold;
-	color: red;
-	cursor: default;
-}
-
 /* * * * * * Страница участника * * * * * */
 .aw-team .memberview .empavt,
 .aw-team .memberview .empinfo {

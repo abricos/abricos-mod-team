@@ -189,13 +189,10 @@ class TeamManager {
 			}
 			
 			$vars = get_object_vars($result);
-			for ($ii=0;$ii<count($vars);$ii++){
-				$var = $vars[$ii];
-				$ret->result->$var = $result->$var;
+			foreach ($vars as $var => $obj){
+				$ret->result->$var = $obj;
 			}
 		}
-		
-		// $ret->result = $this->AJAXMethod($d);
 		
 		if ($d->globalmemberlist && $d->teamid > 0){
 			$team = $this->Team($d->teamid);
