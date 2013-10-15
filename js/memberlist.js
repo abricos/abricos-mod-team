@@ -20,11 +20,13 @@ Component.entryPoint = function(NS){
 	
 	var MemberGroupListWidget = function(container, teamid, cfg){
 		cfg = L.merge({
-			'modName': 'team'
+			'modName': 'team',
+			'override': null
 		}, cfg || {});
-
+		
 		MemberGroupListWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'grouplist' 
+			'buildTemplate': buildTemplate, 'tnames': 'grouplist',
+			'override': cfg['override']
 		}, teamid, cfg);
 	};
 	YAHOO.extend(MemberGroupListWidget, BW, {
@@ -77,7 +79,7 @@ Component.entryPoint = function(NS){
 		},
 		onClick: function(el, tp){
 			switch(el.id){
-			case tp['bempadd']: this.showMemberEditor(); return true;
+			case tp['bmemberadd']: this.showMemberEditor(); return true;
 			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
 			}
 
@@ -94,13 +96,14 @@ Component.entryPoint = function(NS){
 			
 			this.elSetVisible('btns', team.role.isAdmin);
 
-			var __self = this;
+			var __self = this, cfg = this.cfg;
 			
 			this._clearWS();
 
 			var ws = this._wList;
 			team.memberGroupList.foreach(function(group){
 				ws[ws.length] = new NS.MemberGroupRowWidget(__self.gel('list'), team, group, {
+					'override': cfg['override'],
 					'onReloadList': function(){
 						__self.reloadList();
 					}
@@ -163,10 +166,12 @@ Component.entryPoint = function(NS){
 
 	var MemberGroupRowWidget = function(container, team, group, cfg){
 		cfg = L.merge({
-			'onReloadList': null
+			'onReloadList': null,
+			'override': null
 		}, cfg || {});
 		MemberGroupRowWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'grouprow', 'isRowWidget': true
+			'buildTemplate': buildTemplate, 'tnames': 'grouprow', 'isRowWidget': true,
+			'override': cfg['override']
 		}, team, group, cfg);
 	};
 	YAHOO.extend(MemberGroupRowWidget, BW, {
@@ -182,8 +187,8 @@ Component.entryPoint = function(NS){
 		onClick: function(el, tp){
 			var tp = this._TId['grouprow'];
 			switch(el.id){
-			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
-			case tp['bempadd']: this.showMemberEditor(); return true;
+			case tp['bgroupedit']: this.showMemberGroupEditor(); return true;
+			case tp['bmemberadd']: this.showMemberEditor(); return true;
 			}
 			return false;
 		},

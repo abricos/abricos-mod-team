@@ -5,21 +5,21 @@
 	</div>
 
 	<div id="{i#nullitem}" class="nullitem" style="display: none">
-		Список участников не найден или недостаточно прав для просмотра
+		{##nullitem}
 	</div>
 	
 	<div id="{i#rlwrap}" class="groups" style="display: none">
 		<div class="hdtitle">
 			<div id="{i#btns}" class="rbtns" style="display: none">
 				<span id="{i#bbtns}">
-					<a id="{i#bgroupadd}" href="#" class="habtn">{#mod.team.memberlist.grouplist.bgroupadd}</a>
-					<a id="{i#bempadd}" href="#" class="habtn" >Добавить участника</a>
+					<a id="{i#bgroupadd}" href="#" class="habtn">{##bgroupadd}</a>
+					<a id="{i#bmemberadd}" href="#" class="habtn">{##bmemberadd}</a>
 				</span>
 				<span id="{i#edloading}" style="display: none">
 					<img src="/images/loading.gif" /> Загрузка...
 				</span>
 			</div>
-			<span class="tl">Участники</span>
+			<span class="tl">{##members}</span>
 		</div>
 		<div id="{i#editor}" class="dpeditor"></div>
 		<div id="{i#emplist}" class="emplist"></div>
@@ -32,8 +32,8 @@
 	<div class="ihd">
 		<div id="{i#btns}" class="rbtns" style="display: none">
 			<span id="{i#bbtns}">
-				<a id="{i#bgroupadd}" href="#" class="habtn">Редактировать группу</a>
-				<a id="{i#bempadd}" href="#" class="habtn" >Добавить участника в группу</a>
+				<a id="{i#bgroupedit}" href="#" class="habtn">{##bgroupedit}</a>
+				<a id="{i#bmemberadd}" href="#" class="habtn">{##bmemberaddin}</a>
 			</span>
 			<span id="{i#edloading}" style="display: none">
 				<img src="/images/loading.gif" /> Загрузка...

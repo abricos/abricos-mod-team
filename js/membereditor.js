@@ -19,16 +19,20 @@ Component.entryPoint = function(NS){
 	var UID = Brick.env.user.id;
 	var buildTemplate = this.buildTemplate;
 
-	var MemberEditorWidget = function(container, team, member, callback){
+	var MemberEditorWidget = function(container, team, member, callback, cfg){
+		cfg = L.merge({
+			'override': null
+		}, cfg || {});
 		MemberEditorWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'widget' 
-		}, team, member, callback);
+			'buildTemplate': buildTemplate, 'tnames': 'widget', 'override': cfg['override'] 
+		}, team, member, callback, cfg);
 	};
 	YAHOO.extend(MemberEditorWidget, Brick.mod.widget.Widget, {
-		init: function(team, member, callback){
+		init: function(team, member, callback, cfg){
 			this.team = team;
 			this.member = member;
 			this.callback = callback;
+			this.cfg = cfg;
 			this.inviteWidget = null;
 			this._isVirtual = false;
 		},

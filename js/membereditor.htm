@@ -10,8 +10,8 @@
 	
 		<div class="{v#cledst}">
 			<div class="group">
-				<h3 class="edstnew">Добавление участника</h3>
-				<h3 class="edstedit">Редактирование участника</h3>
+				<h3 class="edstnew">{##membernew}</h3>
+				<h3 class="edstedit">{##memberedit}</h3>
 			</div>
 
 			<div id="{i#mynameeditor}"></div>
@@ -39,7 +39,7 @@
 						</dl>
 						
 						<dl>
-							<dt>Группа</dt>
+							<dt>{##group}</dt>
 							<dd>
 								<div id="{i#groups}"></div>
 							</dd>
@@ -63,10 +63,10 @@
 							<img src="/images/loading.gif" class="ldg" /> Сохранение...
 						</span>
 						<span id="{i#err0}" class="error" style="display: none">
-							Необходимо заполнить Имя и Фамилию участника
+							{##membernamefill}
 						</span>
 						<span id="{i#err1}" class="error" style="display: none">
-							Этот участник уже добавлен
+							{##memberexist}
 						</span>
 					</dd>
 				</dl>	
@@ -117,10 +117,10 @@
 <!--{existjoin}-->
 <div id="{i#id}" class="group existjoin">
 
-	<h4>Добавление из списка существующих участников</h4>
+	<h4>{##memberaddfrom}</h4>
 	
 	<dl class="email">
-		<dt>Выберите участника</dt>
+		<dt>{##memberselect}</dt>
 		<dd>
 			<div id="{i#select}"></div>
 		</dd>
@@ -134,7 +134,7 @@
 	<h4>Приглашение по адресу электронной почты</h4>
 
 	<dl class="email">
-		<dt>Введите существующий email участника</dt>
+		<dt>{##memberemailenter}</dt>
 		<dd>
 			<div class="inpline">
 				<input id="{i#email}" class="inp" placeholder="" onfocus="this.select()"/>
@@ -153,10 +153,7 @@
 					зарегистрирован в системе
 					<br />
 					<br />
-					После добавления участника в список  
-					будет сформирована учетная запись (логин и пароль) для входа 
-					его в систему, а так же будет отправлено ему приглашение 
-					с подтверждением на указанный email
+					{##memberafterappendnew}
 					<br />
 					<br />
 					Количество не подтвержденных учетных записей в системе ограничено, 
@@ -173,7 +170,7 @@
 				<dt>&nbsp;</dt>
 				<dd>
 					<p>
-						В списке участников уже добавлен пользователь с email 
+						{##memberemailexist} 
 						<span id="{i#resemail1}" class="eml"></span>
 					</p>
 				</dd>
@@ -202,11 +199,7 @@
 				<dt>&nbsp;</dt>
 				<dd>
 					<p>
-						После добавления участника в список 
-						на указанный email будет отправлена 
-						ссылка для подтверждения
-						<br /><br />
-						Для продолжения заполните данные участника и нажмите кнопку <i>Добавить</i>
+						{##memberafterappend}
 					</p>
 				</dd>
 			</dl>
@@ -229,11 +222,11 @@
 </div>
 
 <!--{removepanel}-->
-<div class='hd'>Удаление участника</div>
+<div class='hd'>{##memberremove.title}</div>
 <div class='bd aw-company'>
 	<div id="{i#dialogremove}" class="field">
 		<p>
-			Вы действительно хотите удалить участника из списка?
+			{##memberremove.question}
 		</p>
 		<div class="buttons right">
 			<span id="{i#btns}">
