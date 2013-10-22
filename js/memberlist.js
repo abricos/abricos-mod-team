@@ -21,6 +21,7 @@ Component.entryPoint = function(NS){
 	var MemberGroupListWidget = function(container, teamid, cfg){
 		cfg = L.merge({
 			'modName': 'team',
+			'MemberListWidgetClass': NS.MemberListWidget,
 			'override': null
 		}, cfg || {});
 		
@@ -78,6 +79,7 @@ Component.entryPoint = function(NS){
 			this._wList = [];
 		},
 		onClick: function(el, tp){
+			
 			switch(el.id){
 			case tp['bmemberadd']: this.showMemberEditor(); return true;
 			case tp['bgroupadd']: this.showMemberGroupEditor(); return true;
@@ -93,7 +95,7 @@ Component.entryPoint = function(NS){
 		render: function(){
 			var team = this.team;
 			if (!L.isValue(team) || !L.isValue(team.memberGroupList)){ return; }
-			
+						
 			this.elSetVisible('btns', team.role.isAdmin);
 
 			var __self = this, cfg = this.cfg;
@@ -114,7 +116,7 @@ Component.entryPoint = function(NS){
 				ws[i].render();
 			}
 
-			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, {
+			this.memberListWidget = new cfg['MemberListWidgetClass'](this.gel('emplist'), team, {
 				'groupid': 0
 			});
 		},
@@ -134,7 +136,6 @@ Component.entryPoint = function(NS){
 			
 			this.componentLoad(mcfg['module'], mcfg['component'], function(){
 				__self.elHide('btns,list,emplist');
-
 				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), team, group, function(act){
 					__self.closeEditors();
 					if (act == 'save'){ __self.render(); }
@@ -143,6 +144,7 @@ Component.entryPoint = function(NS){
 			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
 		showMemberEditor: function(memberid){
+			
 			memberid = memberid||0;
 			this.closeEditors();
 			
@@ -150,7 +152,7 @@ Component.entryPoint = function(NS){
 				member = memberid==0 ? new team.manager.MemberClass(team) : list.get(memberid);
 
 			this.componentLoad(mcfg['module'], mcfg['component'], function(){
-				__self.elHide('btns,list,view');
+				__self.elHide('btns,list,emplist');
 				
 				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), team, member, function(act, newMember){
 					__self.closeEditors();
@@ -167,6 +169,7 @@ Component.entryPoint = function(NS){
 	var MemberGroupRowWidget = function(container, team, group, cfg){
 		cfg = L.merge({
 			'onReloadList': null,
+			'MemberListWidgetClass': NS.MemberListWidget,
 			'override': null
 		}, cfg || {});
 		MemberGroupRowWidget.superclass.constructor.call(this, container, {
@@ -193,12 +196,12 @@ Component.entryPoint = function(NS){
 			return false;
 		},
 		render: function(){
-			var team = this.team, group = this.group;
+			var team = this.team, group = this.group, cfg = this.cfg;
 			
 			this.elSetVisible('btns', team.role.isAdmin);
 			this.elSetHTML('grouptl', group.title);
 
-			this.memberListWidget = new NS.MemberListWidget(this.gel('emplist'), team, {
+			this.memberListWidget = new cfg['MemberListWidgetClass'](this.gel('emplist'), team, {
 				'groupid': group.id
 			});
 		},
@@ -310,13 +313,20 @@ Component.entryPoint = function(NS){
 			}
 			return false;
 		},
+		checkMemberInList: function(member){
+			return true;
+		},
 		render: function(){
 			this._clearWS();
 			var __self = this, cfg = this.cfg, ws = this._wList, team = this.team;
 
 			team.memberList.foreach(function(member){
+				if (!__self.checkMemberInList(member)){ return; }
+				
 				if (!member.role.isMember 
-					|| !team.memberInGroupList.checkMemberInGroup(member.id, cfg['groupid'])){ return; }
+					|| !team.memberInGroupList.checkMemberInGroup(member.id, cfg['groupid'])){ 
+					return; 
+				}
 				ws[ws.length] = new NS.MemberListRowWidget(__self.gel('list'), team, member);
  			});
 			

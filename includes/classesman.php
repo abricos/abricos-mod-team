@@ -77,14 +77,14 @@ class TeamManager {
 		
 	/**
 	 * Информация о расширенной таблицы ролей пользовтеля
-	 * Например для спортклуба:
-	 * $this->fldExtTeamUserRole['sportclub_userrole'] = "isemployee,istrener,issportsman"; 
+	 * Например для списка спортсменов:
+	 * $this->fldExtTeamUserRole['sportsman_userrole'] = "issportsman,postid"; 
 	 * 
-	 * sportclub_userrole - таблица расширения в базе
-	 * isemployee,istrener,issportsman - перечень полей в ней
+	 * sportsman_userrole - таблица расширения в базе
+	 * issportsman,postid - перечень полей в ней
 	 */
 	public $fldExtTeamUserRole = array();
-
+	
 	public $fldExtTeamDetail = array();
 	
 	/**
@@ -754,6 +754,8 @@ class TeamManager {
 	public function MemberSaveToAJAX($teamid, $d){
 		$memberid = $this->MemberSave($teamid, $d);
 		if (empty($memberid)){ return null; }
+		
+		$this->TeamCacheClear($teamid);
 		
 		$ret = $this->MemberListToAJAX($teamid);
 		$ret->memberid = $memberid;

@@ -65,6 +65,7 @@ Component.entryPoint = function(NS){
 			case tp['bsave']: this.save(); return true;
 			case tp['bcancel']: this.cancel(); return true;
 			}
+			
 			return false;
 		},
 		setVirtual: function(){
@@ -72,15 +73,20 @@ Component.entryPoint = function(NS){
 			this.render();
 		},
 		render: function(){
+			
 			this.elHide('loading');
 			this.elShow('editor');
 			
 			var u = Brick.env.user;
 			if (u.firstname.length == 0 || u.lastname.length == 0){
 				var __self = this;
-				var editor = new NS.MyNameEditorWidget(this.gel('mynameeditor'), this.team, function(){
+				var editor = new NS.MyNameEditorWidget(this.gel('mynameeditor'), this.team, function(act){
 					editor.destroy();
-					__self.render();
+					if (act == 'cancel'){
+						__self.cancel();
+					}else{
+						__self.render();
+					}
 				});
 				this.elHide('profileok');
 				return;
@@ -244,8 +250,8 @@ Component.entryPoint = function(NS){
 		},
 		onClick: function(el, tp){
 			switch(el.id){
-			case tp['bmypsave']: this.saveMyProfile(); return true;
-			case tp['bmypcancel']: this.cancel(); return true;
+			case tp['bsave']: this.saveMyProfile(); return true;
+			case tp['bcancel']: this.cancel(); return true;
 			}
 		},
 		cancel: function(){

@@ -20,12 +20,14 @@ Component.entryPoint = function(NS){
 
 	var MemberViewWidgetAbstract = function(container, teamid, memberid, cfg){
 		cfg = L.merge({
+			'override': null,
 			'modName': 'team',
 			'act': '',
 			'param': ''
 		}, cfg || {});
 		MemberViewWidgetAbstract.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'widget'
+			'buildTemplate': buildTemplate, 'tnames': 'widget',
+			'override': cfg['override']
 		}, teamid, memberid, cfg);
 	};
 	YAHOO.extend(MemberViewWidgetAbstract, Brick.mod.widget.Widget, {
@@ -95,7 +97,9 @@ Component.entryPoint = function(NS){
 				}
 				
 				if (cUserId == member.id){
-					new NS.MemberInviteActWidget(this.gel('empstat'), team, member);
+					new NS.MemberInviteActWidget(this.gel('empstat'), team, member, {
+						'override': cfg['override']
+					});
 				}else{ // профиль смотрит админ
 					if (member.role.isInvite){
 						this.elShow('infoisjrq');
@@ -166,18 +170,24 @@ Component.entryPoint = function(NS){
 	});
 	NS.MemberViewWidgetAbstract = MemberViewWidgetAbstract;
 	
-	var MemberInviteActWidget = function(container, team, member, callback){
+	var MemberInviteActWidget = function(container, team, member, cfg){
+		cfg = L.merge({
+			'callback': null,
+			'override': null
+		}, cfg || {});
+		
 		MemberInviteActWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'inviteact' 
-		}, team, member, callback);
+			'buildTemplate': buildTemplate, 'tnames': 'inviteact',
+			'override': cfg['override']
+		}, team, member, cfg);
 	};
 	YAHOO.extend(MemberInviteActWidget, Brick.mod.widget.Widget, {
-		init: function(team, member, callback){
+		init: function(team, member, cfg){
 			this.team = team;
 			this.member = member;
-			this.callback = callback;
+			this.cfg = cfg;
 		},
-		buildTData: function(teamid, member){
+		buildTData: function(teamid, member, cfg){
 			var author = NS.manager.users.get(member.role.relUserId);
 			if (L.isNull(author)){
 				return {};

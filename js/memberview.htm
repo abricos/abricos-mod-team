@@ -20,7 +20,7 @@
 				</span>
 			</div>
 			<span class="tl">
-				<a id="{i#urlmemberlist}" href="#">Участники</a>
+				<a id="{i#urlmemberlist}" href="#">{##members}</a>
 				&nbsp;→&nbsp;
 				<span id="{i#unm}"></span>
 			</span>
@@ -41,7 +41,7 @@
 						<dt>Статус</dt>
 						<dd>
 							<div id="{i#btnisjrq}">
-								Пользователь указал себя участником:
+								{##joinrequest}:
 								<a id="bisjrqyes" href="#" class="habtn">Подтверждаю</a>
 								<a id="bisjrqno" href="#" class="habtn">Не подтверждаю</a>
 							</div>
@@ -60,7 +60,7 @@
 				</dl>
 				
 				<dl id="{i#fldgroup}">
-					<dt>Группа</dt>
+					<dt>{##group}</dt>
 					<dd>
 						<div id="{i#grouptitle}"></div>
 					</dd>
@@ -79,7 +79,7 @@
 <!--{inviteact}-->
 <div id="{i#id}" class="inviteact">
 	<p class="center">
-		<a href="#" class="show-user-profile user-{v#uid}">{v#unm}</a> указал вас участником
+		<a href="#" class="show-user-profile user-{v#uid}">{v#unm}</a> {##inviteact.havemember}
 	</p>
 	
 	<div class="agreement center" style="display: none">
