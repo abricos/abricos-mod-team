@@ -64,8 +64,7 @@ Component.entryPoint = function(NS){
 			this.elHide('loading,nullitem,rlwrap');
 
 			var team = this.team, member = this.member;
-
-			if (L.isNull(member)){
+			if (!L.isValue(member)){
 				this.elShow('nullitem');
 			}else{
 				this.elShow('rlwrap');
@@ -77,9 +76,9 @@ Component.entryPoint = function(NS){
 			
 			this.gel('urlmemberlist').href = team.navigator.memberListURI();
 
-			var user = team.manager.users.get(member.id);
-
-			var groupid = team.memberInGroupList.getMemberGroupId(member.id),
+			var cfg = this.cfg,
+				user = team.manager.users.get(member.id),
+				groupid = team.memberInGroupList.getMemberGroupId(member.id),
 				group = team.memberGroupList.get(groupid);
 			
 			this.elSetHTML({
@@ -105,19 +104,6 @@ Component.entryPoint = function(NS){
 						this.elShow('infoisjrq');
 					}
 				}
-				/*
-				if (!L.isNull(NS.manager.invite)){
-					new NS.MemberInviteActWidget(this.gel('empstat'), team, member);
-				}else{
-					if (UID == member.id){
-						
-					} else { // смотрит профиль админ
-						if (member.isInvite){
-							this.elShow('infoisjrq');
-						}
-					}
-				}
-				/**/
 				this.elShow('empstat');
 			}
 		},		
@@ -188,7 +174,7 @@ Component.entryPoint = function(NS){
 			this.cfg = cfg;
 		},
 		buildTData: function(teamid, member, cfg){
-			var author = NS.manager.users.get(member.role.relUserId);
+			var author = Brick.mod.uprofile.viewer.users.get(member.role.relUserId);
 			if (L.isNull(author)){
 				return {};
 			}
@@ -221,12 +207,12 @@ Component.entryPoint = function(NS){
 				'userid': this.member.id,
 				'flag': flag
 			};
-			NS.manager.memberInviteAccept(team, sd, function(member){
+			team.manager.memberInviteAccept(team, sd, function(member){
 
 				var pageReload = function(){
-					var url = NS.navigator.company.depts.view(team.id);
-					if (!L.isNull(member)){
-						url = NS.navigator.company.member.view(team.id, member.id);
+					var url = team.navigator.memberListURI();
+					if (L.isValue(member)){
+						url = team.navigator.memberListURI(member.id);
 					}
 					Brick.Page.reload("/bos/"+url);
 				};

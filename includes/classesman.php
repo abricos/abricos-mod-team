@@ -249,7 +249,7 @@ class TeamManager {
 			case 'membergroupsave': return $this->MemberGroupSaveToAJAX($d->teamid, $d->savedata);
 			case 'membergroupremove': return $this->MemberGroupRemoveToAJAX($d->teamid, $d->groupid);
 
-			case 'memberinviteact': return $this->MemberInviteAccept($d->teamid, $d->userid, $d->flag);
+			case 'memberinviteact': return $this->MemberInviteAcceptToAJAX($d->teamid, $d->userid, $d->flag);
 			
 			case 'mynamesave': return $this->MyNameSave($d);
 		}
@@ -822,6 +822,13 @@ class TeamManager {
 		return $userid;
 	}
 	
+	/**
+	 * Принять/отказать приглашение пользователя в сообещство
+	 * 
+	 * @param integer $teamid
+	 * @param integer $memberid
+	 * @param boolean $flag TRUE-принять, FALSE-отказать
+	 */
 	public function MemberInviteAccept($teamid, $memberid, $flag){
 		$member = $this->Member($teamid, $memberid);
 		
@@ -835,6 +842,14 @@ class TeamManager {
 		
 		$this->TeamMemberCountRecalc($teamid);
 		
+		$this->TeamCacheClear($teamid);
+		
+		return $memberid;
+	}
+	
+	public function MemberInviteAcceptToAJAX($teamid, $memberid, $flag){
+		$memberid = $this->MemberInviteAccept($teamid, $memberid, $flag);
+
 		return $this->MemberToAJAX($teamid, $memberid);
 	}
 	

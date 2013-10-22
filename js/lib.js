@@ -367,7 +367,7 @@ Component.entryPoint = function(NS){
 		URI: function(){
 			return "#app="+this.team.module+'/wsitem/wsi/'+this.team.id+'/';
 		},
-		memberListURI: function(memberid){
+		memberListURI: function(){
 			var man = this.team.manager;
 			return this.URI()+man.modname+'/memberlist/MemberGroupListWidget/';
 		},

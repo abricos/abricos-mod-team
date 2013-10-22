@@ -142,6 +142,7 @@ abstract class Team extends TeamItem {
 		
 		return "http://".$host.$this->URI();
 	}
+	
 }
 
 /**
