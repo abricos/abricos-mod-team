@@ -92,8 +92,8 @@ Component.entryPoint = function(NS){
 			if (!member.role.isMember && (member.role.isJoinRequest || member.role.isInvite)){
 
 				var cUserId = UID;
-				if (!L.isNull(NS.manager.invite)){
-					cUserId = NS.manager.invite['user']['id'];
+				if (!L.isNull(team.manager.invite)){
+					cUserId = team.manager.invite['user']['id'];
 				}
 				
 				if (cUserId == member.id){

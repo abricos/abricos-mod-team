@@ -24,7 +24,8 @@ Component.entryPoint = function(NS){
 			'override': null
 		}, cfg || {});
 		MemberEditorWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'widget', 'override': cfg['override'] 
+			'buildTemplate': buildTemplate, 'tnames': 'widget', 
+			'override': cfg['override']
 		}, team, member, callback, cfg);
 	};
 	YAHOO.extend(MemberEditorWidget, Brick.mod.widget.Widget, {
@@ -36,20 +37,24 @@ Component.entryPoint = function(NS){
 			this.inviteWidget = null;
 			this._isVirtual = false;
 		},
-		buildTData: function(team, member){
+		buildTData: function(team, member, callback, cfg){
 			return {'cledst':member.id==0?'edstnew': 'edstedit'};
 		},
-		onLoad: function(team, member){
+		onLoad: function(team, member, callback, cfg){
 			if (member.id == 0){
 				var __self = this;
-				this.inviteWidget = new NS.MemberInviteWidget(this.gel('invite'), team, 
-					function(eml){ },
-					function(eml, user, femp){
+				this.inviteWidget = new NS.MemberInviteWidget(this.gel('invite'), team, {
+					'override': cfg['override'],
+					'startCallback': function(eml){ },
+					'finishCallback': function(eml, user, femp){
 						__self.render();
 					}
-				);
-				this.existJoinWidget = new NS.MemberExistingJoinWidget(this.gel('existjoin'), team, function(){
-					__self.render();
+				});
+				this.existJoinWidget = new NS.MemberExistingJoinWidget(this.gel('existjoin'), team, {
+					'override': cfg['override'],
+					'callback': function(){
+						__self.render();
+					}
 				});
 			}
 			var groupid = team.memberInGroupList.getMemberGroupId(member.id);
@@ -282,17 +287,22 @@ Component.entryPoint = function(NS){
 	});
 	NS.MyNameEditorWidget = MyNameEditorWidget;
 	
-	var MemberExistingJoinWidget = function(container, team, callback){
+	var MemberExistingJoinWidget = function(container, team, cfg){
+		cfg = L.merge({
+			'callback': null,
+			'override': null
+		}, cfg || {});
 		MemberExistingJoinWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'existjoin' 
-		}, team, callback);
+			'buildTemplate': buildTemplate, 'tnames': 'existjoin',
+			'override': cfg['override']
+		}, team, cfg);
 	};
 	YAHOO.extend(MemberExistingJoinWidget, Brick.mod.widget.Widget, {
-		init: function(team, callback){
+		init: function(team, cfg){
 			this.team = team;
-			this.callback = callback;
+			this.cfg = cfg;
 		},
-		onLoad: function(team, callback){
+		onLoad: function(team, cfg){
 			var gMemberList = NS.Team.globalMemberList.get(team.id);
 			
 			var exc = [];
@@ -303,7 +313,7 @@ Component.entryPoint = function(NS){
 			this.selectWidget = new NS.MemberSelectWidget(this.gel('select'), gMemberList, {
 				'exclude': exc,
 				'onChange': function(){
-					NS.life(callback);
+					NS.life(cfg['callback']);
 				}
 			});
 		},
@@ -313,16 +323,21 @@ Component.entryPoint = function(NS){
 	});
 	NS.MemberExistingJoinWidget = MemberExistingJoinWidget;
 	
-	var MemberInviteWidget = function(container, team, startCallback, finishCallback){
+	var MemberInviteWidget = function(container, team, cfg){
+		cfg = L.merge({
+			'startCallback': null,
+			'finishCallback': null,
+			'override': null
+		}, cfg || {});
 		MemberInviteWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'invite' 
-		}, team, startCallback, finishCallback);
+			'buildTemplate': buildTemplate, 'tnames': 'invite',
+			'override': cfg['override']
+		}, team, cfg);
 	};
 	YAHOO.extend(MemberInviteWidget, Brick.mod.widget.Widget, {
-		init: function(team, startCallback, finishCallback){
+		init: function(team, cfg){
 			this.team = team;
-			this.startCallback = startCallback;
-			this.finishCallback = finishCallback;
+			this.cfg = cfg;
 			this.value = null;
 			this._isProcess = false;
 		},
@@ -333,13 +348,13 @@ Component.entryPoint = function(NS){
 			}
 			return ucfg['inviteWaitLimit'] - ucfg['inviteWaitCount'];
 		},
-		buildTData: function(team){
+		buildTData: function(team, cfg){
 			return {
 				'invcnt': this.availableInvite(),
 				'waitcnt':  this.team.manager.userConfig['inviteWaitCount']
 			};
 		},
-		onLoad: function(){
+		onLoad: function(team, cfg){
 			var __self = this;
 			E.on(this.gel('email'), 'keyup', function(e){
 				__self.emailValidate();
@@ -380,7 +395,7 @@ Component.entryPoint = function(NS){
 			this.elDisable('bfind');
 			this.elShow('emlld');
 			this.gel('email').readonly = "readonly";
-			NS.life(this.startCallback, eml);
+			NS.life(this.cfg['startCallback'], eml);
 		},
 		_finishCheckCallback: function(eml, user){
 			this._isProcess = false;
@@ -416,7 +431,7 @@ Component.entryPoint = function(NS){
 				'user': user,
 				'member': member
 			};
-			NS.life(this.finishCallback, eml, user, member);
+			NS.life(this.cfg['finishCallback'], eml, user, member);
 		},
 		getValue: function(){
 			return this.value;

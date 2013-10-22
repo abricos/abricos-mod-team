@@ -323,10 +323,22 @@ Component.entryPoint = function(NS){
 			team.memberList.foreach(function(member){
 				if (!__self.checkMemberInList(member)){ return; }
 				
-				if (!member.role.isMember 
-					|| !team.memberInGroupList.checkMemberInGroup(member.id, cfg['groupid'])){ 
-					return; 
+				if (!member.role.isModMember){
+					// участник не принадлежит этому модулю
+					return;
 				}
+				
+				if (!team.memberInGroupList.checkMemberInGroup(member.id, cfg['groupid'])){
+					// участник не проходит по фильтру данной группы
+					return;
+				}
+				
+				if (!member.role.isMember){
+					if (!member.role.isInvite && !member.role.isJoinRequest){
+						return;
+					}
+				}
+				
 				ws[ws.length] = new NS.MemberListRowWidget(__self.gel('list'), team, member);
  			});
 			
