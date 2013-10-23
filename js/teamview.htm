@@ -1,0 +1,82 @@
+<!--{widget}-->
+<div id="{i#id}" class="aw-team">
+
+	<div id="{i#loading}" class="loading">
+		<img src="/images/loading.gif" /> Идет загрузка данных <br />
+		Пожалуйста, подождите...
+	</div>
+
+	<div id="{i#nullitem}" class="nullitem">
+		Сообщество не найдено или недостаточно прав для просмотра
+	</div>
+
+	<div id="{i#rlwrap}" class="teamview">
+		<div class="hdtitle">
+			<div id="{i#btns}" class="rbtns" style="display: none">
+				<span id="{i#bbtns}">
+					<a id="{i#bedit}" href="#" class="habtn">Редактировать</a>
+					<a id="{i#bremove}" href="#" class="habtn">Удалить</a>
+				</span>
+				<span id="{i#edloading}" style="display: none">
+					<img src="/images/loading.gif" /> Загрузка...
+				</span>
+			</div>
+			<span class="tl">
+				Информация о сообществе
+			</span>
+		</div>
+
+		<div id="{i#view}">
+			<div class="viewform">
+				
+				<dl id="{i#fldsite}">
+					<dt>Сайт</dt>
+					<dd>
+						<div id="{i#site}"></div>
+					</dd>
+				</dl>
+
+				<dl id="{i#fldemail}">
+					<dt>E-mail</dt>
+					<dd>
+						<div id="{i#email}"></div>
+					</dd>
+				</dl>
+				
+				<dl id="{i#fldphone}">
+					<dt>Телефон</dt>
+					<dd>
+						<div id="{i#phone}"></div>
+					</dd>
+				</dl>
+	
+				<dl id="{i#fldaddress}">
+					<dt>Адрес</dt>
+					<dd>
+						<div id="{i#address}"></div>
+					</dd>
+				</dl>
+	
+				<dl id="{i#fldemps}">
+					<dt>
+						<a id="{i#empstl}" href="{v#urlemps}">Участники</a>
+					</dt>
+					<dd>
+						<a id="{i#emps}" href="{v#urlemps}"></a>
+					</dd>
+				</dl>
+	
+				<dl id="{i#flddescript}">
+					<dt>О сообществе</dt>
+					<dd>
+						<div id="{i#descript}"></div>
+					</dd>
+				</dl>
+				
+				<div class="clear"></div>
+			</div>
+			
+		</div>		
+		<div id="{i#editor}" class="clear"></div>	
+	</div>
+</div>
