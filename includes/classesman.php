@@ -73,6 +73,8 @@ class TeamManager {
 	public $MemberGroupClass	= MemberGroup;
 	public $MemberGroupListClass= MemberGroupList;
 	
+	public $TeamNavigatorClass	= TeamNavigator;
+	
 	public $TeamUserConfigClass	= TeamUserConfig;
 		
 	/**
@@ -148,6 +150,25 @@ class TeamManager {
 	 * @return MemberList
 	 */
 	public function NewMemberList(){ return new $this->MemberListClass(); }
+	
+	private $_navigatorURI;
+	private $_navigatorURL;
+	
+	/**
+	 * @return TeamNavigator
+	 */
+	public function Navigator($isURL = false){
+		if ($isURL){
+			if (empty($this->_navigatorURL)){
+				$this->_navigatorURL = new $this->TeamNavigatorClass(true);
+			}
+			return $this->_navigatorURL;
+		}
+		if (empty($this->_navigatorURI)){
+			$this->_navigatorURI = new $this->TeamNavigatorClass(false);
+		}
+		return $this->_navigatorURI;
+	}
 	
 	/**
 	 * @param Team $team
@@ -696,6 +717,10 @@ class TeamManager {
 						if (is_null($invite)){
 							return null;
 						}
+						
+						// отправка уведомление
+						$this->MemberNewInviteSendMail($team, $d->email, $d->fnm, $d->lnm, $invite);
+						
 						$d->id = $invite->user['id'];
 					}else{
 						// выслать приглашение существующему пользователю
@@ -710,6 +735,9 @@ class TeamManager {
 						}
 						// приглашение существующего пользователя в группу
 						$this->MemberInvite($team, $d->id);
+						
+						// отправка уведомления
+						$this->MemberInviteSendMail($team, $d->id);
 					}
 				}				
 			}
@@ -804,6 +832,45 @@ class TeamManager {
 	
 		return $invite;
 	}
+
+	/**
+	 * Отправка приглашения новому участнику
+	 * 
+	 * @param Team $team
+	 * @param unknown_type $email
+	 * @param unknown_type $fname
+	 * @param unknown_type $lname
+	 * @param unknown_type $invite
+	 */
+	protected function MemberNewInviteSendMail(Team $team, $email, $fname, $lname, $invite){
+		$inu = $invite->user;
+		
+		$repd = array(
+			"author" => TeamUserManager::Get($this->userid)->UserNameBuild(),
+			"teamtitle" => $team->title,
+			"username" => $fname." ".$lname,
+			"inviteurl" =>  $invite->URL."/".$this->Navigator()->MemberView($team->id, $inu['id'], $this->moduleName),
+			"login" => $inu['login'],
+			"password" => $inu['password'],
+			"email" => $email,
+			"teamurl" => $this->Navigator(true)->TeamView($team->id),
+			"sitename" => Brick::$builder->phrase->Get('sys', 'site_name')
+		);
+		
+		$brick = Brick::$builder->LoadBrickS($this->moduleName, 'templates', null, null);
+		if (empty($brick)
+				|| empty($brick->param->var['mbrinvitesubject'])
+				|| empty($brick->param->var['mbrinvitebody'])){
+			
+			$brick = Brick::$builder->LoadBrickS("team", 'templates', null, null);
+		}
+		$v = &$brick->param->var;
+		
+		$subject = Brick::ReplaceVarByData($v['mbrinvitesubject'], $repd);
+		$body = Brick::ReplaceVarByData($v['mbrinvitebody'], $repd);
+		
+		Abricos::Notify()->SendMail($email, $subject, $body);
+	}
 	
 	/**
 	 * Пригласить существуюищего пользователя
@@ -820,6 +887,43 @@ class TeamManager {
 		TeamQuery::MemberInviteSetWait($this->db, $team->id, $userid, $this->userid);
 	
 		return $userid;
+	}
+	
+	/**
+	 * Отправить приглашение на вступление существующему пользователю
+	 * 
+	 * @param Team $team
+	 * @param integer $userid
+	 */
+	protected function MemberInviteSendMail(Team $team, $userid){
+		
+		$userEml = UserQueryExt::User($this->db, $userid);
+		
+		$host = $_SERVER['HTTP_HOST'] ? $_SERVER['HTTP_HOST'] : $_ENV['HTTP_HOST'];
+		
+		$repd = array(
+			"author" => TeamUserManager::Get($this->userid)->UserNameBuild(),
+			"teamtitle" => $team->title,
+			"username" => TeamUserManager::Get($userid)->UserNameBuild(),
+			"inviteurl" => $this->Navigator(true)->MemberView($team->id, $userid, $this->moduleName),
+			"email" => $userEml['email'],
+			"teamurl" => $this->Navigator(true)->TeamView($team->id),
+			"sitename" => Brick::$builder->phrase->Get('sys', 'site_name')
+		);
+		
+		$brick = Brick::$builder->LoadBrickS($this->moduleName, 'templates', null, null);
+		if (empty($brick)
+				|| empty($brick->param->var['mbraddsubject'])
+				|| empty($brick->param->var['mbraddbody'])){
+				
+			$brick = Brick::$builder->LoadBrickS("team", 'templates', null, null);
+		}
+		$v = &$brick->param->var;
+		
+		$subject = Brick::ReplaceVarByData($v['mbraddsubject'], $repd);
+		$body = Brick::ReplaceVarByData($v['mbraddbody'], $repd);
+		
+		Abricos::Notify()->SendMail($d->email, $subject, $body);
 	}
 	
 	/**

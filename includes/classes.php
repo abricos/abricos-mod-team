@@ -35,6 +35,65 @@ class TeamConfig {
 	}
 }
 
+/**
+ * Билдер ссылок
+ * 
+ * http://host/team/ - список сообществ
+ * http://host/team/page[n]/ - страница списка сообществ
+ * http://host/team/by/ - список модулей сообществ
+ * http://host/team/by/[modname]/ - список сообществ модуля
+ * http://host/team/t[teamid]/ - сообщество
+ * http://host/team/t[teamid]/member/ - список участников
+ * http://host/team/t[teamid]/member/by/ - список модулей участников
+ * http://host/team/t[teamid]/member/by/[modname]/ - список участников в модуле
+ * http://host/team/t[teamid]/member/[memberid]/ - участник со страницами модулей
+ * http://host/team/t[teamid]/member/by/[modname]/[memberid]/ - просмотр участника в модуле
+ */
+class TeamNavigator {
+	
+	public $isURL;
+	
+	public function __construct($isURL = false){
+		$this->isURL = false;
+	}
+	
+	public function URL(){
+		if ($this->isURL){
+			return Abricos::$adress->host."/team/";
+		}
+		return "/team/";
+	}
+	
+	public function TeamList($modname = ''){
+		if (empty($modname)){
+			return $this->URL();
+		}else{
+			return $this->URL()."by/".$modname."/";
+		}
+	}
+	
+	public function TeamView($teamid){
+		return $this->URL()."t".intval($teamid)."/";
+	}
+	
+	public function MemberList($teamid, $modname = ''){
+		if (empty($modname)){
+			return $this->TeamView($teamid)."member/";
+		}else{
+			return $this->TeamView($teamid)."member/by/".$modname."/";
+		}
+	}
+	
+	public function MemberView($teamid, $memberid, $modname = ''){
+		$memberid = intval($memberid);
+		if (empty($modname)){
+			return $this->TeamView($teamid)."member/".$memberid."/";
+		}else{
+			return $this->TeamView($teamid)."member/by/".$modname."/".$memberid."/";
+		}
+	}
+}
+
 
 /**
  * Сообщество (облако, компания, клубы и т.п.)
@@ -132,17 +191,6 @@ abstract class Team extends TeamItem {
 
 		return $ret;
 	}
-	
-	public function URI(){
-		return "/".$this->module."/t".$this->id."/";
-	}
-	
-	public function URL(){
-		$host = $_SERVER['HTTP_HOST'] ? $_SERVER['HTTP_HOST'] : $_ENV['HTTP_HOST'];
-		
-		return "http://".$host.$this->URI();
-	}
-	
 }
 
 /**
