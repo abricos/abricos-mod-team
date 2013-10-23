@@ -1,0 +1,124 @@
+<!--{widget}-->
+<div class="aw-sportclub aw-team" id="{i#id}">
+
+	<div id="{i#loading}" class="loading">
+		<img src="/images/loading.gif" />
+		Идет загрузка данных. Пожалуйста, подождите...
+	</div>
+
+	<div id="{i#editor}" class="teameditor editform" style="display: none">
+		<div class="{v#cledst}">
+			<div class="group">
+			
+				<h3 class="edstnew">Добавление сообщества</h3>
+				<h3 class="edstedit">Редактирование сообщества</h3>
+
+				<dl class="cmtype">
+					<dt>Тип сообщества</dt>
+					<dd>
+						<div id="{i#teamtype}"></div>
+						<div class="dsc">
+							Выберите тип вашего сообщества
+						</div>
+					</dd>
+				</dl>
+			
+				<dl class="tmtitle">
+					<dt>Название</dt>
+					<dd>
+						<input id="{i#title}" class="inp" placeholder="" />
+						<div class="dsc">
+							Укажите точное название вашего сообщества
+						</div>
+					</dd>
+				</dl>
+
+				<div id="{i#ofieldsaftertitle}"></div>
+
+				<dl class="cmsite">
+					<dt>E-mail</dt>
+					<dd>
+						<input id="{i#email}" class="inp" placeholder="" />
+						<div class="dsc">
+							Адрес электронный почты вашего сообщества 
+						</div>
+					</dd>
+				</dl>
+
+				<dl class="cmsite">
+					<dt>Сайт</dt>
+					<dd>
+						<input id="{i#site}" class="inp" placeholder="" />
+						<div class="dsc">
+							URL адрес внешнего сайта вашего сообщества. 
+							Префикс «http://» вводить не нужно
+						</div>
+					</dd>
+				</dl>
+			
+				<dl class="cmdesc">
+					<dt>Краткое описание сообщества</dt>
+					<dd>
+						<textarea id="{i#descript}" class="inp"></textarea>
+						<div class="dsc">
+							Укажите точную, правдивую и актуальную информацию о 
+							вашем сообществе. 
+						</div>
+					</dd>
+				</dl>
+
+				<dl class="cmlogo">
+					<dt>Логотип</dt>
+					<dd>
+						<div id="{i#logo}"></div>
+						<div class="dsc">
+							Логотип повысит привлекательность вашего сообщества, а так же 
+							повысит общий рейтинг в системе <br />
+							Рекомендуем вам загрузить логотип вашего сообщества в любом 
+							из форматов: JPG, PNG, GIF
+						</div>
+					</dd>
+				</dl>
+				
+				<div id="{i#overfields}"></div>
+				
+			</div>
+	
+			<dl>
+				<dt>&nbsp;</dt>
+				<dd class="baction">
+					<span id="{i#btns}">
+						<input id="{i#bcreate}" value="Создать" type="button" class="btn edstnew" />
+						<input id="{i#bsave}" value="Сохранить" type="button" class="btn edstedit" />
+						<input id="{i#bcancel}" value="Отмена" type="button" class="btn" />
+					</span>
+					<span id="{i#bloading}" style="display: none">
+						<img src="/images/loading.gif" class="ldg" /> Сохранение...
+					</span>
+				</dd>
+			</dl>
+
+			<div class="clear"></div>
+		</div>
+	</div>
+</div>
+
+
+<!--{removepanel}-->
+<div class='hd'>Удаление сообщества</div>
+<div class='bd aw-sportclub'>
+	<div id="{i#dialogremove}" class="field">
+		<p>
+			Вы действительно хотите удалить сообщество со всем его содержимым?
+		</p>
+		<div class="buttons right">
+			<span id="{i#btns}">
+				<input id="{i#bremove}" value="Удалить" type="button" />
+				<input id="{i#bcancel}" value="Отмена" type="button" />
+			</span>
+			<span id="{i#bloading}" style="display: none">
+				<img src="/images/loading.gif" /> Удаление...
+			</span>
+		</div>
+	</div>
+</div>

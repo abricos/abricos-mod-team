@@ -1,4 +1,35 @@
-<!--{widget}-->
+<!--{module}-->
+<div id="{i#id}" class="aw-team">
+	<div id="{i#loading}" class="loading">
+		<img src="/images/loading.gif" /> Идет загрузка данных <br /> Пожалуйста, подождите...
+	</div>
+	<div id="{i#rlwrap}" class="modteamlist" style="display: none">
+		<div class="hdtitle">
+			<span class="tl">{##teams}</span>
+		</div>
+		<div id="{i#list}"></div>
+	</div>
+</div>
+
+<!--{uprofile}-->
+<div id="{i#id}" class="aw-team">
+	<div id="{i#loading}" class="loading">
+		<img src="/images/loading.gif" /> Идет загрузка данных <br /> Пожалуйста, подождите...
+	</div>
+	<div id="{i#rlwrap}" class="uproflieteamlist" style="display: none">
+		<div class="hdtitle">
+			<div id="{i#btns}" class="rbtns">
+				<a id="{i#badd}" href="#" class="habtn" style="display: none">Добавить сообщество</a>
+				<span id="{i#edloading}" style="display: none"><img src="/images/loading.gif" /> Загрузка...</span>
+			</div>
+			<span class="tl">{##teams}</span>
+		</div>
+		<div id="{i#editor}" class="cmeditor"></div>
+		<div id="{i#list}" class="cmlist"></div>
+	</div>
+</div>
+
+<!--{list}-->
 <div id="{i#id}" class="teamlist">
 	<div id="{i#list}"></div>
 </div>

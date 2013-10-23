@@ -393,6 +393,12 @@ Component.entryPoint = function(NS){
 		}, cfg || {});
 		
 		// специализированный виджеты в перегруженном модуле
+		cfg['teamEditor'] = L.merge({
+			'module': 'team',
+			'component': 'teameditor',
+			'widget': 'TeamEditorWidget'
+		}, cfg['teamEditor'] || {});
+
 		cfg['memberGroupEditor'] = L.merge({
 			'module': 'team',
 			'component': 'mgroupeditor',
