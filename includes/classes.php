@@ -54,7 +54,7 @@ class TeamNavigator {
 	public $isURL;
 	
 	public function __construct($isURL = false){
-		$this->isURL = false;
+		$this->isURL = $isURL;
 	}
 	
 	public function URL(){
@@ -87,9 +87,9 @@ class TeamNavigator {
 	public function MemberView($teamid, $memberid, $modname = ''){
 		$memberid = intval($memberid);
 		if (empty($modname)){
-			return $this->TeamView($teamid)."member/".$memberid."/";
+			return $this->TeamView($teamid)."member/m".$memberid."/";
 		}else{
-			return $this->TeamView($teamid)."member/by/".$modname."/".$memberid."/";
+			return $this->TeamView($teamid)."member/by/".$modname."/m".$memberid."/";
 		}
 	}
 }

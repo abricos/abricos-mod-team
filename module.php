@@ -46,6 +46,18 @@ class TeamModule extends Ab_Module {
 		return $this->_manager;
 	}
 	
+	/**
+	 * @var Team
+	 */
+	public $currentTeam;
+	
+	public $currentMemberId;
+	
+	/**
+	 * @var Ab_Module
+	 */
+	public $currentMemberMod;
+	
 	public function GetContentName(){
 		$cname = '';
 		$adress = $this->registry->adress;
@@ -54,6 +66,39 @@ class TeamModule extends Ab_Module {
 	
 		if ($lvl >= 2 && $dir[1] == 'uploadlogo'){
 			return 'uploadlogo';
+		}
+		
+		$p = $dir[1];
+		if (!empty($p) && substr($p, 0, 1) == 't'){
+			$teamid = bkint(substr($p, 1));
+			
+			$team = $this->GetManager()->Team($teamid);
+			if (empty($team)){ return ''; }
+			
+			$cname = 'teamview';
+			
+			$this->currentTeam = $team;
+			
+			if ($dir[2] == 'member'){
+				
+				if ($dir[3] == 'by' && !empty($dir[4])){
+					$memberMod = Abricos::GetModule($dir[4]);
+					if (empty($memberMod)){ return ''; }
+					
+					$this->currentMemberMod = $memberMod;
+
+					$p = $dir[5];
+					if (!empty($p) && substr($p, 0, 1) == 'm'){
+						$memberid = bkint(substr($p, 1));
+						$this->currentMemberId = $memberid;
+						
+						return 'memberview';
+					}
+				}
+				return '';
+			}
+		}else{
+			return 'teamlist';
 		}
 		
 		return $cname;
