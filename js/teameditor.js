@@ -138,7 +138,7 @@ Component.entryPoint = function(NS){
 				__self = this;
 			Dom.setStyle(gel('btns'), 'display', 'none');
 			Dom.setStyle(gel('bloading'), 'display', '');
-			NS.manager.teamRemove(this.team, function(){
+			this.team.manager.teamRemove(this.team, function(){
 				__self.close();
 				NS.life(__self.callback);
 			});

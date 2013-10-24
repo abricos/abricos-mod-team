@@ -87,7 +87,7 @@ Component.entryPoint = function(NS){
 		},
 		onClick: function(el, tp){
 			switch(el.id){
-			case tp['bedit']: this.showEditor(); return true;
+			case tp['bedit']: this.showTeamEditor(); return true;
 			case tp['bremove']: this.showRemovePanel(); return true;
 			}
 			return false;
@@ -98,36 +98,32 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 			this.elShow('btns,view');
 		},
-		_loadEditor: function(component, callback){
+		showTeamEditor: function(){
 			this.closeEditors();
-			this.componentLoad('{C#MODNAME}', component, callback, {
-				'hide': 'bbtns', 'show': 'edloading'
-			});
-		},
-		showEditor: function(){
-			var __self = this;
-			this._loadEditor('cmeditor', function(){
-				__self.showEditorMethod();
-			});
-		},
-		showEditorMethod: function(){
-			this.elHide('btns,view');
-			var __self = this;
-			this._editor = new NS.SportclubEditorWidget(this.gel('editor'), this.team.id, function(act){
-				__self.closeEditors();
-				if (act == 'save'){ 
-					__self.render();
-					Brick.Page.reload();
-				}
-			});
+
+			var __self = this, team = this.team, mcfg = team.manager.cfg['teamEditor'];
+
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+				__self.elHide('btns,view');
+				
+				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), __self.modname, team.id, function(act){
+					__self.closeEditors();
+					
+					if (act == 'save'){ 
+						__self.render();
+						Brick.Page.reload();
+					}
+				});
+			}, {'hide': 'bbtns', 'show': 'edloading'});
 		},
 		showRemovePanel: function(){
-			var team = this.team;
-			this._loadEditor('cmeditor', function(){
-				new NS.SportclubRemovePanel(team, function(){
-					Brick.console('remove');
+			var __self = this, team = this.team, mcfg = team.manager.cfg['teamRemove'];
+
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+				__self._editor = new Brick.mod[mcfg['module']][mcfg['panel']](team, function(){
+					Brick.Page.reload("#app="+team.module+"/wspace/ws");
 				});
-			});
+			}, {'hide': 'bbtns', 'show': 'edloading'});			
 		}
 	});
 	NS.TeamViewWidget = TeamViewWidget;

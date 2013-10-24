@@ -398,6 +398,12 @@ Component.entryPoint = function(NS){
 			'component': 'teameditor',
 			'widget': 'TeamEditorWidget'
 		}, cfg['teamEditor'] || {});
+		
+		cfg['teamRemove'] = L.merge({
+			'module': 'team',
+			'component': 'teameditor',
+			'panel': 'TeamRemovePanel'
+		}, cfg['memberEditor'] || {});
 
 		cfg['memberGroupEditor'] = L.merge({
 			'module': 'team',
