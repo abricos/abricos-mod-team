@@ -786,7 +786,6 @@ class TeamManager {
 		$this->TeamCacheClear($teamid);
 		
 		$ret = $this->MemberListToAJAX($teamid);
-		$ret->memberid = $memberid;
 		
 		$obj = $this->MemberToAJAX($teamid, $memberid);
 		$ret->memberid = $memberid;

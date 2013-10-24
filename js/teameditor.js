@@ -46,7 +46,9 @@ Component.entryPoint = function(NS){
 			NSMod.initManager(function(man){
 				__self.manager = man;
 				if (teamid == 0){
-					__self.onLoadTeam(new man.TeamClass());
+					__self.onLoadTeam(new man.TeamClass({
+						'dtl': {}
+					}));
 				}else{
 					man.teamLoad(teamid, function(team){
 						__self.onLoadTeam(team);

@@ -116,6 +116,8 @@ Component.entryPoint = function(NS){
 		}
 	};
 	NS.InitData = InitData;
+	
+	var _TMODULENAMECACHE = {};
 
 	var Team = function(d, man){
 		d = L.merge({
@@ -132,7 +134,7 @@ Component.entryPoint = function(NS){
 			'auid': Brick.env.user.id,
 			'role': {}
 		}, d || {});
-		
+
 		this.manager = man || Manager.get(d['m']);
 
 		Team.superclass.constructor.call(this, d);
@@ -169,8 +171,12 @@ Component.entryPoint = function(NS){
 			}
 			this.role.update(d['role']);
 			
-			if (d['dtl'] && !L.isNull(d['dtl'])){
-				this.detail = new this.manager['TeamDetailClass'](d['dtl']);
+			if (L.isValue(d['dtl'])){
+				this.detail = new this.manager.TeamDetailClass(d['dtl']);
+			}
+			
+			if (this.id > 0){
+				_TMODULENAMECACHE[this.id|0] = this.module;
 			}
 		}
 		/*,
@@ -559,7 +565,7 @@ Component.entryPoint = function(NS){
 			var __self = this,
 				team = this._cacheTeam[teamid];
 
-			if (L.isValue(team) && !L.isNull(team.detail) && !cfg['reload']){
+			if (L.isValue(team) && L.isValue(team.detail) && !cfg['reload']){
 				NS.life(callback, team);
 				return;
 			}
@@ -776,40 +782,39 @@ Component.entryPoint = function(NS){
 	NS.Manager = Manager;
 
 	NS.getTeam = function(teamid, callback){
-		/*
-		var team = NS.teamCache[teamid];
 		
-		if (L.isValue(team)){
-			NS.life(callback, team);
-			return;
-		}
-		/**/
-
-		Brick.ajax('team', {
-			'data': {
-				'do': 'teammodulename',
-				'teamid': teamid
-			},
-			'event': function(request){
-				if (L.isValue(request) && L.isValue(request.data)){
-					
-					var mName = request.data;
-					Brick.ff(mName, 'lib', function(){
-						var mNS = Brick.mod[mName] || {};
-						if (!L.isFunction(mNS['initManager'])){
-							NS.life(callback, null);
-						}else{
-							mNS['initManager'](function(man){
-								man.teamLoad(teamid, function(team){
-									NS.life(callback, team);
-								});
-							});
-						}
-					});
-				}else{
+		var teamLoad = function(mName){
+			Brick.ff(mName, 'lib', function(){
+				var mNS = Brick.mod[mName] || {};
+				if (!L.isFunction(mNS['initManager'])){
 					NS.life(callback, null);
+				}else{
+					mNS['initManager'](function(man){
+						man.teamLoad(teamid, function(team){
+							NS.life(callback, team);
+						});
+					});
 				}
-			}
-		});		
+			});
+		};
+		
+		if (L.isValue(_TMODULENAMECACHE[teamid])){
+			teamLoad(_TMODULENAMECACHE[teamid]);
+		}else{
+			Brick.ajax('team', {
+				'data': {
+					'do': 'teammodulename',
+					'teamid': teamid
+				},
+				'event': function(request){
+					if (L.isValue(request) && L.isValue(request.data)){
+						var mName = request.data;
+						teamLoad(mName);
+					}else{
+						NS.life(callback, null);
+					}
+				}
+			});		
+		}
 	};
 };
