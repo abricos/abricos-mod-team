@@ -37,7 +37,7 @@ Component.entryPoint = function(NS){
 		},
 		buildTData: function(modname, teamid){
 			return {
-				// 'urlemps': NS.navigator.sportclub.depts.view(teamid)
+				// 'urlmembers': NS.navigator.sportclub.depts.view(teamid)
 			};
 		},
 		onLoad: function(modname, teamid){
@@ -75,7 +75,7 @@ Component.entryPoint = function(NS){
 
 			this.elSetHTML({
 				'email': team.email,
-				'emps': team.memberCount,
+				'members': team.memberCount,
 				'site': team.siteHTML,
 				'descript': team.descript
 			});
@@ -83,6 +83,7 @@ Component.entryPoint = function(NS){
 			this.elSetVisible('fldemail', isem(team.email));
 			this.elSetVisible('fldsite', isem(team.site));
 			this.elSetVisible('flddescript', isem(team.descript));
+			this.elSetVisible('fldmembers', team.memberCount > 0);
 		},
 		onClick: function(el, tp){
 			switch(el.id){

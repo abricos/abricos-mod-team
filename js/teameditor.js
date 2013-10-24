@@ -16,14 +16,19 @@ Component.entryPoint = function(NS){
 
 	var buildTemplate = this.buildTemplate;
 	
-	var TeamEditorWidget = function(container, modname, teamid, callback){
+	var TeamEditorWidget = function(container, modname, teamid, callback, cfg){
 		teamid = (teamid || 0)|0;
+		cfg = L.merge({
+			'override': null
+		}, cfg || {});
+
 		TeamEditorWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'widget'
-		}, modname, teamid, callback);
+			'buildTemplate': buildTemplate, 'tnames': 'widget',
+			'override': cfg['override']
+		}, modname, teamid, callback, cfg);
 	};
 	YAHOO.extend(TeamEditorWidget, Brick.mod.widget.Widget, {
-		init: function(modname, teamid, callback){
+		init: function(modname, teamid, callback, cfg){
 			this.teamid = teamid;
 			this.callback = callback;
 			this.team = null;

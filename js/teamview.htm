@@ -7,7 +7,7 @@
 	</div>
 
 	<div id="{i#nullitem}" class="nullitem">
-		Сообщество не найдено или недостаточно прав для просмотра
+		{##nullitem}
 	</div>
 
 	<div id="{i#rlwrap}" class="teamview">
@@ -22,7 +22,7 @@
 				</span>
 			</div>
 			<span class="tl">
-				Информация о сообществе
+				{##infotitle}
 			</span>
 		</div>
 
@@ -45,17 +45,15 @@
 					</dd>
 				</dl>
 				
-				<dl id="{i#fldemps}">
-					<dt>
-						<a id="{i#empstl}" href="{v#urlemps}">Участники</a>
-					</dt>
+				<dl id="{i#fldmembers}">
+					<dt>Участников</dt>
 					<dd>
-						<a id="{i#emps}" href="{v#urlemps}"></a>
+						<span id="{i#members}"></span>
 					</dd>
 				</dl>
-	
+				
 				<dl id="{i#flddescript}">
-					<dt>О сообществе</dt>
+					<dt>{##about}</dt>
 					<dd>
 						<div id="{i#descript}"></div>
 					</dd>

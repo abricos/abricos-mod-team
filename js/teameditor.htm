@@ -10,15 +10,15 @@
 		<div class="{v#cledst}">
 			<div class="group">
 			
-				<h3 class="edstnew">Добавление сообщества</h3>
-				<h3 class="edstedit">Редактирование сообщества</h3>
+				<h3 class="edstnew">{##teamnew}</h3>
+				<h3 class="edstedit">{##teamedit}</h3>
 
 				<dl class="cmtype">
-					<dt>Тип сообщества</dt>
+					<dt>{##teamtype}</dt>
 					<dd>
 						<div id="{i#teamtype}"></div>
 						<div class="dsc">
-							Выберите тип вашего сообщества
+							{##teamtypedsc}
 						</div>
 					</dd>
 				</dl>
@@ -28,7 +28,7 @@
 					<dd>
 						<input id="{i#title}" class="inp" placeholder="" />
 						<div class="dsc">
-							Укажите точное название вашего сообщества
+							{##teamtitledsc}
 						</div>
 					</dd>
 				</dl>
@@ -40,7 +40,7 @@
 					<dd>
 						<input id="{i#email}" class="inp" placeholder="" />
 						<div class="dsc">
-							Адрес электронный почты вашего сообщества 
+							{##teamemaildsc}
 						</div>
 					</dd>
 				</dl>
@@ -50,19 +50,17 @@
 					<dd>
 						<input id="{i#site}" class="inp" placeholder="" />
 						<div class="dsc">
-							URL адрес внешнего сайта вашего сообщества. 
-							Префикс «http://» вводить не нужно
+							{##teamsitedsc}
 						</div>
 					</dd>
 				</dl>
 			
 				<dl class="cmdesc">
-					<dt>Краткое описание сообщества</dt>
+					<dt>{##teamdesc}</dt>
 					<dd>
 						<textarea id="{i#descript}" class="inp"></textarea>
 						<div class="dsc">
-							Укажите точную, правдивую и актуальную информацию о 
-							вашем сообществе. 
+							{##teamdescdsc}
 						</div>
 					</dd>
 				</dl>
@@ -72,10 +70,7 @@
 					<dd>
 						<div id="{i#logo}"></div>
 						<div class="dsc">
-							Логотип повысит привлекательность вашего сообщества, а так же 
-							повысит общий рейтинг в системе <br />
-							Рекомендуем вам загрузить логотип вашего сообщества в любом 
-							из форматов: JPG, PNG, GIF
+							{##logodsc}
 						</div>
 					</dd>
 				</dl>
@@ -105,11 +100,11 @@
 
 
 <!--{removepanel}-->
-<div class='hd'>Удаление сообщества</div>
+<div class='hd'>{##removetitle}</div>
 <div class='bd aw-sportclub'>
 	<div id="{i#dialogremove}" class="field">
 		<p>
-			Вы действительно хотите удалить сообщество со всем его содержимым?
+			{##removedesc}
 		</p>
 		<div class="buttons right">
 			<span id="{i#btns}">
