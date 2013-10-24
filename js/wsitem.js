@@ -85,7 +85,6 @@ Component.entryPoint = function(NS){
 			this.showPage(this.pgInfo);
 		},
 		showPage: function(p){
-			
 			p = L.merge({
 				'm': '', 'c': '', 'w': '',
 				'p1': '', 'p2': '', 'p3': '', 'p4': '', 'p5': ''
@@ -106,6 +105,7 @@ Component.entryPoint = function(NS){
 			if (L.isValue(app) && app.parentName != ''){
 				sapp = appList.getBy(app.moduleName, app.parentName);
 			}
+
 			appList.foreach(function(fapp){
 				var miEl = Dom.get(TId['menuitem']['id']+'-'+fapp.id);
 				if (!L.isValue(miEl)){ return; }

@@ -624,12 +624,12 @@ class TeamAppInfo extends AbricosItem {
 		$this->name = $name;
 		
 		if (empty($widget)){ $widget = $moduleName; }
-		$this->widget = $widget;
+		$this->widget = strval($widget);
 		
 		$this->title = strval($title);
 		
-		$this->onlyModule = $onlyModule;
-		$this->parent = $parent;
+		$this->onlyModule = strval($onlyModule);
+		$this->parent = strval($parent);
 	}
 	
 	public function ToAJAX(){

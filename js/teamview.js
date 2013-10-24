@@ -12,37 +12,77 @@ Component.requires = {
 Component.entryPoint = function(NS){
 
 	var Dom = YAHOO.util.Dom,
-		E = YAHOO.util.Event,
-		L = YAHOO.lang,
-		R = NS.roles;
+		L = YAHOO.lang;
 
 	var buildTemplate = this.buildTemplate;
 	var isem = function(s){ return L.isString(s) && s.length > 0; };
 	
-	var TeamViewWidget = function(container, teamid){
+	var TeamViewWidget = function(container, modname, teamid, cfg){
+		cfg = L.merge({
+			'override': null
+		}, cfg || {});
+		
 		TeamViewWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'widget' 
-		}, teamid);
+			'buildTemplate': buildTemplate, 'tnames': 'widget', 
+			'override': cfg['override']
+		}, modname, teamid);
 	};
 	YAHOO.extend(TeamViewWidget, Brick.mod.widget.Widget, {
-		init: function(teamid){
+		init: function(modname, teamid){
+			this.modname = modname;
 			this.teamid = teamid;
 			this.team = null;
 
 			this._editor = null;
 		},
-		buildTData: function(teamid){
+		buildTData: function(modname, teamid){
 			return {
 				// 'urlemps': NS.navigator.sportclub.depts.view(teamid)
 			};
 		},
-		onLoad: function(teamid){
+		onLoad: function(modname, teamid){
+			
+			var NSMod = Brick.mod[modname];
+			if (!L.isValue(NSMod)){ return; }
+
 			var __self = this;
-			NS.initManager(function(){
-				NS.manager.teamLoad(teamid, function(team){
-					__self._onLoadManager(team);
+			NSMod.initManager(function(man){
+				man.teamLoad(teamid, function(team){
+					__self.onLoadTeam(team);
 				});
 			});
+		},
+		onLoadTeam: function(team){
+			this.team = team;
+			
+			this.elHide('loading');
+			this.render();
+		},
+		render: function(){
+			this.elHide('loading,nullitem,rlwrap');
+			this.elHide('fldsite,flddescript,fldemail');
+
+			var team = this.team;
+
+			if (L.isNull(team)){
+				this.elShow('nullitem');
+			}else{
+				this.elShow('rlwrap');
+			}
+			if (L.isNull(team)){ return; }
+			
+			this.elSetVisible('btns', team.role.isAdmin);
+
+			this.elSetHTML({
+				'email': team.email,
+				'emps': team.memberCount,
+				'site': team.siteHTML,
+				'descript': team.descript
+			});
+			
+			this.elSetVisible('fldemail', isem(team.email));
+			this.elSetVisible('fldsite', isem(team.site));
+			this.elSetVisible('flddescript', isem(team.descript));
 		},
 		onClick: function(el, tp){
 			switch(el.id){
@@ -87,40 +127,6 @@ Component.entryPoint = function(NS){
 					Brick.console('remove');
 				});
 			});
-		},
-		_onLoadManager: function(team){
-			this.team = team;
-			this.render();
-		},
-		render: function(){
-			this.elHide('loading,nullitem,rlwrap');
-			this.elHide('fldsite,fldphone,fldaddress,flddescript,fldemail');
-
-			var team = this.team;
-
-			if (L.isNull(team)){
-				this.elShow('nullitem');
-			}else{
-				this.elShow('rlwrap');
-			}
-			if (L.isNull(team)){ return; }
-			
-			this.elSetVisible('btns', team.role.isAdmin);
-
-			this.elSetHTML({
-				'email': team.email,
-				'emps': team.memberCount,
-				'site': team.siteHTML,
-				'descript': team.descript,
-				'phone': team.phone,
-				'address': team.address
-			});
-			
-			this.elSetVisible('fldemail', isem(team.email));
-			this.elSetVisible('fldsite', isem(team.site));
-			this.elSetVisible('fldphone', isem(team.phone));
-			this.elSetVisible('fldaddress', isem(team.address));
-			this.elSetVisible('flddescript', isem(team.descript));
 		}
 	});
 	NS.TeamViewWidget = TeamViewWidget;
