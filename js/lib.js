@@ -14,12 +14,9 @@ Component.requires = {
 Component.entryPoint = function(NS){
 
 	var Dom = YAHOO.util.Dom,
-		L = YAHOO.lang,
-		R = NS.roles;
+		L = YAHOO.lang;
 
-	var CE = YAHOO.util.CustomEvent;
 	var SysNS = Brick.mod.sys;
-	var LNG = this.language;
 	var UP = Brick.mod.uprofile;
 
 	this.buildTemplate({}, '');
@@ -773,6 +770,16 @@ Component.entryPoint = function(NS){
 		}
 		return man;
 	};
+	Manager.init = function(modname, callback){
+		var NSMod = Brick.mod[modname];
+		if (!L.isValue(NSMod)){
+			NS.life(callback, null);
+		}else{
+			NSMod.initManager(function(man){
+				NS.life(callback, man);
+			});
+		}
+	};	
 	Manager.fire = function(modname, fname, p1, p2, p3, p4, p5, p6, p7, p8){
 		var func = Manager.get(modname)[fname];
 		if (L.isFunction(func)){

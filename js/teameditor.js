@@ -16,34 +16,121 @@ Component.entryPoint = function(NS){
 
 	var buildTemplate = this.buildTemplate;
 	
-	var TeamEditorWidget = function(container, modname, teamid, callback, cfg){
-		teamid = (teamid || 0)|0;
+	var TeamCreateWizardWidget = function(container, cfg){
 		cfg = L.merge({
+			'modName': '{C#MODNAME}',
+			'callback': null,
+			'override': null
+		}, cfg || {});
+
+		TeamCreateWizardWidget.superclass.constructor.call(this, container, {
+			'buildTemplate': buildTemplate, 'tnames': 'wizard',
+			'override': cfg['override']
+		}, cfg);
+	};
+	YAHOO.extend(TeamCreateWizardWidget, Brick.mod.widget.Widget, {
+		init: function(cfg){
+			this.cfg = cfg;
+			this.manager = null;
+		},
+		onLoad: function(cfg){
+			var __self = this;
+			
+			NS.Manager.init(cfg['modName'], function(man){
+				__self.onLoadManager(man);
+			});
+		},
+		onLoadManager: function(man){
+	
+			if (!L.isValue(man)){ return; }
+
+			this.manager = man;
+			
+			if (man.initData.typeInfoList.count() == 0){
+				this.showTeamEditor(man);
+				return;
+			}
+			
+			this.typeSelectWidget = new NS.TeamTypeSelectWidget(this.gel('teamtype'), man);
+			
+			this.elHide('loading');
+			this.elShow('wizard');
+		},
+		onClick: function(el, tp){
+			switch(el.id){
+			case tp['bcreate']:
+			case tp['bsave']: this.save(); return true;
+			case tp['bcancel']: this.cancel(); return true;
+			}
+			return false;
+		},
+		cancel: function(){
+			NS.life(this.cfg['callback'], 'cancel');
+		},
+		save: function(){
+			var teamType = this.typeSelectWidget.getValue();
+			
+			if (!L.isString(teamType)){
+				teamType = '';
+			}
+			
+			if (teamType.length == ""){
+				teamType = this.cfg['modName'];
+			}
+			
+			this.elShow('loading');
+			this.elHide('wizard');
+
+			var __self = this;
+			NS.Manager.init(teamType, function(man){
+				__self.showTeamEditor(man);
+			});
+		},
+		showTeamEditor: function(manager){
+			var __self = this, cfg = this.cfg, mcfg = manager.cfg['teamEditor'];
+
+			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+				__self.elShow('editor');
+				__self.elHide('loading,wizard');
+
+				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), 0, {
+					'modName': manager.modname,
+					'callback': cfg['callback']
+				});
+			});			
+		}
+	});
+	NS.TeamCreateWizardWidget = TeamCreateWizardWidget;
+	
+	var TeamEditorWidget = function(container, teamid, cfg){
+		cfg = L.merge({
+			'modName': '{C#MODNAME}',
+			'callback': null,
 			'override': null
 		}, cfg || {});
 
 		TeamEditorWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'widget',
 			'override': cfg['override']
-		}, modname, teamid, callback, cfg);
+		}, teamid|0, cfg);
 	};
 	YAHOO.extend(TeamEditorWidget, Brick.mod.widget.Widget, {
-		init: function(modname, teamid, callback, cfg){
+		init: function(teamid, cfg){
 			this.teamid = teamid;
-			this.callback = callback;
+			this.cfg = cfg;
+
 			this.team = null;
 			this.manager = null;
 		},
-		buildTData: function(modname, teamid){
+		buildTData: function(teamid, cfg){
 			return {'cledst': teamid==0?'edstnew': 'edstedit'};
 		},
-		onLoad: function(modname, teamid){
-			
-			var NSMod = Brick.mod[modname];
-			if (!L.isValue(NSMod)){ return; }
-
+		onLoad: function(teamid, cfg){
 			var __self = this;
-			NSMod.initManager(function(man){
+			
+			NS.Manager.init(cfg['modName'], function(man){
+				if (!L.isValue(man)){ return; }
+
 				__self.manager = man;
 				if (teamid == 0){
 					__self.onLoadTeam(new man.TeamClass({
@@ -54,7 +141,7 @@ Component.entryPoint = function(NS){
 						__self.onLoadTeam(team);
 					});
 				}
-			});	
+			});
 		},
 		onClick: function(el, tp){
 			switch(el.id){
@@ -67,9 +154,6 @@ Component.entryPoint = function(NS){
 		onLoadTeam: function(team){
 			this.team = team;
 			this.logoWidget = new NS.LogoWidget(this.gel('logo'), team.logo);
-			this.typeSelectWidget = new NS.TeamTypeSelectWidget(this.gel('teamtype'), this.manager, {
-				'value': team.type
-			});
 	
 			this.render();
 		},
@@ -87,7 +171,7 @@ Component.entryPoint = function(NS){
 			});
 		},
 		cancel: function(){
-			NS.life(this.callback, 'cancel');
+			NS.life(this.cfg['callback'], 'cancel');
 		},
 		getSaveData: function(){
 			return {
@@ -97,7 +181,6 @@ Component.entryPoint = function(NS){
 				'eml': this.gel('email').value,
 				'dsc': this.gel('descript').value,
 				'site': this.gel('site').value,
-				'tp': this.typeSelectWidget.getValue(),
 				'logo': this.logoWidget.getValue()
 			};
 		},
@@ -111,7 +194,7 @@ Component.entryPoint = function(NS){
 			this.manager.teamSave(sd, function(team){
 				__self.elShow('btns');
 				__self.elHide('bloading');
-				NS.life(__self.callback, 'save', team);
+				NS.life(__self.cfg['callback'], 'save', team);
 			});
 		}		
 	});

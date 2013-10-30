@@ -12,10 +12,9 @@ Component.entryPoint = function(NS){
 
 	var Dom = YAHOO.util.Dom,
 		E = YAHOO.util.Event,
-		L = YAHOO.lang,
-		R = NS.roles;
+		L = YAHOO.lang;
 
-	var BW = Brick.mod.widget.Widget;
+	var BW = Brick.mod.widget.Widget
 	var buildTemplate = this.buildTemplate;
 	
 	var TeamListRowWidget = function(container, team, cfg){
@@ -73,7 +72,6 @@ Component.entryPoint = function(NS){
 		}, list, cfg);
 	};
 	TeamListWidget.overrides = {};
-	
 	YAHOO.extend(TeamListWidget, BW, {
 		init: function(list, cfg){
 			this.list = list;
@@ -113,66 +111,29 @@ Component.entryPoint = function(NS){
 		}		
 	});
 	NS.TeamListWidget = TeamListWidget;
-	
-	
-	var ModuleTeamListWidget = function(container, modname, cfg){
+
+	var ModuleTeamListWidget = function(container, cfg){
 		cfg = L.merge({
+			'modName': '{C#MODNAME}',
+			'filterByUser': 0,
 			'override': null
 		}, cfg || {});
-		
+
 		ModuleTeamListWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'module',
 			'override': cfg['override']
-		}, modname, cfg);
+		}, cfg);
 	};
 	YAHOO.extend(ModuleTeamListWidget, BW, {
-		onLoad: function(modname, cfg){
-	
-			var NSMod = Brick.mod[modname];
-			if (!L.isValue(NSMod)){ return; }
-			
-			var __self = this;
-			NSMod.initManager(function(man){
-				man.teamListLoad(function(list){
-					__self._onLoadManager(list);
-				});
-			});
-		},
-		_onLoadManager: function(list){
-
-			this.elHide('loading');
-			this.elShow('rlwrap');
-			
-			this.listWidget = new NS.TeamListWidget(this.gel('list'), list); 
-		}
-	});
-	NS.ModuleTeamListWidget = ModuleTeamListWidget;
-	
-	
-	var buildTemplate = this.buildTemplate;
-	
-	var UProfileTeamListWidget = function(container, modname, user, cfg){
-		cfg = L.merge({
-			'override': null
-		}, cfg || {});
-
-		UProfileTeamListWidget.superclass.constructor.call(this, container, {
-			'buildTemplate': buildTemplate, 'tnames': 'uprofile',
-			'override': cfg['override']
-		}, modname, user, cfg);
-	};
-	YAHOO.extend(UProfileTeamListWidget, BW, {
-		init: function(modname, user, cfg){
-			this.modname = modname;
-			this.user = user;
+		init: function(cfg){
 			this.cfg = cfg;
 			
 			this.manager = null;
 			this._editor = null;
 			this.listWidget = null;
 		},
-		onLoad: function(modname, user, cfg){
-			var NSMod = Brick.mod[modname];
+		onLoad: function(cfg){
+			var NSMod = Brick.mod[cfg['modName']];
 			if (!L.isValue(NSMod)){ return; }
 			
 			var __self = this;
@@ -183,16 +144,23 @@ Component.entryPoint = function(NS){
 		},
 		reloadList: function(){
 			this.elShow('loading');
-			this.elHide('rlwrap,badd');
+			this.elHide('rlwrap');
+
+			var cfgList = {}, cfg = this.cfg;
+			if (cfg['filterByUser'] > 0){
+				cfgList = {
+					'memberid': cfg['filterByUser']
+				};
+			}
 			
 			var __self = this;
 			this.manager.teamListLoad(function(list){
 				__self._onLoadList(list);
-			}, {'memberid': this.user.id});
+			}, cfgList);
 		},
 		onClick: function(el, tp){
 			switch(el.id){
-			case tp['badd']: this.showTeamEditor(); return true;
+			case tp['badd']: this.showTeamCreateWizard(); return true;
 			}
 			return false;
 		},
@@ -202,14 +170,15 @@ Component.entryPoint = function(NS){
 			this.elHide('loading');
 			this.elShow('rlwrap');
 			
-			if (Brick.env.user.id == this.user.id){
-				this.elShow('badd');
+			var cfg = this.cfg;
+			
+			if (cfg['filterByUser'] > 0 && Brick.env.user.id != cfg['filterByUser']){
+				this.elHide('badd');
 			}
 			
 			if (!L.isNull(this.listWidget)){
 				this.listWidget.destroy();
 			}
-			
 			this.listWidget = new NS.TeamListWidget(this.gel('list'), this.list); 
 		},
 		closeEditors: function(){
@@ -218,26 +187,28 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 			this.elShow('btns,list');
 		},
-		showTeamEditor: function(){
+		showTeamCreateWizard: function(){
 			this.closeEditors();
 
-			var __self = this, mcfg = this.manager.cfg['teamEditor'];
+			var __self = this, cfg = this.cfg;
 
-			this.componentLoad(mcfg['module'], mcfg['component'], function(){
+			this.componentLoad('{C#MODNAME}', 'teameditor', function(){
 				__self.elHide('btns,list');
 				
-				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), __self.modname, 0, function(act){
-					__self.closeEditors();
-					
-					if (act == 'save'){ 
-						__self.reloadList();
-					}
+				__self._editor = new NS.TeamCreateWizardWidget(__self.gel('editor'), {
+					'modName': cfg['modName'],
+					'callback': function(act){
+						__self.closeEditors();
+						
+						if (act == 'save'){ 
+							__self.reloadList();
+						}
+					} 
 				});
 			}, {'hide': 'bbtns', 'show': 'edloading'});
 		}
 	});
 	
-	NS.UProfileTeamListWidget = UProfileTeamListWidget;
-
+	NS.ModuleTeamListWidget = ModuleTeamListWidget;
 
 };

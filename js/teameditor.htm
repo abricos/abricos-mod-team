@@ -1,5 +1,50 @@
+<!--{wizard}-->
+<div class="aw-team" id="{i#id}">
+
+	<div id="{i#loading}" class="loading">
+		<img src="/images/loading.gif" />
+		Идет загрузка данных. Пожалуйста, подождите...
+	</div>
+
+	<div id="{i#wizard}" class="teamwizard editform" style="display: none">
+		<div class="group">
+		
+			<h3 class="edstnew">Добавление сообщества</h3>
+
+			<dl>
+				<dt>{##teamtype}</dt>
+				<dd>
+					<div id="{i#teamtype}"></div>
+					<div class="dsc">
+						{##teamtypedsc}
+					</div>
+				</dd>
+			</dl>
+			
+		</div>
+		
+		<dl>
+			<dt>&nbsp;</dt>
+			<dd class="baction">
+				<span id="{i#btns}">
+					<input id="{i#bcreate}" value="Создать" type="button" class="btn edstnew" />
+					<input id="{i#bcancel}" value="Отмена" type="button" class="btn" />
+				</span>
+				<span id="{i#bloading}" style="display: none">
+					<img src="/images/loading.gif" class="ldg" /> Сохранение...
+				</span>
+			</dd>
+		</dl>
+
+		<div class="clear"></div>
+	</div>
+	
+	<div id="{i#editor}"></div>
+	
+</div>
+
 <!--{widget}-->
-<div class="aw-sportclub aw-team" id="{i#id}">
+<div class="aw-team" id="{i#id}">
 
 	<div id="{i#loading}" class="loading">
 		<img src="/images/loading.gif" />
@@ -13,16 +58,6 @@
 				<h3 class="edstnew">{##teamnew}</h3>
 				<h3 class="edstedit">{##teamedit}</h3>
 
-				<dl class="cmtype">
-					<dt>{##teamtype}</dt>
-					<dd>
-						<div id="{i#teamtype}"></div>
-						<div class="dsc">
-							{##teamtypedsc}
-						</div>
-					</dd>
-				</dl>
-			
 				<dl class="tmtitle">
 					<dt>Название</dt>
 					<dd>
