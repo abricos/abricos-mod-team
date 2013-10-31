@@ -133,11 +133,8 @@ Component.entryPoint = function(NS){
 			this.listWidget = null;
 		},
 		onLoad: function(cfg){
-			var NSMod = Brick.mod[cfg['modName']];
-			if (!L.isValue(NSMod)){ return; }
-			
 			var __self = this;
-			NSMod.initManager(function(man){
+			Brick.mod.team.Manager.init(cfg['modName'], function(man){
 				__self.manager = man;
 				__self.reloadList();
 			});

@@ -42,34 +42,29 @@ Component.entryPoint = function(NS){
 		},
 		onLoad: function(teamid, cfg){
 			var __self = this;
-			Brick.mod[cfg['modName']].initManager(function(man){
-				man.teamLoad(teamid, function(team){
-					man.memberListLoad(team, function(list){
-						__self._onLoadManager(team, list);
-					});
-				});
-			});
+			Brick.mod.team.teamLoad(teamid, function(team){
+				__self.onLoadTeam(team);
+			}, cfg['modName']);
 		},
-		reloadList: function(){
-			this.elShow('loading');
-			this.elHide('rlwrap');
-
-			var __self = this;
-			NS.manager.memberListLoad(this.team, function(list){
-				__self._onLoadManager(__self.team, list);
-			});
-		},
-		_onLoadManager: function(team, list){
+		onLoadTeam: function(team){
 			this.team = team;
 			
 			this.elHide('loading,rlwrap,nullitem');
 			
-			if (L.isNull(team) || L.isNull(list)){
+			if (!L.isValue(team)){
 				this.elShow('nullitem');
 				return;
 			}
-			this.elShow('rlwrap');
-			this.render();
+			this.reloadList();
+		},
+		reloadList: function(){
+			this.elShow('loading');
+			this.elHide('rlwrap');
+			
+			var __self = this;
+			this.team.manager.memberListLoad(this.team, function(list){
+				__self.render();
+			});
 		},
 		_clearWS: function(){
 			var ws = this._wList;

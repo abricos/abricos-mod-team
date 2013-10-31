@@ -45,13 +45,13 @@ Component.entryPoint = function(NS){
 			this._editor = null;
 		},
 		onLoad: function(teamid, memberid, cfg){
-			var __self = this;
-			Brick.mod[cfg['modName']].initManager(function(man){
-				man.teamLoad(teamid, function(team){
+			var __self = this, Manager = Brick.mod.team.Manager;
+			Manager.teamLoad(teamid, function(team){
+				Manager.init(cfg['modName'], function(man){
 					man.memberLoad(team, memberid, function(member){
 						__self.onLoadTeam(team, member);
-					}/*, cfg/**/);
-				});				
+					});
+				});
 			});
 		},
 		onLoadTeam: function(team, member){

@@ -42,14 +42,9 @@ Component.entryPoint = function(NS){
 		},
 		onLoad: function(modname, teamid){
 			
-			var NSMod = Brick.mod[modname];
-			if (!L.isValue(NSMod)){ return; }
-
 			var __self = this;
-			NSMod.initManager(function(man){
-				man.teamLoad(teamid, function(team){
-					__self.onLoadTeam(team);
-				});
+			NS.teamLoad(teamid, function(team){
+				__self.onLoadTeam(team);
 			});
 		},
 		onLoadTeam: function(team){

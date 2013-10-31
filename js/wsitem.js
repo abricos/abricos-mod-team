@@ -44,15 +44,12 @@ Component.entryPoint = function(NS){
 			this.widget = null;
 			var __self = this, NSMod = this.NSMod, teamid = this.teamid;
 			
-			
-			NSMod.initManager(function(man){
-				NSMod.manager.teamLoad(teamid, function(team){
-					__self._onLoadManager(man, team);
-				});
+			NS.teamLoad(teamid, function(team){
+				__self.onLoadTeam(team);
 			});
 		},
 		destroy: function(){},
-		_onLoadManager: function(man, team){
+		onLoadTeam: function(team){
 	
 			this.team = team;
 			var TM = this._TM, gel = function(n){ return TM.getEl('panel.'+n); };
@@ -62,8 +59,7 @@ Component.entryPoint = function(NS){
 				return;
 			}
 			
-			var lst = "";
-			
+			var lst = "", man = team.manager;
 			man.initData.appInfoList.foreach(function(app){
 				if (app.parentName != ''){ return; }
 				lst += TM.replace('menuitem', {
@@ -90,7 +86,7 @@ Component.entryPoint = function(NS){
 				'p1': '', 'p2': '', 'p3': '', 'p4': '', 'p5': ''
 			}, p || {});
 
-			var appList = this.NSMod.manager.initData.appInfoList,
+			var appList = this.team.manager.initData.appInfoList,
 				app = appList.getBy(p['m'], p['c']);
 			if (!L.isValue(app) && !Brick.componentExists(p['m'], p['c'])){
 				app = appList.getByIndex(0);

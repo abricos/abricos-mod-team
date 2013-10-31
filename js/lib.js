@@ -176,11 +176,6 @@ Component.entryPoint = function(NS){
 				_TMODULENAMECACHE[this.id|0] = this.module;
 			}
 		}
-		/*,
-		load: function(callback, reload){ // загрузить полные данные
-			NS.Manager.fire(this.module, 'teamLoad', this.id, callback, reload);
-		}
-		/**/
 	});
 	NS.Team = Team;
 	
@@ -506,26 +501,45 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
-		_updateTeamList: function(d){
-			if (!d || !d['teams'] || !L.isArray(d['teams']['list'])){ 
-				return null; 
+		_updateTeamList: function(d, callback){
+			if (!d || !d['teams'] || !L.isArray(d['teams']['list'])){
+				NS.life(callback, null);
+				return;
 			}
 			
 			var dList = d['teams']['list'];
 			
 			var list = new this.TeamListClass();
-			
+
+			var oMans = {};
+			// собрать список всех менеджеров модулей
 			for (var i=0;i<dList.length;i++){
-				var di = dList[i], team = this._cacheTeam[di['id']];
-				
-				if (!L.isValue(team)){
-					team = new this.TeamClass(di);
-				}else{
-					team.update(di);
-				}
-				list.add(team);
+				var m = dList[i]['m'];
+				oMans[m] = true;
 			}
-			return list;
+			var aMans = [];
+			for (var m in oMans){
+				aMans[aMans.length] = m;
+			}
+			
+			// подгрузить менеджеры сообществ
+			NS.Manager.init(aMans, function(){
+				// создать список сообществ
+				for (var i=0;i<dList.length;i++){
+					var di = dList[i], man = NS.Manager.get(di['m']);
+					if (!L.isValue(man)){ continue; }
+					
+					var team = man._cacheTeam[di['id']];
+					
+					if (!L.isValue(team)){
+						team = new man.TeamClass(di);
+					}else{
+						team.update(di);
+					}
+					list.add(team);
+				}
+				NS.life(callback, list);
+			});
 		},
 		
 		teamListLoad: function(callback, prm){
@@ -538,8 +552,9 @@ Component.entryPoint = function(NS){
 			var __self = this;
 			
 			this.ajax(prm, function(d){
-				var list = __self._updateTeamList(d);
-				NS.life(callback, list);
+				__self._updateTeamList(d, function(list){
+					NS.life(callback, list);
+				});
 			});
 		},
 		
@@ -548,8 +563,9 @@ Component.entryPoint = function(NS){
 			sd['do'] = 'teamsave';
 			
 			this.ajax(sd, function(d){
-				var list = __self._updateTeamList(d);
-				NS.life(callback, list);
+				__self._updateTeamList(d, function(list){
+					NS.life(callback, list);
+				});
 			});
 		},
 		
@@ -762,51 +778,64 @@ Component.entryPoint = function(NS){
 			});
 		}
 	};
-	// Получить менеджер наследуемого приложения
-	Manager.get = function(modname){
-		var man = Brick.mod[modname]['manager'];
-		if (!L.isObject(man)){
-			man = NS.manager;
-		}
-		return man;
-	};
-	Manager.init = function(modname, callback){
-		var NSMod = Brick.mod[modname];
-		if (!L.isValue(NSMod)){
-			NS.life(callback, null);
-		}else{
-			NSMod.initManager(function(man){
-				NS.life(callback, man);
+	Manager.cache = {};
+	Manager.init = function(modName, callback){
+		if (L.isArray(modName)){
+			// инициализация менеджеров рекурсивно из массива
+			var m = modName.pop();
+			Manager.init(m, function(){
+				if (modName.length>0){
+					Manager.init(modName, callback);
+				}else{
+					NS.life(callback, Manager.cache[m]);
+				}
 			});
+			return;
 		}
+		
+		if (L.isValue(Manager.cache[modName])){
+			NS.life(callback, Manager.cache[modName]);
+			return;
+		}
+		
+		Brick.ff(modName, 'lib', function(){
+			var NSMod = Brick.mod[modName];
+			if (L.isValue(NSMod)){
+				new NSMod.Manager(function(man){
+					Manager.cache[modName] = man; 
+					NS.life(callback, man);
+				});
+			}else{
+				NS.life(callback, null);
+			}
+		});
 	};	
-	Manager.fire = function(modname, fname, p1, p2, p3, p4, p5, p6, p7, p8){
-		var func = Manager.get(modname)[fname];
-		if (L.isFunction(func)){
-			func(p1, p2, p3, p4, p5, p6, p7, p8);
-		}
+	Manager.get = function(modName){
+		return Manager.cache[modName];
 	};
 	NS.Manager = Manager;
 
-	NS.getTeam = function(teamid, callback){
+	NS.teamLoad = function(teamid, callback, cfg){
+		cfg = L.merge({
+			'modName': null
+		}, cfg || {});
 		
-		var teamLoad = function(mName){
-			Brick.ff(mName, 'lib', function(){
-				var mNS = Brick.mod[mName] || {};
-				if (!L.isFunction(mNS['initManager'])){
-					NS.life(callback, null);
-				}else{
-					mNS['initManager'](function(man){
-						man.teamLoad(teamid, function(team){
-							NS.life(callback, team);
-						});
+		var _teamLoad = function(mName){
+			Manager.init(mName, function(man){
+				if (L.isValue(man)){
+					man.teamLoad(teamid, function(team){
+						NS.life(callback, team, man);
 					});
+				}else{
+					NS.life(callback, null, null);
 				}
 			});
 		};
 		
-		if (L.isValue(_TMODULENAMECACHE[teamid])){
-			teamLoad(_TMODULENAMECACHE[teamid]);
+		if (L.isString(cfg['modName']) && cfg['modName'].length > 0){
+			_teamLoad(cfg['modName']);
+		}else if (L.isValue(_TMODULENAMECACHE[teamid])){
+			_teamLoad(_TMODULENAMECACHE[teamid]);
 		}else{
 			Brick.ajax('team', {
 				'data': {
@@ -815,10 +844,9 @@ Component.entryPoint = function(NS){
 				},
 				'event': function(request){
 					if (L.isValue(request) && L.isValue(request.data)){
-						var mName = request.data;
-						teamLoad(mName);
+						_teamLoad(request.data);
 					}else{
-						NS.life(callback, null);
+						NS.life(callback, null, null);
 					}
 				}
 			});		
