@@ -51,20 +51,31 @@ Component.entryPoint = function(NS){
 			this.team = team;
 			
 			this.elHide('loading');
+			
+			if (!L.isValue(team)){
+				this.elShow('nullitem');
+				return;
+			}
+			
+			this.elShow('rlwrap');
+			
+			if (team.role.isAdmin){
+				// подгрузить редакторы
+				var __self = this, mcfg = team.manager.cfg['teamEditor'], 
+					sh = {'hide': 'bbtns', 'show': 'edloading'};
+				this.componentLoad(mcfg['module'], mcfg['component'], function(){
+					mcfg = team.manager.cfg['teamRemove'];
+					__self.componentLoad(mcfg['module'], mcfg['component'], null, sh);			
+				}, sh);
+			}
 			this.render();
 		},
 		render: function(){
-			this.elHide('loading,nullitem,rlwrap');
+			if (!L.isValue(this.team)){ return; }
+
 			this.elHide('fldsite,flddescript,fldemail');
 
 			var team = this.team;
-
-			if (L.isNull(team)){
-				this.elShow('nullitem');
-			}else{
-				this.elShow('rlwrap');
-			}
-			if (L.isNull(team)){ return; }
 			
 			this.elSetVisible('btns', team.role.isAdmin);
 
@@ -98,27 +109,29 @@ Component.entryPoint = function(NS){
 
 			var __self = this, team = this.team, mcfg = team.manager.cfg['teamEditor'];
 
-			this.componentLoad(mcfg['module'], mcfg['component'], function(){
-				__self.elHide('btns,view');
-				
-				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), __self.modname, team.id, function(act){
+			this.elHide('btns,view');
+			
+			this._editor = new Brick.mod[mcfg['module']][mcfg['widget']](this.gel('editor'), team.id, {
+				'modName': __self.modname,
+				'callback': function(act){
 					__self.closeEditors();
 					
 					if (act == 'save'){ 
 						__self.render();
 						Brick.Page.reload();
 					}
-				});
-			}, {'hide': 'bbtns', 'show': 'edloading'});
+				} 
+			});
 		},
 		showRemovePanel: function(){
-			var __self = this, team = this.team, mcfg = team.manager.cfg['teamRemove'];
-
-			this.componentLoad(mcfg['module'], mcfg['component'], function(){
-				__self._editor = new Brick.mod[mcfg['module']][mcfg['panel']](team, function(){
-					Brick.Page.reload("#app="+team.module+"/wspace/ws");
-				});
-			}, {'hide': 'bbtns', 'show': 'edloading'});			
+			var team = this.team, mcfg = team.manager.cfg['teamRemove'];
+			this._editor = new Brick.mod[mcfg['module']][mcfg['panel']](team, function(){
+				var m = team.module;
+				if (team.parentModule.length > 0){
+					m = team.parentModule;
+				}
+				Brick.Page.reload("#app="+m+"/wspace/ws");
+			});
 		}
 	});
 	NS.TeamViewWidget = TeamViewWidget;

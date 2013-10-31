@@ -106,6 +106,8 @@ abstract class Team extends TeamItem {
 	 */
 	public $module = '';
 	
+	public $parentModule = '';
+	
 	/**
 	 * Тип сообещства
 	 * @var string
@@ -154,6 +156,8 @@ abstract class Team extends TeamItem {
 		
 		$this->role = $this->Manager()->NewTeamUserRole($this, Abricos::$user->id, $d);
 		
+		$this->parentModule = $this->Manager()->parentModuleName;
+		
 		// TeamUserManager::AddId($this->authorid);
 	}
 	
@@ -173,6 +177,7 @@ abstract class Team extends TeamItem {
 	public function ToAJAX(){
 		$ret = parent::ToAJAX();
 		$ret->m			= $this->module;
+		$ret->pm		= $this->parentModule;
 		$ret->tp		= $this->type;
 		$ret->auid		= $this->authorid;
 		$ret->tl		= $this->title;

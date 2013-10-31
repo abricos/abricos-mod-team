@@ -120,6 +120,7 @@ Component.entryPoint = function(NS){
 		d = L.merge({
 			'id': 0,
 			'm': 'team',
+			'pm': '',
 			'tp': '',
 			'nm': '',
 			'eml': '',
@@ -151,6 +152,7 @@ Component.entryPoint = function(NS){
 		update: function(d){
 			
 			this.module		= d['m'];
+			this.parentModule = d['pm'];
 			this.type		= d['tp'];
 			this.name		= d['nm'];
 			this.authorid	= d['auid'];			// создатель сообщества
@@ -363,7 +365,11 @@ Component.entryPoint = function(NS){
 			this.team = team;
 		},
 		URI: function(){
-			return "#app="+this.team.module+'/wsitem/wsi/'+this.team.id+'/';
+			var m = this.team.module;
+			if (this.team.parentModule.length > 0){
+				m = this.team.parentModule;
+			}
+			return "#app="+m+'/wsitem/wsi/'+this.team.id+'/';
 		},
 		memberListURI: function(){
 			var man = this.team.manager;
@@ -511,6 +517,11 @@ Component.entryPoint = function(NS){
 			
 			var list = new this.TeamListClass();
 
+			if (dList.length == 0){
+				NS.life(callback, list);
+				return;
+			}
+			
 			var oMans = {};
 			// собрать список всех менеджеров модулей
 			for (var i=0;i<dList.length;i++){

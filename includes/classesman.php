@@ -40,6 +40,12 @@ class TeamManager {
 	 * @var string
 	 */
 	public $moduleName = '';
+	
+	/**
+	 * Имя модуля родителя
+	 * @var string
+	 */
+	public $parentModuleName = '';
 
 	/**
 	 * @var Ab_Database
@@ -298,6 +304,7 @@ class TeamManager {
 		
 		$ret = new stdClass();
 		$ret->initdata = $item->ToAJAX();
+		$ret->initdata->parent = $this->parentModuleName;
 		
 		return $ret;
 	}
@@ -410,7 +417,17 @@ class TeamManager {
 		$list = $this->NewTeamList();
 		
 		while (($d = $this->db->fetch_array($rows))){
-			$list->Add($this->NewTeam($d));
+			if ($d['m'] != $this->moduleName){
+				$mod = Abricos::GetModule($d['m']);
+				if (empty($mod)){ continue; }
+				
+				$modMan = $mod->GetManager();
+				
+				$tMan = $modMan->GetTeamManager();
+				$list->Add($tMan->NewTeam($d));
+			}else{
+				$list->Add($this->NewTeam($d));
+			}
 		}
 		
 		return $list;

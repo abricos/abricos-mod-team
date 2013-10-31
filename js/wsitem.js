@@ -42,7 +42,7 @@ Component.entryPoint = function(NS){
 		onLoad: function(){
 			this.team = null;
 			this.widget = null;
-			var __self = this, NSMod = this.NSMod, teamid = this.teamid;
+			var __self = this, teamid = this.teamid;
 			
 			NS.teamLoad(teamid, function(team){
 				__self.onLoadTeam(team);
@@ -58,14 +58,14 @@ Component.entryPoint = function(NS){
 				Dom.setStyle(gel('error'), 'display', '');
 				return;
 			}
-			
+
 			var lst = "", man = team.manager;
 			man.initData.appInfoList.foreach(function(app){
 				if (app.parentName != ''){ return; }
 				lst += TM.replace('menuitem', {
 					'id': app.id,
 					'tl': app.title,
-					'url': "#app="+man.modname+"/wsitem/wsi/"+team.id+'/'+app.moduleName+'/'+app.name+'/'+app.widgetName+'/'
+					'url': team.navigator.URI()+app.moduleName+'/'+app.name+'/'+app.widgetName+'/'
 				});
 			});
 			gel('topmenu').innerHTML += lst;
