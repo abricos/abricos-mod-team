@@ -95,9 +95,7 @@ Component.entryPoint = function(NS){
 	var TypeInfoList = function(d){
 		TypeInfoList.superclass.constructor.call(this, d, TypeInfo);
 	};
-	YAHOO.extend(TypeInfoList, SysNS.ItemList, {
-		
-	});
+	YAHOO.extend(TypeInfoList, SysNS.ItemList, {});
 	NS.TypeInfoList = TypeInfoList;
 	
 	var InitData = function(d){
@@ -119,7 +117,7 @@ Component.entryPoint = function(NS){
 	var Team = function(d, man){
 		d = L.merge({
 			'id': 0,
-			'm': 'team',
+			'm': '{C#MODNAME}',
 			'pm': '',
 			'tp': '',
 			'nm': '',
@@ -143,9 +141,7 @@ Component.entryPoint = function(NS){
 			this.navigator = new this.manager['NavigatorClass'](this);
 			this.detail = null;
 			
-			this.memberList = null;
-			this.memberGroupList = null;
-			this.memberInGroup = null;
+			this.appData = {};
 			
 			Team.superclass.init.call(this, d);
 		},
@@ -181,7 +177,25 @@ Component.entryPoint = function(NS){
 	});
 	NS.Team = Team;
 	
+	/*
+	var TeamAppDataManager = function(team){
+		this.init(team);
+	};
+	TeamAppDataManager.prototype = {
+		init: function(team){
+			this.team = team;
+		},
+		get: function(modName, appName){
+			
+		},
+		set: function(){
+			
+		}
+	};
+	/**/
+	
 	// все участники сообещства
+	/*
 	NS.Team.globalMemberList = function(){
 		
 		var cache = {};
@@ -199,6 +213,7 @@ Component.entryPoint = function(NS){
 		};
 		
 	}();
+	/**/
 	
 	var TeamList = function(d, teamClass){
 		TeamList.superclass.constructor.call(this, d, teamClass || Team);
@@ -208,7 +223,7 @@ Component.entryPoint = function(NS){
 	
 	var TeamDetail = function(d){
 		d = L.merge({
-			'iwCount': 0
+			// 'iwCount': 0
 		}, d || {});
 		this.init(d);
 	};
@@ -217,7 +232,7 @@ Component.entryPoint = function(NS){
 			this.update(d);
 		},
 		update: function(d){
-			this.inviteWaitCount = d['iwCount'];
+			// this.inviteWaitCount = d['iwCount'];
 		}
 	};
 	NS.TeamDetail = TeamDetail;
@@ -239,7 +254,7 @@ Component.entryPoint = function(NS){
 		},
 		update: function(d){
 			this.isMember = (d['ismbr']|0)==1;
-			this.isModMember = this.isMember;
+			// this.isModMember = this.isMember;
 			this.isAdmin = (d['isadm']|0)==1;
 			this.isVirtual = (d['isvrt']|0)==1;
 			
@@ -250,98 +265,10 @@ Component.entryPoint = function(NS){
 	};
 	NS.TeamUserRole = TeamUserRole;
 	
-	var MemberGroup = function(d){
-		d = L.merge({
-			'tl': '',
-			'pid': 0
-		}, d || {});
-		MemberGroup.superclass.constructor.call(this, d);
-	};
-	YAHOO.extend(MemberGroup, SysNS.Item, {
-		update: function(d){
-			this.parentid = d['pid']|0;
-			this.title = d['tl'];
-		}
-	});
-	NS.MemberGroup = MemberGroup;
-
-	var MemberGroupList = function(d){
-		MemberGroupList.superclass.constructor.call(this, d, MemberGroup);
-	};
-	YAHOO.extend(MemberGroupList, SysNS.ItemList, {});
-	NS.MemberGroupList = MemberGroupList;
-	
-	var MemberInGroup = function(d){
-		d = L.merge({
-			'gid': 0,
-			'uid': 0
-		}, d || {});
-		MemberInGroup.superclass.constructor.call(this, d);
-	};
-	YAHOO.extend(MemberInGroup, SysNS.Item, {
-		update: function(d){
-			this.groupid = d['gid']|0;
-			this.memberid = d['uid']|0;
-		}
-	});
-	NS.MemberInGroup = MemberInGroup;
-
-	var MemberInGroupList = function(d){
-		MemberInGroupList.superclass.constructor.call(this, d, MemberInGroup);
-	};
-	YAHOO.extend(MemberInGroupList, SysNS.ItemList, {
-		getMemberGroupId: function(memberid){
-			var groupid = 0;
-			this.foreach(function(mig){
-				if (mig.memberid == memberid){
-					groupid = mig.groupid;
-					return true;
-				}
-			});
-			return groupid;
-		},
-		checkMemberInGroup: function(memberid, groupid){
-			var mgid = this.getMemberGroupId(memberid);
-			return mgid == groupid;
-		}
-	});
-	NS.MemberInGroupList = MemberInGroupList;
-
-	var Member = function(team, d){
-		this.team = team;
-		d = L.merge({
-			'role': {}
-		}, d || {});
-		Member.superclass.constructor.call(this, d);
-	};
-	YAHOO.extend(Member, SysNS.Item, {
-		init: function(d){
-			Member.superclass.init.call(this, d);
-		},
-		update: function(d){
-			if (L.isValue(this.team)){
-				this.role = new this.team.manager.TeamUserRoleClass(d['role']);
-			}else{
-				this.role = new NS.TeamUserRole(d['role']);
-			}
-		}
-	});
-	NS.Member = Member;
-	
-	var MemberList = function(d){
-		MemberList.superclass.constructor.call(this, d, Member);
-	};
-	YAHOO.extend(MemberList, SysNS.ItemList, {
-		createItem: function(di){
-			return new NS.Member(null, di);
-		}
-	});
-	NS.MemberList = MemberList;
-	
 	var UserConfig = function(d){
 		d = L.merge({
-			'iwCount': 0,
-			'iwLimit': 0
+			// 'iwCount': 0,
+			// 'iwLimit': 0
 		}, d || {});
 		this.init(d);
 	};
@@ -351,8 +278,8 @@ Component.entryPoint = function(NS){
 			this.update(d);
 		},
 		update: function(d){
-			this.inviteWaitCount = d['iwCount'];
-			this.inviteWaitLimit = d['iwLimit'];
+			// this.inviteWaitCount = d['iwCount'];
+			// this.inviteWaitLimit = d['iwLimit'];
 		}
 	};
 	NS.UserConfig = UserConfig;
@@ -391,40 +318,20 @@ Component.entryPoint = function(NS){
 			'TeamDetailClass':		TeamDetail,
 			'TeamListClass':		TeamList,
 			'TeamUserRoleClass':	TeamUserRole,
-			'MemberClass':			Member,
-			'MemberListClass':		MemberList,
 			'NavigatorClass':		Navigator
 		}, cfg || {});
 		
 		// специализированный виджеты в перегруженном модуле
 		cfg['teamEditor'] = L.merge({
-			'module': 'team',
+			'module': '{C#MODNAME}',
 			'component': 'teameditor',
 			'widget': 'TeamEditorWidget'
 		}, cfg['teamEditor'] || {});
 		
 		cfg['teamRemove'] = L.merge({
-			'module': 'team',
+			'module': '{C#MODNAME}',
 			'component': 'teameditor',
 			'panel': 'TeamRemovePanel'
-		}, cfg['memberEditor'] || {});
-
-		cfg['memberGroupEditor'] = L.merge({
-			'module': 'team',
-			'component': 'mgroupeditor',
-			'widget': 'MemberGroupEditorWidget'
-		}, cfg['memberGroupEditor'] || {});
-
-		cfg['memberEditor'] = L.merge({
-			'module': 'team',
-			'component': 'membereditor',
-			'widget': 'MemberEditorWidget'
-		}, cfg['memberEditor'] || {});
-		
-		cfg['memberRemove'] = L.merge({
-			'module': 'team',
-			'component': 'membereditor',
-			'panel': 'MemberRemovePanel'
 		}, cfg['memberEditor'] || {});
 
 		this.init(callback, cfg);
@@ -442,15 +349,11 @@ Component.entryPoint = function(NS){
 			this.TeamListClass		= cfg['TeamListClass'];
 			this.TeamUserRoleClass	= cfg['TeamUserRoleClass'];
 			
-			this.MemberClass		= cfg['MemberClass'];
-			this.MemberListClass	= cfg['MemberListClass'];
 			this.NavigatorClass		= cfg['NavigatorClass'];
 
-			this.invite = null;
+			// this.invite = null;
 			this.userConfig = new this.UserConfigClass();
 			this._cacheTeam = {};
-			
-			this.users = UP.viewer.users;
 			
 			this.initData = null;
 			
@@ -488,16 +391,15 @@ Component.entryPoint = function(NS){
 						if (L.isValue(d['userconfig'])){
 							userConfig.update(d['userconfig']);
 						}
-						if (L.isValue(d['users'])){
-							__self.users.update(d['users']);
-						}
 						if (L.isValue(d['initdata'])){
 							__self.initData = new __self.InitDataClass(d['initdata']);
 						}
+						/*
 						if (req['teamid'] && L.isValue(d['globalmemberlist']) && L.isArray(d['globalmemberlist']['list'])){
 							var list = new NS.MemberList(d['globalmemberlist']['list']);
 							NS.Team.globalMemberList.set(req['teamid'], list);
 						}
+						/**/
 					}
 					if (L.isArray(d['log'])){
 						Brick.console(d['log']);
@@ -624,34 +526,7 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
-		_updateMemberGroupList: function(team, d){
-			if (!L.isValue(d) || !L.isValue(d['membergroups']) || !L.isArray(d['membergroups']['list'])){
-				return null;
-			}
-				
-			var list = team.memberGroupList = new NS.MemberGroupList();
-			
-			var dList = d['membergroups']['list'];
-			for (var i=0; i<dList.length; i++){
-				list.add(new NS.MemberGroup(dList[i]));
-			}
-			return list;
-		},
-
-		_updateMemberInGroupList: function(team, d){
-			if (!L.isValue(d) || !L.isValue(d['memberingroups']) || !L.isArray(d['memberingroups']['list'])){
-				return null;
-			}
-				
-			var list = team.memberInGroupList = new NS.MemberInGroupList();
-			
-			var dList = d['memberingroups']['list'];
-			for (var i=0; i<dList.length; i++){
-				list.add(new NS.MemberInGroup(dList[i]));
-			}
-			return list;
-		},
-		
+		/*
 		_updateMemberList: function(team, d){
 			this._updateMemberGroupList(team, d);
 			this._updateMemberInGroupList(team, d);
@@ -788,6 +663,7 @@ Component.entryPoint = function(NS){
 				NS.life(callback);
 			});
 		}
+		/**/
 	};
 	Manager.cache = {};
 	Manager.init = function(modName, callback){

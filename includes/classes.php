@@ -157,8 +157,6 @@ abstract class Team extends TeamItem {
 		$this->role = $this->Manager()->NewTeamUserRole($this, Abricos::$user->id, $d);
 		
 		$this->parentModule = $this->Manager()->parentModuleName;
-		
-		// TeamUserManager::AddId($this->authorid);
 	}
 	
 	/**
@@ -203,13 +201,16 @@ abstract class Team extends TeamItem {
  */
 class TeamDetail {
 	
+	/**
+	 * @var Team
+	 */
 	public $team;
 	
 	/**
 	 * Количество неподтвержденных приглашений
 	 * @var integer
 	 */
-	public $inviteWaitCount = null;
+	// public $inviteWaitCount = null;
 	
 	public function __construct(Team $team, $d){
 		$this->team = $team;
@@ -218,9 +219,11 @@ class TeamDetail {
 	public function ToAJAX(){
 		$ret = new stdClass();
 	
+		/*
 		if (!is_null($this->inviteWaitCount)){
 			$ret->iwCount = $this->inviteWaitCount;
 		}
+		/**/
 		return $ret;
 	}
 }
@@ -511,68 +514,8 @@ class MemberList extends TeamItemList {
 	}
 }
 
-class MemberGroup extends TeamItem {
-
-	public $title;
-
-	public function __construct($d){
-		parent::__construct($d);
-		$this->title = strval($d['tl']);
-	}
-
-	public function ToAJAX(){
-		$ret = parent::ToAJAX();
-		$ret->tl = $this->title;
-		return $ret;
-	}
-}
-class MemberGroupList extends TeamItemList { }
-
-class MemberInGroup extends  TeamItem {
-	private static $_id = 1;
-	public $groupid;
-	public $memberid;
-	
-	public function __construct($d){
-		$this->id = MemberInGroup::$_id++;
-		$this->memberid = intval($d['uid']);
-		$this->groupid = intval($d['gid']);
-	}
-	
-	public function ToAJAX(){
-		$ret = parent::ToAJAX();
-		$ret->uid = $this->memberid;
-		$ret->gid = $this->groupid;
-		return $ret;
-	}
-}
-
-class MemberInGroupList extends TeamItemList {
-	
-	/**
-	 * @return MemberInGroup
-	 */
-	public function GetByIndex($i){
-		return parent::GetByIndex($i);
-	}
-	
-	/**
-	 * Проверка существование пользователя в группе
-	 * @param integer $userid
-	 * @return MemberInGroup
-	 */
-	public function GetByMemberId($memberid){
-		for ($i=0;$i<$this->Count();$i++){
-			$item = $this->GetByIndex($i);
-			if ($item->memberid == $memberid){ return $item; }
-		}
-		return null;
-	}
-}
-
-
 /**
- * Приложение для сообщества
+ * Информация о приложении для сообщества
  */
 class TeamAppInfo extends AbricosItem {
 	
@@ -787,13 +730,13 @@ class TeamUserConfig {
 	 * Количество всего неподтвержденных приглашений
 	 * @var integer
 	 */
-	public $inviteWaitCount = 0;
+	// public $inviteWaitCount = 0;
 
 	/**
 	 * Лимит неподтвержденных приглашений
 	 * @var integer
 	 */
-	public $inviteWaitLimit = 0;
+	// public $inviteWaitLimit = 0;
 
 
 	public function __construct(TeamManager $man){
@@ -804,14 +747,14 @@ class TeamUserConfig {
 			return;
 		}
 
-		$this->inviteWaitCount = TeamQuery::MemberInviteWaitCountByUser($db, $userid);
-		$this->inviteWaitLimit = $man->IsAdminRole() ? -1 : 5;
+		// $this->inviteWaitCount = TeamQuery::MemberInviteWaitCountByUser($db, $userid);
+		// $this->inviteWaitLimit = $man->IsAdminRole() ? -1 : 5;
 	}
 
 	public function ToAJAX(){
 		$ret = new stdClass();
-		$ret->iwCount = $this->inviteWaitCount;
-		$ret->iwLimit = $this->inviteWaitLimit;
+		// $ret->iwCount = $this->inviteWaitCount;
+		// $ret->iwLimit = $this->inviteWaitLimit;
 		return $ret;
 	}
 }
