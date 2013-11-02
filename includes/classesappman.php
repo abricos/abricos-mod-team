@@ -80,7 +80,7 @@ class TeamAppManager {
 		return $this->_navigatorURI;
 	}
 	
-	public final function AJAX($d){
+	public function AJAX($d){
 		$ret = new stdClass();
 		$aDo = explode("|", $d->do);
 
@@ -108,13 +108,18 @@ class TeamAppManager {
 				$ret->result->$var = $obj;
 			}
 		}
+		
+		$users = TeamUserManager::ToAJAX();
+		if (!empty($users)){
+			$ret->users = $users;
+		}
 	
 		return $ret;
 	}
 	
 	public function AJAXMethod($d){
 		switch($d->do){
-			case 'appdata': return $this->TeamExtendedDataToAJAX($d->teamid);
+			case 'teamextendeddata': return $this->TeamExtendedDataToAJAX($d->teamid);
 		}
 		return null;
 	}
@@ -154,6 +159,18 @@ class TeamAppManager {
 	public function Team($teamid){
 		Abricos::GetModule('team')->GetManager();
 		return TeamModuleManager::$instance->Team($teamid);
+	}
+	
+	/**
+	 * Дополнительные данные (справочники и т.п.) приложения 
+	 * определенного сообщества
+	 * @param integer $teamid
+	 */
+	public function TeamExtendedDataToAJAX($teamid){
+		$ret = new stdClass();
+		$ret->id = $teamid;
+		
+		return $ret;
 	}
 
 }

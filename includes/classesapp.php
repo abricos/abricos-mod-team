@@ -29,5 +29,23 @@ class TeamAppNavigator {
 	}
 }
 
+class TeamAppInitData {
+	
+	/**
+	 * @var TeamAppManager
+	 */
+	public $manager;
+	
+	public function __construct($manager){
+		$this->manager = $manager;
+	}
+	
+	public function ToAJAX(){
+		$ret = new stdClass();
+		
+		return $ret;
+	}
+}
+
 
 ?>

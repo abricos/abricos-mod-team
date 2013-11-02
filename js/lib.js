@@ -139,9 +139,8 @@ Component.entryPoint = function(NS){
 		init: function(d){
 			this.role = new this.manager['TeamUserRoleClass'](d['role']);
 			this.navigator = new this.manager['NavigatorClass'](this);
+			this.extended = new NS.TeamExtendedManager(this);
 			this.detail = null;
-			
-			this.appData = {};
 			
 			Team.superclass.init.call(this, d);
 		},
@@ -177,43 +176,39 @@ Component.entryPoint = function(NS){
 	});
 	NS.Team = Team;
 	
-	/*
-	var TeamAppDataManager = function(team){
+	var TeamExtendedManager = function(team){
 		this.init(team);
 	};
-	TeamAppDataManager.prototype = {
+	TeamExtendedManager.prototype = {
 		init: function(team){
 			this.team = team;
+			this.cache = {};
 		},
-		get: function(modName, appName){
+		load: function(modName, appName, callback){
+			var cache = this.cache, team = this.team;
+			cache[modName] = cache[modName] || {};
+			var extData = cache[modName][appName];
+			if (L.isValue(extData)){
+				NS.life(callback, extData);
+			}
 			
-		},
-		set: function(){
-			
+			NS.app.load(modName, appName, function(appManager){
+				if (!L.isValue(appManager)){
+					NS.life(callback, null);
+				}else{
+					appManager.teamExtendedDataLoad(team, function(extData){
+						if (!L.isValue(extData)){
+							NS.life(callback, null);
+						}else{
+							cache[modName][appName] = extData;
+							NS.life(callback, extData);
+						}
+					});
+				}
+			});
 		}
 	};
-	/**/
-	
-	// все участники сообещства
-	/*
-	NS.Team.globalMemberList = function(){
-		
-		var cache = {};
-		
-		return {
-			get: function(teamid){
-				if (!L.isValue(cache[teamid])){
-					cache[teamid] = null;
-				}
-				return cache[teamid];
-			},
-			set: function(teamid, memberList){
-				cache[teamid] = memberList;
-			}
-		};
-		
-	}();
-	/**/
+	NS.TeamExtendedManager = TeamExtendedManager;
 	
 	var TeamList = function(d, teamClass){
 		TeamList.superclass.constructor.call(this, d, teamClass || Team);
@@ -308,7 +303,72 @@ Component.entryPoint = function(NS){
 		}
 	};
 	NS.Navigator = Navigator;
-
+	
+	var TeamExtendedData = function(manager, d){
+		this.init(manager, d);
+	};
+	TeamExtendedData.prototype = {
+		init: function(manager, d){
+			this.manager = manager;
+			this.update(d);
+		},
+		update: function(d){}
+	};
+	NS.TeamExtendedData = TeamExtendedData;
+	
+	var TeamAppManager = function(modname, callback, cfg){
+		this.modname = modname;
+		
+		cfg = L.merge({
+			'TeamExtendedDataClass': TeamExtendedData
+		}, cfg || {});
+		
+		this.init(callback, cfg);
+	};
+	TeamAppManager.prototype = {
+		init: function(callback, cfg){
+			this.cfg = cfg;
+			
+			this.users = UP.viewer.users;
+			this.TeamExtendedDataClass	= cfg['TeamExtendedDataClass'];
+		},
+		ajax: function(d, callback){
+			d = d || {};
+			d['tm'] = Math.round((new Date().getTime())/1000);
+			
+			var __self = this;
+			Brick.ajax(this.modname, {
+				'data': d,
+				'event': function(request){
+					var d = L.isValue(request) && L.isValue(request.data) ? request.data : null,
+						result = L.isValue(d) ? (d.result ? d.result : null) : null;
+					
+					if (L.isValue(d)){
+						if (L.isValue(d['users'])){
+							__self.users.update(d['users']);
+						}
+					}
+					NS.life(callback, result);
+				}
+			});
+		},
+		teamExtendedDataLoad: function(team, callback){
+			var __self = this;
+			this.ajax({
+				'do': 'teamextendeddata',
+				'teamid': team.id
+			}, function(d){
+				if (L.isValue(d) && L.isValue(d['teamextendeddata'])){
+					var extData = new __self.TeamExtendedDataClass(__self, d['teamextendeddata']);
+					NS.life(callback, extData);
+				}else{
+					NS.life(callback, null);
+				}
+			});
+		}
+	};
+	NS.TeamAppManager = TeamAppManager;
+	
 	var Manager = function(modname, callback, cfg){
 		this.modname = modname;
 		cfg = L.merge({
@@ -739,4 +799,59 @@ Component.entryPoint = function(NS){
 			});		
 		}
 	};
+	
+	var AppManager = function(){
+		this.init();
+	};
+	AppManager.prototype = {
+		init: function(){
+			this.classes = {};
+			this.list = {};
+		},
+		loadClass: function(modName, appName, callback){
+			var cs = this.classes;
+			cs[modName] = cs[modName] || {};
+			
+			var manClass = this.getClass(modName, appName);
+			if (L.isValue(manClass)){
+				NS.life(callback, manClass);
+			}else{
+				var __self = this;
+				Brick.ff(modName, 'lib', function(){
+					manClass = __self.getClass(modName, appName);
+					NS.life(callback, manClass);
+				});
+			}
+		},
+		load: function(modName, appName, callback){
+			var list = this.list;
+			list[modName] = list[modName] || {};
+			
+			var man = list[modName][appName];
+			if (L.isValue(man)){
+				NS.life(callback, man);
+			}else{
+				this.loadClass(modName, appName, function(manClass){
+					if (!L.isValue(manClass)){
+						NS.life(callback, null);
+					}else{
+						list[modName][appName] = new manClass(function(man){
+							list[modName][appName] = man;
+							NS.life(callback, man);
+						});
+					}
+				});
+			}
+		},
+		register: function(modName, appName, manClass){
+			var cs = this.classes;
+			cs[modName] = cs[modName] || {};
+			cs[modName][appName] = manClass;
+		},
+		getClass: function(modName, appName){
+			return this.classes[modName][appName];
+		}
+	};
+	
+	NS.app = new AppManager();
 };
