@@ -271,6 +271,27 @@ class TeamQuery {
 		$db->query_write($sql);
 	}
 	
+	public static function UserByIds(Ab_Database $db, $ids){
+		if (count($ids) == 0){ return; }
+	
+		$wh = array();
+		for ($i=0; $i<count($ids); $i++){
+			array_push($wh, "u.userid=".bkint($ids[$i]));
+		}
+		$sql = "
+			SELECT
+				u.userid as id,
+				u.avatar as avt,
+				u.username as unm,
+				u.firstname as fnm,
+				u.lastname as lnm,
+				u.isvirtual as vrt
+			FROM ".$db->prefix."user u
+			WHERE ".implode(" OR ", $wh)."
+		";
+		return $db->query_read($sql);
+	}
+	
 	public static function FileAddToBuffer(Ab_Database $db, $userid, $fhash, $fname){
 		$sql = "
 			INSERT INTO ".$db->prefix."team_filebuffer (userid, filehash, filename, dateline) VALUES (

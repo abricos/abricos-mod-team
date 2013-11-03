@@ -119,7 +119,11 @@ class TeamAppManager {
 	
 	public function AJAXMethod($d){
 		switch($d->do){
-			case 'teamextendeddata': return $this->TeamExtendedDataToAJAX($d->teamid);
+			case 'teamextendeddata':
+				$ret = new stdClass();
+				$ret->teamextendeddata = 
+					$this->TeamExtendedDataToAJAX($d->teamid);
+				return $ret;
 		}
 		return null;
 	}

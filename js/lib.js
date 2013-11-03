@@ -33,9 +33,6 @@ Component.entryPoint = function(NS){
 	    return re.test(email);
 	};
 	
-	// глобальный кеш сообществ
-	// NS.teamCache = {};
-	
 	var AppInfo = function(d){
 		d = L.merge({
 			'mnm': '',
@@ -206,6 +203,12 @@ Component.entryPoint = function(NS){
 					});
 				}
 			});
+		},
+		get: function(modName, appName){
+			var cache = this.cache;
+			cache[modName] = cache[modName] || {};
+			
+			return cache[modName][appName] || null;
 		}
 	};
 	NS.TeamExtendedManager = TeamExtendedManager;
@@ -295,7 +298,7 @@ Component.entryPoint = function(NS){
 		},
 		memberListURI: function(){
 			var man = this.team.manager;
-			return this.URI()+man.modname+'/memberlist/MemberGroupListWidget/';
+			return this.URI()+man.modname+'/memberlist/GroupListWidget/';
 		},
 		memberViewURI: function(memberid){
 			var man = this.team.manager;
@@ -304,11 +307,13 @@ Component.entryPoint = function(NS){
 	};
 	NS.Navigator = Navigator;
 	
-	var TeamExtendedData = function(manager, d){
-		this.init(manager, d);
+	var TeamExtendedData = function(team, manager, d){
+		this.init(team, manager, d);
 	};
 	TeamExtendedData.prototype = {
-		init: function(manager, d){
+		init: function(team, manager, d){
+			this.id = team.id;
+			this.team = team;
 			this.manager = manager;
 			this.update(d);
 		},
@@ -359,7 +364,7 @@ Component.entryPoint = function(NS){
 				'teamid': team.id
 			}, function(d){
 				if (L.isValue(d) && L.isValue(d['teamextendeddata'])){
-					var extData = new __self.TeamExtendedDataClass(__self, d['teamextendeddata']);
+					var extData = new __self.TeamExtendedDataClass(team, __self, d['teamextendeddata']);
 					NS.life(callback, extData);
 				}else{
 					NS.life(callback, null);
@@ -588,7 +593,7 @@ Component.entryPoint = function(NS){
 		
 		/*
 		_updateMemberList: function(team, d){
-			this._updateMemberGroupList(team, d);
+			this._updateGroupList(team, d);
 			this._updateMemberInGroupList(team, d);
 			
 			if (!L.isValue(d) || !L.isValue(d['members']) || !L.isArray(d['members']['list'])){
@@ -604,34 +609,6 @@ Component.entryPoint = function(NS){
 			return list;
 		},
 		
-		memberGroupSave: function(team, sd, callback){
-			var __self = this;
-			this.ajax({
-				'do': 'membergroupsave',
-				'teamid': team.id,
-				'savedata': sd
-			}, function(d){
-				__self._updateMemberGroupList(team, d);
-				var group = null;
-				if (L.isValue(d) && d['groupid'] > 0){
-					group = team.memberGroupList.get(d['groupid']);
-				}
-				NS.life(callback, group);
-			});
-		},
-
-		memberGroupRemove: function(team, groupid, callback){
-			var __self = this;
-			this.ajax({
-				'do': 'membergroupremove',
-				'teamid': team.id,
-				'groupid': groupid
-			}, function(d){
-				__self._updateMemberGroupList(team, d);
-				NS.life(callback);
-			});
-		},
-
 		memberListLoad: function(team, callback){
 			if (L.isNull(team)){
 				NS.life(callback, null);

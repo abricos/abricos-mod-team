@@ -76,6 +76,7 @@ class TeamNavigator {
 		return $this->URL()."t".intval($teamid)."/";
 	}
 	
+	/*
 	public function MemberList($teamid, $modname = ''){
 		if (empty($modname)){
 			return $this->TeamView($teamid)."member/";
@@ -92,6 +93,7 @@ class TeamNavigator {
 			return $this->TeamView($teamid)."member/by/".$modname."/m".$memberid."/";
 		}
 	}
+	/**/
 }
 
 
@@ -454,63 +456,6 @@ class TeamUserManager {
 		$ret = TeamUserManager::$list->ToAJAX();
 		$ret = $ret->list;
 		return $ret;
-	}
-}
-
-/**
- * Участник сообщества
- */
-class Member extends TeamItem {
-	
-	/**
-	 * @var Team
-	 */
-	public $team = null;
-
-	/**
-	 * Роль пользователя в сообществе
-	 * @var TeamUserRole
-	 */
-	public $role;
-	
-	/**
-	 * @var MemberDetail
-	 */
-	public $detail = null;
-	
-	public function __construct(Team $team, $d){
-		parent::__construct($d);
-
-		$this->team = $team;
-		
-		$this->role = $team->Manager()->NewTeamUserRole($team, $this->id, $d);
-	}
-
-	public function ToAJAX(){
-		$ret = parent::ToAJAX();
-		$ret->role = $this->role->ToAJAX();
-		
-		return $ret;
-	}
-}
-
-class MemberDetail {
-	public $member;
-	
-	public function __construct(Member $member){
-		$this->member = $member;
-	}
-}
-
-class MemberList extends TeamItemList {
-	
-	public function __construct(){
-		parent::__construct();
-	}
-
-	public function Add($item = null){
-		parent::Add($item);
-		
 	}
 }
 
