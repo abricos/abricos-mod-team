@@ -41,7 +41,8 @@ class TeamAppManager {
 	public $userid;
 	
 	
-	public $TeamAppNavigatorClass = TeamAppNavigator;
+	public $TeamAppNavigatorClass	= TeamAppNavigator;
+	public $TeamAppInitDataClass	= TeamAppInitData;
 	
 	/**
 	 * @param Ab_ModuleManager $modManager
@@ -109,6 +110,13 @@ class TeamAppManager {
 			}
 		}
 		
+		if ($d->initdata){
+			$obj = $this->InitDataToAJAX();
+			if (!empty($obj)){
+				$ret->initdata = $obj->initdata;
+			}
+		}
+		
 		$users = TeamUserManager::ToAJAX();
 		if (!empty($users)){
 			$ret->users = $users;
@@ -163,6 +171,31 @@ class TeamAppManager {
 	public function Team($teamid){
 		Abricos::GetModule('team')->GetManager();
 		return TeamModuleManager::$instance->Team($teamid);
+	}
+	
+	/**
+	 * Данные приложения (настройка и т.п.)
+	 * @return TeamAppInitData
+	 */
+	public function InitData(){
+		if (!$this->IsViewRole()){ return null; }
+		
+		$initData = $this->Cache("initdata", 1);
+		if (!empty($initData)){ return $initData; }
+		
+		$initData = $this->TeamAppInitDataClass($this);
+		$this->CacheAdd("initdata", 1, $initData);
+		
+		return $initData;
+	}
+	
+	public function InitDataToAJAX(){
+		$initData = $this->InitData();
+		if (empty($initData)){ return null; }
+		
+		$ret = new stdClass();
+		$ret->initdata = $initData->ToAJAX();
+		return $ret;
 	}
 	
 	/**

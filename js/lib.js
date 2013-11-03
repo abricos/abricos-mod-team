@@ -307,6 +307,20 @@ Component.entryPoint = function(NS){
 	};
 	NS.Navigator = Navigator;
 	
+	var TeamAppInitData = function(manager, d){
+		this.init(manager, d);
+	};
+	TeamAppInitData.prototype = {
+		init: function(manager, d){
+			this.manager = manager;
+			this.update(d);
+		},
+		update: function(d){
+			
+		}
+	};
+	NS.TeamAppInitData = TeamAppInitData;
+	
 	var TeamExtendedData = function(team, manager, d){
 		this.init(team, manager, d);
 	};
@@ -325,7 +339,8 @@ Component.entryPoint = function(NS){
 		this.modname = modname;
 		
 		cfg = L.merge({
-			'TeamExtendedDataClass': TeamExtendedData
+			'TeamExtendedDataClass': TeamExtendedData,
+			'InitDataClass': TeamAppInitData
 		}, cfg || {});
 		
 		this.init(callback, cfg);
@@ -336,10 +351,17 @@ Component.entryPoint = function(NS){
 			
 			this.users = UP.viewer.users;
 			this.TeamExtendedDataClass	= cfg['TeamExtendedDataClass'];
+			this.InitDataClass			= cfg['InitDataClass'];
+			
+			this.initData = null;
 		},
 		ajax: function(d, callback){
 			d = d || {};
 			d['tm'] = Math.round((new Date().getTime())/1000);
+			
+			if (!L.isValue(this.initData)){
+				d['initdata'] = true;
+			}
 			
 			var __self = this;
 			Brick.ajax(this.modname, {
@@ -349,6 +371,9 @@ Component.entryPoint = function(NS){
 						result = L.isValue(d) ? (d.result ? d.result : null) : null;
 					
 					if (L.isValue(d)){
+						if (L.isValue(d['initdata'])){
+							__self.initData = new __self.InitDataClass(__self, d['initdata']);
+						}
 						if (L.isValue(d['users'])){
 							__self.users.update(d['users']);
 						}

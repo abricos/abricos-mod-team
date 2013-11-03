@@ -182,6 +182,7 @@ class TeamManager {
 			}
 		}
 		
+		/*
 		if ($d->globalmemberlist && $d->teamid > 0){
 			$team = $this->Team($d->teamid);
 			if ($team->module == $this->moduleName && $d->do == 'memberlist'){
@@ -196,6 +197,7 @@ class TeamManager {
 				}
 			}
 		}
+		/**/
 		
 		if ($d->userconfigupdate){
 			$ret->userconfig = $this->UserConfigToAJAX();

@@ -208,12 +208,6 @@ class TeamDetail {
 	 */
 	public $team;
 	
-	/**
-	 * Количество неподтвержденных приглашений
-	 * @var integer
-	 */
-	// public $inviteWaitCount = null;
-	
 	public function __construct(Team $team, $d){
 		$this->team = $team;
 	}
@@ -221,11 +215,6 @@ class TeamDetail {
 	public function ToAJAX(){
 		$ret = new stdClass();
 	
-		/*
-		if (!is_null($this->inviteWaitCount)){
-			$ret->iwCount = $this->inviteWaitCount;
-		}
-		/**/
 		return $ret;
 	}
 }
@@ -665,41 +654,6 @@ class TeamInitData {
 		$types = $this->typeList->ToAJAX();
 		$ret->types = $types->list;
 		
-		return $ret;
-	}
-}
-
-class TeamUserConfig {
-
-	/**
-	 * Количество всего неподтвержденных приглашений
-	 * @var integer
-	 */
-	// public $inviteWaitCount = 0;
-
-	/**
-	 * Лимит неподтвержденных приглашений
-	 * @var integer
-	 */
-	// public $inviteWaitLimit = 0;
-
-
-	public function __construct(TeamManager $man){
-		$userid = Abricos::$user->id;
-		$db = $man->db;
-
-		if ($userid == 0){
-			return;
-		}
-
-		// $this->inviteWaitCount = TeamQuery::MemberInviteWaitCountByUser($db, $userid);
-		// $this->inviteWaitLimit = $man->IsAdminRole() ? -1 : 5;
-	}
-
-	public function ToAJAX(){
-		$ret = new stdClass();
-		// $ret->iwCount = $this->inviteWaitCount;
-		// $ret->iwLimit = $this->inviteWaitLimit;
 		return $ret;
 	}
 }
