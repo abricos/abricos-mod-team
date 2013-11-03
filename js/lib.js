@@ -777,6 +777,18 @@ Component.entryPoint = function(NS){
 		}
 	};
 	
+	NS.teamAppDataLoad = function(teamid, modName, appName, callback){
+		NS.teamLoad(teamid, function(team){
+			if (!L.isValue(team)){
+				NS.life(callback, null);
+			}else{
+				team.extended.load(modName, appName, function(appData){
+					NS.life(callback, appData);
+				});
+			}
+		});
+	};
+	
 	var AppManager = function(){
 		this.init();
 	};
