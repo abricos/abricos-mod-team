@@ -263,25 +263,6 @@ Component.entryPoint = function(NS){
 	};
 	NS.TeamUserRole = TeamUserRole;
 	
-	var UserConfig = function(d){
-		d = L.merge({
-			// 'iwCount': 0,
-			// 'iwLimit': 0
-		}, d || {});
-		this.init(d);
-	};
-	UserConfig.prototype = {
-		init: function(d){
-			this.needUpdate = true;
-			this.update(d);
-		},
-		update: function(d){
-			// this.inviteWaitCount = d['iwCount'];
-			// this.inviteWaitLimit = d['iwLimit'];
-		}
-	};
-	NS.UserConfig = UserConfig;
-	
 	var Navigator = function(team){
 		this.init(team);
 	};
@@ -295,7 +276,8 @@ Component.entryPoint = function(NS){
 				m = this.team.parentModule;
 			}
 			return "#app="+m+'/wsitem/wsi/'+this.team.id+'/';
-		},
+		}
+		/*,
 		memberListURI: function(){
 			var man = this.team.manager;
 			return this.URI()+man.modname+'/memberlist/GroupListWidget/';
@@ -304,6 +286,7 @@ Component.entryPoint = function(NS){
 			var man = this.team.manager;
 			return this.URI()+man.modname+'/memberview/MemberViewWidget/'+memberid+'/';
 		}
+		/**/
 	};
 	NS.Navigator = Navigator;
 	
@@ -315,9 +298,7 @@ Component.entryPoint = function(NS){
 			this.manager = manager;
 			this.update(d);
 		},
-		update: function(d){
-			
-		}
+		update: function(d){ }
 	};
 	NS.TeamAppInitData = TeamAppInitData;
 	
@@ -403,7 +384,6 @@ Component.entryPoint = function(NS){
 		this.modname = modname;
 		cfg = L.merge({
 			'InitDataClass':		InitData,
-			'UserConfigClass':		UserConfig,
 			'TeamClass':			Team,
 			'TeamDetailClass':		TeamDetail,
 			'TeamListClass':		TeamList,
@@ -432,7 +412,6 @@ Component.entryPoint = function(NS){
 			this.cfg = cfg;
 
 			this.InitDataClass		= cfg['InitDataClass'];
-			this.UserConfigClass	= cfg['UserConfigClass'];
 			
 			this.TeamClass			= cfg['TeamClass'];
 			this.TeamDetailClass	= cfg['TeamDetailClass'];
@@ -441,8 +420,6 @@ Component.entryPoint = function(NS){
 			
 			this.NavigatorClass		= cfg['NavigatorClass'];
 
-			// this.invite = null;
-			this.userConfig = new this.UserConfigClass();
 			this._cacheTeam = {};
 			
 			this.initData = null;
@@ -456,18 +433,8 @@ Component.entryPoint = function(NS){
 			req = req || {};
 			req['tm'] = Math.round((new Date().getTime())/1000);
 			
-			var userConfig = this.userConfig;
-			if (userConfig.needUpdate){
-				req['userconfigupdate'] = true;
-				userConfig.needUpdate = false;
-			}
 			if (!L.isValue(this.initData)){
 				req['initdataupdate'] = true;
-			}
-			
-			if (this.requestGlobalMemberList && req['teamid']>0 
-					&& !L.isValue(NS.Team.globalMemberList.get(req['teamid']))){
-				req['globalmemberlist'] = true;
 			}
 			
 			var __self = this;
@@ -478,18 +445,9 @@ Component.entryPoint = function(NS){
 						result = L.isValue(d) ? (d.result ? d.result : null) : null;
 		
 					if (L.isValue(d)){
-						if (L.isValue(d['userconfig'])){
-							userConfig.update(d['userconfig']);
-						}
 						if (L.isValue(d['initdata'])){
 							__self.initData = new __self.InitDataClass(d['initdata']);
 						}
-						/*
-						if (req['teamid'] && L.isValue(d['globalmemberlist']) && L.isArray(d['globalmemberlist']['list'])){
-							var list = new NS.MemberList(d['globalmemberlist']['list']);
-							NS.Team.globalMemberList.set(req['teamid'], list);
-						}
-						/**/
 					}
 					if (L.isArray(d['log'])){
 						Brick.console(d['log']);

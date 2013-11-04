@@ -183,7 +183,7 @@ class TeamAppManager {
 		$initData = $this->Cache("initdata", 1);
 		if (!empty($initData)){ return $initData; }
 		
-		$initData = $this->TeamAppInitDataClass($this);
+		$initData = new $this->TeamAppInitDataClass($this);
 		$this->CacheAdd("initdata", 1, $initData);
 		
 		return $initData;
@@ -191,6 +191,7 @@ class TeamAppManager {
 	
 	public function InitDataToAJAX(){
 		$initData = $this->InitData();
+	
 		if (empty($initData)){ return null; }
 		
 		$ret = new stdClass();

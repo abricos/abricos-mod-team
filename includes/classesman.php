@@ -74,8 +74,6 @@ class TeamManager {
 	
 	public $TeamNavigatorClass	= TeamNavigator;
 	
-	public $TeamUserConfigClass	= TeamUserConfig;
-		
 	/**
 	 * Информация о расширенной таблицы ролей пользовтеля
 	 * Например для списка спортсменов:
@@ -198,10 +196,6 @@ class TeamManager {
 			}
 		}
 		/**/
-		
-		if ($d->userconfigupdate){
-			$ret->userconfig = $this->UserConfigToAJAX();
-		}
 		
 		if ($d->initdataupdate){
 			$idAX = $this->InitDataToAJAX();
@@ -533,23 +527,6 @@ class TeamManager {
 	}
 	/**/
 		
-	/**
-	 * @return TeamUserConfig
-	 */
-	public function UserConfig(){
-		if (!$this->IsViewRole()){
-			return null;
-		}
-		return new $this->TeamUserConfigClass($this);
-	}
-	
-	public function UserConfigToAJAX(){
-		$ucfg = $this->UserConfig();
-		if (is_null($ucfg)){
-			return null;
-		}
-		return $ucfg->ToAJAX();
-	}
 }
 
 ?>

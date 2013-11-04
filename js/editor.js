@@ -13,62 +13,6 @@ Component.entryPoint = function(NS){
 	var BW = Brick.mod.widget.Widget,
 		buildTemplate = this.buildTemplate;
 	
-	var UserFindByEmail = function(startCallback, finishCallback){
-		this.init(startCallback, finishCallback);
-	};
-	UserFindByEmail.prototype = {
-		init: function(startCallback, finishCallback){
-			this.startCallback = startCallback;
-			this.finishCallback = finishCallback;
-
-			this._checkUserCache = {};
-		},
-		find: function(eml){
-			if (!NS.emailValidate(eml)){
-				return false;
-			}
-			this._findMethod(eml);
-			return true;
-		},
-		_findMethod: function(eml){
-			var chk = this._checkUserCache;
-			if (chk[eml] && chk[eml]['isprocess']){
-				// этот емайл сейчас уже находится в запросе
-				return; 
-			}
-			
-			NS.life(this.startCallback, eml);
-
-			if (chk[eml] && chk[eml]['result']){
-				NS.life(this.finishCallback, eml);
-				return;
-			}
-			chk[eml] = { 'isprocess': true };
-
-			var __self = this;
-
-			Brick.ajax('{C#MODNAME}', {
-				'data': {
-					'do': 'userfindbyemail',
-					'email': eml
-				},
-				'event': function(request){
-					var d = request.data,
-						user = null;
-					if (!L.isNull(d)){
-						eml = d['email'];
-						user = d['user'];
-					}
-					chk[eml]['isprocess'] = false;
-					chk[eml]['result'] = user;
-					NS.life(__self.finishCallback, eml, user);
-				}
-			});
-		}
-	};
-	NS.UserFindByEmail = UserFindByEmail;
-	
-	
 	var LogoWidget = function(container, filehash){
 		filehash = filehash || null;
 		this.init(container, filehash);
