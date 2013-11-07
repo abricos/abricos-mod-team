@@ -183,10 +183,25 @@ Component.entryPoint = function(NS){
 		},
 		load: function(modName, appName, callback){
 			var cache = this.cache, team = this.team;
+
+			if (L.isArray(modName)){
+				// загрузка данных нескольких модулей рекурсивно из массива
+				var m = modName.pop();
+				team.extended.load(m, appName, function(appData){
+					if (modName.length>0){
+						team.extended.load(modName, appName, callback);
+					}else{
+						NS.life(callback, cache[m][appName]);
+					}
+				});
+				return;
+			}
+			
 			cache[modName] = cache[modName] || {};
 			var extData = cache[modName][appName];
 			if (L.isValue(extData)){
 				NS.life(callback, extData);
+				return;
 			}
 			
 			NS.app.load(modName, appName, function(appManager){
@@ -252,7 +267,6 @@ Component.entryPoint = function(NS){
 		},
 		update: function(d){
 			this.isMember = (d['ismbr']|0)==1;
-			// this.isModMember = this.isMember;
 			this.isAdmin = (d['isadm']|0)==1;
 			this.isVirtual = (d['isvrt']|0)==1;
 			
@@ -335,6 +349,8 @@ Component.entryPoint = function(NS){
 			this.InitDataClass			= cfg['InitDataClass'];
 			
 			this.initData = null;
+			
+			this._cacheRelatedModuleList = null;
 		},
 		ajax: function(d, callback){
 			d = d || {};
@@ -376,6 +392,28 @@ Component.entryPoint = function(NS){
 					NS.life(callback, null);
 				}
 			});
+		},
+		// список всех родственных приложений
+		// например для любого из приложений teammember список может быть employee, sportsman и т.п.
+		relatedModuleNameList: function(team, callback){
+			if (L.isValue(this._cacheRelatedModuleList)){
+				NS.life(callback, this._cacheRelatedModuleList);
+			}
+			
+			var __self = this, related = [];
+			
+			this.ajax({
+				'do': 'relatedmodulelist',
+				'teamid': team.id
+			}, function(d){
+				
+				if (L.isValue(d) && L.isArray(d['relatedmodules'])){
+					__self._cacheRelatedModuleList = 
+						related = d['relatedmodules'];
+				}
+				
+				NS.life(callback, related);
+			});			
 		}
 	};
 	NS.TeamAppManager = TeamAppManager;
@@ -426,7 +464,7 @@ Component.entryPoint = function(NS){
 			
 			// при очередном запросе данных подгрузить еще и список 
 			// всех участников сообщества, если он не подгружен ранее
-			this.requestGlobalMemberList = false;
+			// this.requestGlobalMemberList = false;
 		},
 		
 		ajax: function(req, callback){
@@ -797,8 +835,23 @@ Component.entryPoint = function(NS){
 		},
 		load: function(modName, appName, callback){
 			var list = this.list;
+			
+			if (L.isArray(modName)){
+				// инициализация менеджеров рекурсивно из массива
+				var m = modName.pop();
+				NS.app.load(m, appName, function(man){
+					if (modName.length>0){
+						NS.app.load(modName, appName, callback);
+					}else{
+						NS.life(callback, list[m][appName]);
+					}
+				});
+				return;
+			}
+			
 			list[modName] = list[modName] || {};
 			
+
 			var man = list[modName][appName];
 			if (L.isValue(man)){
 				NS.life(callback, man);
@@ -822,6 +875,14 @@ Component.entryPoint = function(NS){
 		},
 		getClass: function(modName, appName){
 			return this.classes[modName][appName];
+		},
+		foreach: function(f){
+			var list = this.list;
+			for (var m in list){
+				for (var appName in this.list[m]){
+					NS.life(f, this.list[m][appName]);
+				}
+			}
 		}
 	};
 	

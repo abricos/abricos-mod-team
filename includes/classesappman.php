@@ -132,6 +132,10 @@ class TeamAppManager {
 				$ret->teamextendeddata = 
 					$this->TeamExtendedDataToAJAX($d->teamid);
 				return $ret;
+			case 'relatedmodulelist':
+				$ret = new stdClass();
+				$ret->relatedmodules = $this->RelatedModuleList($d->teamid);
+				return $ret;
 		}
 		return null;
 	}
@@ -209,6 +213,17 @@ class TeamAppManager {
 		$ret->id = $teamid;
 		
 		return $ret;
+	}
+	
+	/**
+	 * Список родственных приложений
+	 * 
+	 * Например, список всех модулей наследуемых от TeamMember
+	 * 
+	 * @param integer $teamid
+	 */
+	public function RelatedModuleList($teamid){
+		return array();
 	}
 
 }
