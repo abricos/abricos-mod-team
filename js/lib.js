@@ -224,6 +224,14 @@ Component.entryPoint = function(NS){
 			cache[modName] = cache[modName] || {};
 			
 			return cache[modName][appName] || null;
+		},
+		foreach: function(f){
+			var list = this.cache;
+			for (var m in list){
+				for (var appName in list[m]){
+					NS.life(f, list[m][appName]);
+				}
+			}
 		}
 	};
 	NS.TeamExtendedManager = TeamExtendedManager;
@@ -294,11 +302,11 @@ Component.entryPoint = function(NS){
 		/*,
 		memberListURI: function(){
 			var man = this.team.manager;
-			return this.URI()+man.modname+'/memberlist/GroupListWidget/';
+			return this.URI()+man.modName+'/memberlist/GroupListWidget/';
 		},
 		memberViewURI: function(memberid){
 			var man = this.team.manager;
-			return this.URI()+man.modname+'/memberview/MemberViewWidget/'+memberid+'/';
+			return this.URI()+man.modName+'/memberview/MemberViewWidget/'+memberid+'/';
 		}
 		/**/
 	};
@@ -330,8 +338,9 @@ Component.entryPoint = function(NS){
 	};
 	NS.TeamExtendedData = TeamExtendedData;
 	
-	var TeamAppManager = function(modname, callback, cfg){
-		this.modname = modname;
+	var TeamAppManager = function(modName, appName, callback, cfg){
+		this.modName = modName;
+		this.appName = appName;
 		
 		cfg = L.merge({
 			'TeamExtendedDataClass': TeamExtendedData,
@@ -361,7 +370,7 @@ Component.entryPoint = function(NS){
 			}
 			
 			var __self = this;
-			Brick.ajax(this.modname, {
+			Brick.ajax(this.modName, {
 				'data': d,
 				'event': function(request){
 					var d = L.isValue(request) && L.isValue(request.data) ? request.data : null,
@@ -418,8 +427,8 @@ Component.entryPoint = function(NS){
 	};
 	NS.TeamAppManager = TeamAppManager;
 	
-	var Manager = function(modname, callback, cfg){
-		this.modname = modname;
+	var Manager = function(modName, callback, cfg){
+		this.modName = modName;
 		cfg = L.merge({
 			'InitDataClass':		InitData,
 			'TeamClass':			Team,
@@ -476,7 +485,7 @@ Component.entryPoint = function(NS){
 			}
 			
 			var __self = this;
-			Brick.ajax(this.modname, {
+			Brick.ajax(this.modName, {
 				'data': req,
 				'event': function(request){
 					var d = L.isValue(request) && L.isValue(request.data) ? request.data : null,
@@ -879,10 +888,15 @@ Component.entryPoint = function(NS){
 		foreach: function(f){
 			var list = this.list;
 			for (var m in list){
-				for (var appName in this.list[m]){
-					NS.life(f, this.list[m][appName]);
+				for (var appName in list[m]){
+					NS.life(f, list[m][appName]);
 				}
 			}
+		},
+		get: function(modName, appName){
+			var list = this.list;
+			list[modName] = list[modName] || {};
+			return list[modName][appName] || null;
 		}
 	};
 	

@@ -17,7 +17,7 @@ Component.entryPoint = function(NS){
 	var buildTemplate = this.buildTemplate;
 	var isem = function(s){ return L.isString(s) && s.length > 0; };
 	
-	var TeamViewWidget = function(container, modname, teamid, cfg){
+	var TeamViewWidget = function(container, modName, teamid, cfg){
 		cfg = L.merge({
 			'override': null
 		}, cfg || {});
@@ -25,22 +25,22 @@ Component.entryPoint = function(NS){
 		TeamViewWidget.superclass.constructor.call(this, container, {
 			'buildTemplate': buildTemplate, 'tnames': 'widget', 
 			'override': cfg['override']
-		}, modname, teamid);
+		}, modName, teamid);
 	};
 	YAHOO.extend(TeamViewWidget, Brick.mod.widget.Widget, {
-		init: function(modname, teamid){
-			this.modname = modname;
+		init: function(modName, teamid){
+			this.modName = modName;
 			this.teamid = teamid;
 			this.team = null;
 
 			this._editor = null;
 		},
-		buildTData: function(modname, teamid){
+		buildTData: function(modName, teamid){
 			return {
 				// 'urlmembers': NS.navigator.sportclub.depts.view(teamid)
 			};
 		},
-		onLoad: function(modname, teamid){
+		onLoad: function(modName, teamid){
 			
 			var __self = this;
 			NS.teamLoad(teamid, function(team){
@@ -112,7 +112,7 @@ Component.entryPoint = function(NS){
 			this.elHide('btns,view');
 			
 			this._editor = new Brick.mod[mcfg['module']][mcfg['widget']](this.gel('editor'), team.id, {
-				'modName': __self.modname,
+				'modName': __self.modName,
 				'callback': function(act){
 					__self.closeEditors();
 					

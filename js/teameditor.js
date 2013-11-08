@@ -94,7 +94,7 @@ Component.entryPoint = function(NS){
 				__self.elHide('loading,wizard');
 
 				__self._editor = new Brick.mod[mcfg['module']][mcfg['widget']](__self.gel('editor'), 0, {
-					'modName': manager.modname,
+					'modName': manager.modName,
 					'callback': cfg['callback']
 				});
 			});			
