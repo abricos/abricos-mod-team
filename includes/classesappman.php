@@ -209,6 +209,9 @@ class TeamAppManager {
 	 * @param integer $teamid
 	 */
 	public function TeamExtendedDataToAJAX($teamid){
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+		
 		$ret = new stdClass();
 		$ret->id = $teamid;
 		
