@@ -58,6 +58,12 @@ class TeamNavigator {
 		return "/team/";
 	}
 	
+	public function TeamView($teamid){
+		return $this->URL()."t_".intval($teamid)."/";
+	}
+	
+	
+	/*
 	public function TeamList($modname = ''){
 		if (empty($modname)){
 			return $this->URL();
@@ -66,14 +72,6 @@ class TeamNavigator {
 		}
 	}
 	
-	public function TeamView($teamid){
-		return $this->URL()."t".intval($teamid)."/";
-	}
-	
-	/*
-	public function TeamApp($modName){
-		
-	}
 	/**/
 }
 

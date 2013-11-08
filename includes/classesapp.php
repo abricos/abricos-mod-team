@@ -21,11 +21,13 @@ class TeamAppNavigator {
 		$this->isURL = $isURL;
 	}
 
-	public function URL(){
-		if ($this->isURL){
-			return Abricos::$adress->host."/".$this->manager->moduleName."/";
-		}
-		return "/".$this->manager->moduleName."/";
+	public function URL(Team $team){
+		$url = $this->TeamView($team);
+		return $url."m_".$this->manager->moduleName."/a_".$this->manager->name;
+	}
+	
+	public function TeamView(Team $team){
+		return $team->Manager()->Navigator($this->isURL)->TeamView($team->id);
 	}
 }
 

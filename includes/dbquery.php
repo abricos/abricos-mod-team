@@ -281,6 +281,149 @@ class TeamQuery {
 		$db->query_write($sql);
 	}
 	
+	/**
+	 * Пользователь userid стал членом группы teamid
+	 *
+	 * @param Ab_Database $db
+	 * @param integer $teamid
+	 * @param integer $userid
+	 */
+	public static function UserSetMember(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			INSERT INTO ".$db->prefix."team_userrole
+			(teamid, userid, ismemeber, dateline, upddate) VALUES (
+				".bkint($teamid).",
+				".bkint($userid).",
+				1,
+				".TIMENOW.",
+				".TIMENOW."
+			) ON DUPLICATE KEY UPDATE
+				ismember=1
+		";
+		$db->query_write($sql);
+	}
+	
+	/**
+	 * Админ группы отправил приглашение на вступление пользователю userid
+	 *
+	 * @param Ab_Database $db
+	 * @param integer $teamid
+	 * @param integer $userid
+	 */
+	public static function MemberInviteSetWait(Ab_Database $db, $teamid, $userid, $adminid){
+		$sql = "
+			INSERT INTO ".$db->prefix."team_userrole
+			(teamid, userid, reluserid, isinvite, dateline, upddate) VALUES (
+				".bkint($teamid).",
+				".bkint($userid).",
+				".bkint($adminid).",
+				1,
+				".TIMENOW.",
+				".TIMENOW."
+			) ON DUPLICATE KEY UPDATE
+				reluserid=".bkint($adminid).",
+				isinvite=1
+		";
+		$db->query_write($sql);
+	}
+	
+	public static function MemberInviteWaitCountByTeam(Ab_Database $db, $teamid){
+		$sql = "
+			SELECT
+				count(*) as cnt
+			FROM ".$db->prefix."team_userrole
+			WHERE teamid=".bkint($teamid)." AND ismember=0 AND isinvite=1
+		";
+		$row = $db->query_first($sql);
+		return intval($row['cnt']);
+	}
+	
+	public static function MemberInviteWaitCountByUser(Ab_Database $db, $userid){
+		$sql = "
+			SELECT
+				count(*) as cnt
+			FROM ".$db->prefix."team_userrole
+			WHERE reluserid=".bkint($userid)." AND ismember=0 AND isinvite=1
+		";
+		$row = $db->query_first($sql);
+		return intval($row['cnt']);
+	}
+	
+	/**
+	 * Пользователь принял приглашение вступить в группу
+	 *
+	 * @param Ab_Database $db
+	 * @param integer $teamid
+	 * @param integer $userid
+	 */
+	public static function MemberInviteSetAccept(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			UPDATE ".$db->prefix."team_userrole
+			SET
+				isinvite=2,
+				ismember=1
+			WHERE teamid=".bkint($teamid)." AND userid=".bkint($userid)."
+				AND ismember=0
+			LIMIT 1
+		";
+		$db->query_write($sql);
+	}
+	
+	public static function MemberRemove(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			UPDATE ".$db->prefix."team_userrole
+			SET
+				isremove=".(Abricos::$user->id == $userid ? 2 : 1).",
+				ismember=0
+			WHERE teamid=".bkint($teamid)." AND userid=".bkint($userid)."
+			LIMIT 1
+		";
+		$db->query_write($sql);
+	}
+	
+	/**
+	 * Пользователь отклонил приглашение вступить в группу
+	 *
+	 * @param Ab_Database $db
+	 * @param integer $teamid
+	 * @param integer $userid
+	 */
+	public static function MemberInviteSetReject(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			UPDATE ".$db->prefix."team_userrole
+			SET
+				isinvite=3,
+				ismember=0
+			WHERE teamid=".bkint($teamid)." AND userid=".bkint($userid)."
+				AND ismember=0
+			LIMIT 1
+		";
+		$db->query_write($sql);
+	}
+	
+	/**
+	 * Пользователь userid сам запросил вступление в группу
+	 *
+	 * @param Ab_Database $db
+	 * @param integer $teamid
+	 * @param integer $userid
+	 */
+	public static function MemeberJoinRequestSet(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			INSERT INTO ".$db->prefix."team_userrole
+			(teamid, userid, isjoinrequest, dateline, upddate) VALUES (
+				".bkint($teamid).",
+				".bkint($userid).",
+				1,
+				".TIMENOW.",
+				".TIMENOW."
+			) ON DUPLICATE KEY UPDATE
+				isjoinrequest=1
+		";
+		$db->query_write($sql);
+	}
+	
+	
 	public static function UserByIds(Ab_Database $db, $ids){
 		if (count($ids) == 0){ return; }
 	
