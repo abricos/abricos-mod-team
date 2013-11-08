@@ -22,6 +22,16 @@ class TeamQuery {
 		return $row['m'];
 	}
 	
+	public static function TeamModuleNameList(Ab_Database $db){
+		$sql = "
+			SELECT 
+				DISTINCT t.module as m
+			FROM ".$db->prefix."team t
+			WHERE t.deldate=0 
+		";
+		return $db->query_read($sql);
+	}
+	
 	/**
 	 * Список групп с правами текущего пользователя на эти группы
 	 *

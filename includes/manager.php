@@ -85,6 +85,21 @@ class TeamModuleManager extends Ab_ModuleManager {
 		return TeamQuery::TeamModuleName($this->db, $teamid);
 	}
 	
+	/**
+	 * @param string $moduleName
+	 * @return TeamManager
+	 */
+	public function GetTeamManager($moduleName){
+		$mod = Abricos::GetModule($moduleName);
+		if (empty($mod)){
+			return null;
+		}
+		
+		$modMan = $mod->GetManager();
+		
+		return @$modMan->GetTeamManager();
+	}
+	
 	private $_cacheTeam = array();
 	
 	/**
@@ -114,6 +129,19 @@ class TeamModuleManager extends Ab_ModuleManager {
 		}
 		
 		return $this->_cacheTeam[$teamid] = $tMan->Team($teamid);
+	}
+	
+	
+	public function TeamModuleNameList(){
+		$ret = array();
+		if (!$this->IsViewRole()){ return null; }
+		
+		$rows = TeamQuery::TeamModuleNameList($this->db);
+		while (($row = $this->db->fetch_array($rows))){
+			array_push($ret, $row['m']);
+		}
+		
+		return $ret;
 	}
 	
 	public function FileAddToBuffer($fhash, $fname){

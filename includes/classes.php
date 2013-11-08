@@ -38,16 +38,10 @@ class TeamConfig {
 /**
  * Билдер ссылок
  * 
- * http://host/team/ - список сообществ
- * http://host/team/page[n]/ - страница списка сообществ
- * http://host/team/by/ - список модулей сообществ
- * http://host/team/by/[modname]/ - список сообществ модуля
- * http://host/team/t[teamid]/ - сообщество
- * http://host/team/t[teamid]/member/ - список участников
- * http://host/team/t[teamid]/member/by/ - список модулей участников
- * http://host/team/t[teamid]/member/by/[modname]/ - список участников в модуле
- * http://host/team/t[teamid]/member/[memberid]/ - участник со страницами модулей
- * http://host/team/t[teamid]/member/by/[modname]/[memberid]/ - просмотр участника в модуле
+ * http://host/team/ - список типов сообществ
+ * http://host/team/m_[modname]/ - список сообществ определенного типа (модуля)
+ * http://host/team/t_[teamid]/ - сообщество
+ * http://host/team/t_[teamid]/m[modname]/ - приложение сообщества
  */
 class TeamNavigator {
 	
@@ -77,21 +71,8 @@ class TeamNavigator {
 	}
 	
 	/*
-	public function MemberList($teamid, $modname = ''){
-		if (empty($modname)){
-			return $this->TeamView($teamid)."member/";
-		}else{
-			return $this->TeamView($teamid)."member/by/".$modname."/";
-		}
-	}
-	
-	public function MemberView($teamid, $memberid, $modname = ''){
-		$memberid = intval($memberid);
-		if (empty($modname)){
-			return $this->TeamView($teamid)."member/m".$memberid."/";
-		}else{
-			return $this->TeamView($teamid)."member/by/".$modname."/m".$memberid."/";
-		}
+	public function TeamApp($modName){
+		
 	}
 	/**/
 }

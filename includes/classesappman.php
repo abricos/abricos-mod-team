@@ -66,7 +66,7 @@ class TeamAppManager {
 	private $_navigatorURL;
 	
 	/**
-	 * @return TeamMemberNavigator
+	 * @return TeamAppNavigator
 	 */
 	public function Navigator($isURL = false){
 		if ($isURL){

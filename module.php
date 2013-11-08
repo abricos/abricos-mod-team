@@ -47,16 +47,9 @@ class TeamModule extends Ab_Module {
 	}
 	
 	/**
-	 * @var Team
+	 * @var TeamManager
 	 */
-	public $currentTeam;
-	
-	public $currentMemberId;
-	
-	/**
-	 * @var Ab_Module
-	 */
-	public $currentMemberMod;
+	public $currentTeamManager;
 	
 	public function GetContentName(){
 		$cname = '';
@@ -68,7 +61,25 @@ class TeamModule extends Ab_Module {
 			return 'uploadlogo';
 		}
 		
+		if ($lvl == 1){
+			return 'teammodlist';
+		}
+
 		$p = $dir[1];
+		
+		if (!empty($p) && substr($p, 0, 2) == 'm_'){
+			
+			$modName = substr($p, 2);
+			
+			$man = $this->GetManager()->GetTeamManager($modName);
+			if (empty($man)){ return ''; }
+			
+			$this->currentTeamManager = $man;
+			
+			return 'teamlist';
+		}
+		
+		/*
 		if (!empty($p) && substr($p, 0, 1) == 't'){
 			$teamid = bkint(substr($p, 1));
 			
@@ -100,6 +111,7 @@ class TeamModule extends Ab_Module {
 		}else{
 			return 'teamlist';
 		}
+		/**/
 		
 		return $cname;
 	}
