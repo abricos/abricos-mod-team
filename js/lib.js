@@ -294,16 +294,6 @@ Component.entryPoint = function(NS){
 			}
 			return "#app="+m+'/wsitem/wsi/'+this.team.id+'/';
 		}
-		/*,
-		memberListURI: function(){
-			var man = this.team.manager;
-			return this.URI()+man.modName+'/memberlist/GroupListWidget/';
-		},
-		memberViewURI: function(memberid){
-			var man = this.team.manager;
-			return this.URI()+man.modName+'/memberview/MemberViewWidget/'+memberid+'/';
-		}
-		/**/
 	};
 	NS.Navigator = Navigator;
 	
@@ -324,22 +314,40 @@ Component.entryPoint = function(NS){
 	};
 	TeamExtendedData.prototype = {
 		init: function(team, manager, d){
-			this.id = team.id;
-			this.team = team;
-			this.manager = manager;
+			this.id			= team.id;
+			this.team		= team;
+			this.manager	= manager;
+			
+			this.navigator = new manager.NavigatorClass(this);
+
 			this.update(d);
 		},
 		update: function(d){}
 	};
 	NS.TeamExtendedData = TeamExtendedData;
 	
+	var TeamAppNavigator = function(taData){
+		this.init(taData);
+	};
+	TeamAppNavigator.prototype = {
+		init: function(taData){
+			this.taData = taData;
+		},
+		URI: function(){
+			var taData = this.taData;
+			return taData.team.navigator.URI()+taData.manager.modName+"/";
+		}
+	};
+	NS.TeamAppNavigator = TeamAppNavigator;	
+	
 	var TeamAppManager = function(modName, appName, callback, cfg){
 		this.modName = modName;
 		this.appName = appName;
 		
 		cfg = L.merge({
-			'TeamExtendedDataClass': TeamExtendedData,
-			'InitDataClass': TeamAppInitData
+			'TeamExtendedDataClass':	TeamExtendedData,
+			'NavigatorClass':			TeamAppNavigator,
+			'InitDataClass':			TeamAppInitData
 		}, cfg || {});
 		
 		this.init(callback, cfg);
@@ -351,6 +359,7 @@ Component.entryPoint = function(NS){
 			this.users = UP.viewer.users;
 			this.TeamExtendedDataClass	= cfg['TeamExtendedDataClass'];
 			this.InitDataClass			= cfg['InitDataClass'];
+			this.NavigatorClass			= cfg['NavigatorClass'];
 			
 			this.initData = null;
 			

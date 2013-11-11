@@ -291,7 +291,7 @@ class TeamQuery {
 	public static function UserSetMember(Ab_Database $db, $teamid, $userid){
 		$sql = "
 			INSERT INTO ".$db->prefix."team_userrole
-			(teamid, userid, ismemeber, dateline, upddate) VALUES (
+			(teamid, userid, ismember, dateline, upddate) VALUES (
 				".bkint($teamid).",
 				".bkint($userid).",
 				1,
