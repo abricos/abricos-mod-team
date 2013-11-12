@@ -47,73 +47,62 @@ class TeamModule extends Ab_Module {
 	}
 	
 	/**
-	 * @var TeamManager
+	 * @var Team
 	 */
-	public $currentTeamManager;
+	public $currentTeam = null;
 	
+	/**
+	 * @var TeamAppManager
+	 */
+	public $currentTeamApp = null;
+	
+	/**
+	 * Определение стартового кирпича
+	 *
+	 * Парсит URL
+	 * 
+	 * /team/ - список типов сообществ
+	 * /team/[modname]/ - список сообществ определенного типа (модуля)
+	 * /team/[teamid]/ - сообщество
+	 * /team/[teamid]/[modname]/[appname]/ - приложение сообщества
+	 */
 	public function GetContentName(){
-		$cname = '';
 		$adress = $this->registry->adress;
 		$lvl = $adress->level;
 		$dir = $adress->dir;
-	
+
+		if ($lvl == 1){
+			return 'teammodlist';
+		}
+		
 		if ($lvl >= 2 && $dir[1] == 'uploadlogo'){
 			return 'uploadlogo';
 		}
 		
-		if ($lvl == 1){
-			return 'teammodlist';
-		}
-
-		$p = $dir[1];
-		
-		if (!empty($p) && substr($p, 0, 2) == 'm_'){
-			
-			$modName = substr($p, 2);
-			
-			$man = $this->GetManager()->GetTeamManager($modName);
-			if (empty($man)){ return ''; }
-			
-			$this->currentTeamManager = $man;
-			
-			return 'teamlist';
-		}
-		
-		/*
-		if (!empty($p) && substr($p, 0, 1) == 't'){
-			$teamid = bkint(substr($p, 1));
-			
+		$teamid = intval($dir[1]);
+		$team = null;
+		if ($teamid > 0 && $teamid == $dir[1]){
 			$team = $this->GetManager()->Team($teamid);
 			if (empty($team)){ return ''; }
-			
-			$cname = 'teamview';
-			
-			$this->currentTeam = $team;
-			
-			if ($dir[2] == 'member'){
-				
-				if ($dir[3] == 'by' && !empty($dir[4])){
-					$memberMod = Abricos::GetModule($dir[4]);
-					if (empty($memberMod)){ return ''; }
-					
-					$this->currentMemberMod = $memberMod;
-
-					$p = $dir[5];
-					if (!empty($p) && substr($p, 0, 1) == 'm'){
-						$memberid = bkint(substr($p, 1));
-						$this->currentMemberId = $memberid;
-						
-						return 'memberview';
-					}
-				}
-				return '';
-			}
-		}else{
-			return 'teamlist';
 		}
-		/**/
 		
-		return $cname;
+		$this->currentTeam = $team;
+		
+		if ($lvl == 2){
+			return 'teamview';
+		}
+		
+		$modName = $dir[2];
+		$appName = $dir[3];
+		
+		$appManager = $this->GetManager()->GetTeamAppManager($modName, $appName);
+		if (empty($appManager)){ 
+			return '';
+		}
+		
+		$this->currentTeamApp = $appManager;
+		
+		return "teamapp";
 	}
 }
 

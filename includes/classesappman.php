@@ -6,7 +6,7 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
-class TeamAppManager {
+abstract class TeamAppManager {
 	
 	/**
 	 * @var Ab_ModuleManager
@@ -17,7 +17,7 @@ class TeamAppManager {
 	 * Имя управляющего модуля
 	 * @var string
 	 */
-	public $moduleName = '';
+	public $moduleName;
 	
 	/**
 	 * Имя приложения
@@ -40,7 +40,6 @@ class TeamAppManager {
 	 */
 	public $userid;
 	
-	
 	public $TeamAppNavigatorClass	= TeamAppNavigator;
 	public $TeamAppInitDataClass	= TeamAppInitData;
 	
@@ -48,7 +47,7 @@ class TeamAppManager {
 	 * @param Ab_ModuleManager $modManager
 	 * @param string $appName
 	 */
-	public function __construct(Ab_ModuleManager $mman, $appName = ''){
+	public function __construct(Ab_ModuleManager $mman, $appName){
 		$this->modManager = $mman;
 		$this->moduleName = $mman->module->name;
 		$this->name = $appName;
@@ -68,8 +67,8 @@ class TeamAppManager {
 	/**
 	 * @return TeamAppNavigator
 	 */
-	public function Navigator($isURL = false){
-		if ($isURL){
+	public function Navigator($isAbs = false){
+		if ($isAbs){
 			if (empty($this->_navigatorURL)){
 				$this->_navigatorURL = new $this->TeamAppNavigatorClass($this, true);
 			}
@@ -227,6 +226,31 @@ class TeamAppManager {
 	 */
 	public function RelatedModuleList($teamid){
 		return array();
+	}
+	
+	
+	private $_cacheBrickBuilder;
+	
+	protected function GetBrickBuilderInstance(Team $team){
+		require_once 'classesbrick.php';
+		return new TeamAppBrickBuilder($this, $team);
+	}
+	
+	/**
+	 * @return TeamAppBrickBuilder
+	 */
+	public function GetBrickBuilder($teamid){
+		$cacheName = "brickbuilder";
+		$bb = $this->Cache($cacheName, $teamid);
+		
+		if (!empty($bb)){ return $bb; }
+		
+		$team = $this->Team($teamid);
+		if (empty($team)){ return null; }
+		
+		$bb = $this->GetBrickBuilderInstance($team);
+		$this->CacheAdd($cacheName, $teamid, $bb);
+		return $bb;
 	}
 
 }

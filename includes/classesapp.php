@@ -14,20 +14,21 @@ class TeamAppNavigator {
 	 * @var TeamAppManager
 	 */
 	public $manager;
-	public $isURL;
+	public $isAbs;
 
-	public function __construct($manager, $isURL = false){
+	public function __construct($manager, $isAbs = false){
 		$this->manager = $manager;
-		$this->isURL = $isURL;
+		$this->isAbs = $isAbs;
 	}
 
 	public function URL(Team $team){
+		$man = $this->manager;
 		$url = $this->TeamView($team);
-		return $url."m_".$this->manager->moduleName."/a_".$this->manager->name;
+		return $url.$man->moduleName."/".$man->name."/";
 	}
 	
 	public function TeamView(Team $team){
-		return $team->Manager()->Navigator($this->isURL)->TeamView($team->id);
+		return $team->Manager()->Navigator($this->isAbs)->TeamView($team->id);
 	}
 }
 

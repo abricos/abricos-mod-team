@@ -134,8 +134,8 @@ class TeamManager {
 	/**
 	 * @return TeamNavigator
 	 */
-	public function Navigator($isURL = false){
-		if ($isURL){
+	public function Navigator($isAbs = false){
+		if ($isAbs){
 			if (empty($this->_navigatorURL)){
 				$this->_navigatorURL = new $this->TeamNavigatorClass(true);
 			}
@@ -497,35 +497,6 @@ class TeamManager {
 		$cnt = TeamQuery::TeamMemberCountRecalc($this->db, $teamid);
 		return $cnt;
 	}
-	
-	/**
-	 * Роль участника в сообществе 
-	 * 
-	 * @param integer $teamid
-	 * @param integer $memberid
-	 * @return TeamUserRole
-	 */
-	/*
-	public function TeamUserRole($teamid, $memberid){
-		$team = $this->Team($teamid);
-		if (empty($team)){ return null; }
-		
-		$cacheName = "teamuserrole".$memberid;
-		
-		$role = $this->TeamCache($teamid, $cacheName);
-		if (!empty($role)){ return $role; }
-		
-		$row = TeamQuery::Member($this, $team, $memberid);
-		if (empty($row)){
-			$this->TeamCacheClear($teamid, $cacheName);
-			return null; 
-		}
-		$role = $this->NewTeamUserRole($team, $memberid, $row);
-		$this->TeamCacheAdd($teamid, $cacheName, $role);
-		
-		return $role; 
-	}
-	/**/
 		
 }
 

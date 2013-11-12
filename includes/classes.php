@@ -35,44 +35,24 @@ class TeamConfig {
 	}
 }
 
-/**
- * Билдер ссылок
- * 
- * http://host/team/ - список типов сообществ
- * http://host/team/m_[modname]/ - список сообществ определенного типа (модуля)
- * http://host/team/t_[teamid]/ - сообщество
- * http://host/team/t_[teamid]/m[modname]/ - приложение сообщества
- */
 class TeamNavigator {
 	
-	public $isURL;
+	public $isAbs;
 	
-	public function __construct($isURL = false){
-		$this->isURL = $isURL;
+	public function __construct($isAbs = false){
+		$this->isAbs = $isAbs;
 	}
 	
 	public function URL(){
-		if ($this->isURL){
+		if ($this->isAbs){
 			return Abricos::$adress->host."/team/";
 		}
 		return "/team/";
 	}
 	
 	public function TeamView($teamid){
-		return $this->URL()."t_".intval($teamid)."/";
+		return $this->URL().intval($teamid)."/";
 	}
-	
-	
-	/*
-	public function TeamList($modname = ''){
-		if (empty($modname)){
-			return $this->URL();
-		}else{
-			return $this->URL()."by/".$modname."/";
-		}
-	}
-	
-	/**/
 }
 
 

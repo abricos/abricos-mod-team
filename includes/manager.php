@@ -100,6 +100,16 @@ class TeamModuleManager extends Ab_ModuleManager {
 		return @$modMan->GetTeamManager();
 	}
 	
+	public function GetTeamAppManager($modName, $appName){
+		$mod = Abricos::GetModule($modName);
+		if (empty($mod)){ return null; }
+		
+		if (!method_exists($mod, 'Team_GetAppManager')){
+			return null;
+		}
+		return $mod->Team_GetAppManager($appName);
+	}
+	
 	private $_cacheTeam = array();
 	
 	/**
