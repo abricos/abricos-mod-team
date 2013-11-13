@@ -180,28 +180,16 @@ class TeamManager {
 			}
 		}
 		
-		/*
-		if ($d->globalmemberlist && $d->teamid > 0){
-			$team = $this->Team($d->teamid);
-			if ($team->module == $this->moduleName && $d->do == 'memberlist'){
-				// TODO: убрать дубликат данных
-			}
-			$mod = Abricos::GetModule($team->module);
-			if (!empty($mod)){
-				$man = $mod->GetManager()->GetTeamManager();
-				$obj = $man->MemberListToAJAX($team->id);
-				if (!empty($obj)){
-					$ret->globalmemberlist = $obj->members;
-				}
-			}
-		}
-		/**/
-		
 		if ($d->initdataupdate){
 			$idAX = $this->InitDataToAJAX();
 			if (!empty($idAX)){
 				$ret->initdata = $idAX->initdata;
 			}
+		}
+		
+		$users = TeamUserManager::ToAJAX();
+		if (!empty($users)){
+			$ret->users = $users;
 		}
 		
 		if (Abricos::$config['Misc']['develop_mode']){
@@ -321,7 +309,7 @@ class TeamManager {
 		$team = $this->Team($teamid);
 		if (empty($team)){ return null; }
 		
-		// TeamUserManager::AddId($team->authorid);
+		TeamUserManager::AddId($team->authorid);
 		
 		$ret = new stdClass();
 		$ret->team = $team->ToAJAX($other);

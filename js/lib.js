@@ -239,7 +239,6 @@ Component.entryPoint = function(NS){
 	
 	var TeamDetail = function(d){
 		d = L.merge({
-			// 'iwCount': 0
 		}, d || {});
 		this.init(d);
 	};
@@ -248,7 +247,6 @@ Component.entryPoint = function(NS){
 			this.update(d);
 		},
 		update: function(d){
-			// this.inviteWaitCount = d['iwCount'];
 		}
 	};
 	NS.TeamDetail = TeamDetail;
@@ -498,6 +496,9 @@ Component.entryPoint = function(NS){
 					if (L.isValue(d)){
 						if (L.isValue(d['initdata'])){
 							__self.initData = new __self.InitDataClass(d['initdata']);
+						}
+						if (L.isValue(d['users'])){
+							UP.viewer.users.update(d['users']);
 						}
 					}
 					if (L.isArray(d['log'])){
