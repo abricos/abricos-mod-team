@@ -11,7 +11,7 @@ $brick = Brick::$builder->brick;
 $app = TeamModule::$instance->currentTeamApp;
 $team = TeamModule::$instance->currentTeam;
 
-$appBrick = $app->GetBrickBuilder()->GetContentBrick($team->id);
+$appBrick = $app->GetBrickBuilder($team->id)->GetContentBrick();
 
 if (!empty($appBrick)){
 	$brick->content = $appBrick->content;

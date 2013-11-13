@@ -13,7 +13,7 @@ $mod = TeamModule::$instance;
 $team = $mod->currentTeam;
 
 $uri = Brick::ReplaceVarByData($uri, array(
-	'teammod' => $team->module,
+	'teammod' => !empty($team->parentModule) ? $team->parentModule : $team->module,
 	'teamid' => $team->id
 ));
 
