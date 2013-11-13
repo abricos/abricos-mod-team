@@ -711,17 +711,6 @@ Component.entryPoint = function(NS){
 			});
 		},
 		
-		memberInviteAccept: function(team, sd, callback){
-			this.requestGlobalMemberList = true;
-			
-			var __self = this;
-			sd['do'] = 'memberinviteact';
-			this.ajax(sd, function(d){
-				var member = __self._updateMember(team, d);
-				NS.life(callback, member);
-			});
-		},
-		
 		memberRemove: function(team, member, callback){
 			this.requestGlobalMemberList = true;
 			
