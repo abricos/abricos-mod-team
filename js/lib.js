@@ -371,6 +371,8 @@ Component.entryPoint = function(NS){
 				d['initdata'] = true;
 			}
 			
+			d['appname'] = this.appName;
+			
 			var __self = this;
 			Brick.ajax(this.modName, {
 				'data': d,
@@ -626,107 +628,7 @@ Component.entryPoint = function(NS){
 			this.ajax({'do': 'teamremove', 'teamid': team.id}, function(d){
 				NS.life(callback);
 			});
-		},
-		
-		/*
-		_updateMemberList: function(team, d){
-			this._updateGroupList(team, d);
-			this._updateMemberInGroupList(team, d);
-			
-			if (!L.isValue(d) || !L.isValue(d['members']) || !L.isArray(d['members']['list'])){
-				return null;
-			}
-				
-			var list = team.memberList = new this.MemberListClass();
-			
-			var dList = d['members']['list'];
-			for (var i=0; i<dList.length; i++){
-				list.add(new this.MemberClass(team, dList[i]));
-			}
-			return list;
-		},
-		
-		memberListLoad: function(team, callback){
-			if (L.isNull(team)){
-				NS.life(callback, null);
-				return;
-			}
-			// запросить весь список участников сообещства
-			this.requestGlobalMemberList = true;
-			var __self = this;
-			this.ajax({
-				'do': 'memberlist',
-				'teamid': team.id
-			}, function(d){
-				var list = __self._updateMemberList(team, d);
-				NS.life(callback, list);
-			});
-		},
-		
-		_updateMember: function(team, d){
-			this._updateMemberList(team, d);
-			if (!L.isValue(d) || !L.isValue(d['member']) || (d['member']['id']|0) == 0){
-				return null;
-			}
-			var memberid = d['member']['id']|0,
-				member = team.memberList.get(memberid);
-
-			if (L.isValue(member)){
-				member.update(d['member']);
-			}
-			
-			return member;
-		},
-		
-		memberLoad: function(team, memberid, callback){
-			if (L.isNull(team)){
-				NS.life(callback, null);
-				return;
-			}
-			var sDo = 'member';
-			if (!L.isValue(team.memberList)){
-				sDo += '|memberlist';
-			}
-			var __self = this;
-			this.ajax({
-				'do': sDo,
-				'teamid': team.id,
-				'memberid': memberid
-			}, function(d){
-				var member = __self._updateMember(team, d);
-
-				NS.life(callback, member);
-			});
-		},
-		
-		memberSave: function(team, sd, callback){
-			this.requestGlobalMemberList = true;
-
-			var __self = this;
-			this.ajax({
-				'do': 'membersave',
-				'teamid': team.id,
-				'savedata': sd
-			}, function(d){
-				var member = __self._updateMember(team, d);
-				NS.life(callback, member);
-			});
-		},
-		
-		memberRemove: function(team, member, callback){
-			this.requestGlobalMemberList = true;
-			
-			var __self = this;
-			this.ajax({
-				'do': 'memberremove', 
-				'teamid': team.id,
-				'memberid': member.id
-			}, function(d){
-				__self._updateMemberList(team, d);
-				NS.life(callback);
-			});
 		}
-		/**/
 	};
 	Manager.cache = {};
 	Manager.init = function(modName, callback){
