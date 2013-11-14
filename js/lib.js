@@ -381,6 +381,7 @@ Component.entryPoint = function(NS){
 					if (L.isValue(d)){
 						if (L.isValue(d['initdata'])){
 							__self.initData = new __self.InitDataClass(__self, d['initdata']);
+							__self.onLoadInitData();
 						}
 						if (L.isValue(d['users'])){
 							__self.users.update(d['users']);
@@ -390,6 +391,7 @@ Component.entryPoint = function(NS){
 				}
 			});
 		},
+		onLoadInitData: function(){},
 		teamExtendedDataLoad: function(team, callback){
 			var __self = this;
 			this.ajax({
