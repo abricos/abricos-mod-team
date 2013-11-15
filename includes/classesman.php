@@ -263,6 +263,25 @@ class TeamManager {
 		}
 		return $this->_cacheTeam[$teamid][$cacheName];
 	}
+	
+	/**
+	 * Роль пользователя в сообществе
+	 * 
+	 * @param integer $teamid
+	 * @param integer $userid
+	 * @return TeamUserRole
+	 */
+	public function TeamUserRole($teamid, $userid){
+		$team = $this->Team($teamid);
+		if (empty($team) || !$team->role->IsAdmin()){ return null; }
+		
+		if ($userid == $this->userid){ return $team->role; }
+		
+		$d = TeamQuery::TeamUserRole($this->db, $teamid, $userid);
+		if (empty($d)){ return null; }
+		
+		return $this->NewTeamUserRole($team, $userid, $d);
+	}
 
 	/**
 	 * @param integer $teamid

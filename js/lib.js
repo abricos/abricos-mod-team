@@ -733,8 +733,16 @@ Component.entryPoint = function(NS){
 			if (L.isValue(manClass)){
 				NS.life(callback, manClass);
 			}else{
+				
+				var jsfn = 'lib';
+				if (Brick.componentExists(modName, appName+'lib')){
+					jsfn = appName+'lib';
+				}else if (Brick.componentExists(modName, 'lib'+appName)){
+					jsfn = 'lib'+appName;
+				}
+				
 				var __self = this;
-				Brick.ff(modName, 'lib', function(){
+				Brick.ff(modName, jsfn, function(){
 					manClass = __self.getClass(modName, appName);
 					NS.life(callback, manClass);
 				});
@@ -757,7 +765,6 @@ Component.entryPoint = function(NS){
 			}
 			
 			list[modName] = list[modName] || {};
-			
 
 			var man = list[modName][appName];
 			if (L.isValue(man)){

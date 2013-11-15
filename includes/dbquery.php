@@ -173,6 +173,25 @@ class TeamQuery {
 		return null;
 	}
 	
+	public static function TeamUserRole(Ab_Database $db, $teamid, $userid){
+		$sql = "
+			SELECT
+				ur.userid as id,
+				ur.ismember,
+				ur.isadmin,
+				ur.isjoinrequest,
+				ur.isinvite,
+				ur.reluserid,
+				ur.isremove
+			FROM ".$db->prefix."team t
+			LEFT JOIN ".$db->prefix."team_userrole ur ON t.teamid=ur.teamid
+				AND ur.userid=".bkint($userid)."
+			WHERE t.deldate=0 AND t.teamid=".bkint($teamid)."
+			LIMIT 1
+		";
+		return $db->query_first($sql);		
+	}
+	
 	public static function TeamMemberCountRecalc(Ab_Database $db, $teamid){
 		$sql = "
 			SELECT count(ur.teamid) as cnt

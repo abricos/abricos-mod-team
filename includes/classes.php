@@ -258,6 +258,14 @@ class TeamUserRole {
 		return $this->_isAdmin == 1;
 	}
 	
+	public function IsInvite(){
+		return $this->_isInvite == 1;
+	}
+	
+	public function IsJoinRequest(){
+		return $this->_isJoinRequest == 1;
+	}
+	
 	/**
 	 * Виртуальный участник сообщества
 	 */
