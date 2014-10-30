@@ -67,7 +67,7 @@ class TeamModule extends Ab_Module {
 	 * /team/[teamid]/[modname]/[appname]/ - приложение сообщества
 	 */
 	public function GetContentName(){
-		$adress = $this->registry->adress;
+		$adress = Abricos::$adress;
 		$lvl = $adress->level;
 		$dir = $adress->dir;
 
