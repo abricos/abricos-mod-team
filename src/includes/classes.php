@@ -556,8 +556,7 @@ class TeamInitData {
 		$this->appList = new TeamAppInfoList();
 		
 		// зарегистрировать все модули
-		Abricos::$modules->RegisterAllModule();
-		$modules = Abricos::$modules->GetModules();
+		$modules = Abricos::$modules->RegisterAllModule();
 		
 		// опросить каждый модуль на наличие приложения для сообщества
 		// сначало модуль родитель, затем все остальные модули
