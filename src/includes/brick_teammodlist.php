@@ -2,7 +2,8 @@
 /**
  * @package Abricos
  * @subpackage Team
- * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+ * @copyright 2013-2016 Alexander Kuzmin
+ * @license http://opensource.org/licenses/mit-license.php MIT License
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
@@ -16,12 +17,10 @@ $modNames = $man->TeamModuleNameList();
 
 $lst = "";
 foreach ($modNames as $modName){
-	$lst .= Brick::ReplaceVarByData($v['row'], array(
-		"lnk" => "/team/m_".$modName."/",
-		"tl" => $modName
-	));
+    $lst .= Brick::ReplaceVarByData($v['row'], array(
+        "lnk" => "/team/m_".$modName."/",
+        "tl" => $modName
+    ));
 }
 
 $brick->content = $lst;
-
-?>

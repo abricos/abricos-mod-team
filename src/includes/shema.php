@@ -1,22 +1,21 @@
 <?php
 /**
- * Схема таблиц данного модуля.
- * 
  * @package Abricos
  * @subpackage Team
- * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
- * @author  Alexander Kuzmin <roosit@abricos.org>
+ * @copyright 2013-2016 Alexander Kuzmin
+ * @license http://opensource.org/licenses/mit-license.php MIT License
+ * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
 $charset = "CHARACTER SET 'utf8' COLLATE 'utf8_general_ci'";
-$updateManager = Ab_UpdateManager::$current; 
+$updateManager = Ab_UpdateManager::$current;
 $db = Abricos::$db;
 $pfx = $db->prefix;
 
 if ($updateManager->isInstall()){
-	Abricos::GetModule('team')->permission->Install();
+    Abricos::GetModule('team')->permission->Install();
 
-	$db->query_write("
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team (
 			`teamid` int(10) unsigned NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
 			`module` varchar(25) NOT NULL DEFAULT '' COMMENT 'Модуль создатель',
@@ -44,25 +43,25 @@ if ($updateManager->isInstall()){
 			KEY `team` (`ismoder`, `module`, `deldate`),
 			KEY (`userid`)
 		)".$charset
-	);
-	
-	/*
-	 * Отношение пользователя к группе 
-	 * определяется флагом ismember (0 - гость группы, 1 - участник группы)
-	 * 
-	 * статус приглашения пользователя isinvite:
-	 * 0 - нет статуса, 
-	 * 1 - пользователь приглашен в группу одним из ее участников (система ждет его подтверждения),
-	 * 2 - пользователь подтвердил это приглашение (теперь он член группы),
-	 * 3 - пользователь отказался от приглашения
-	 * 
-	 * флаг удаление из группы isremove:
-	 * 0 - не удален,
-	 * 1 - удален админом,
-	 * 2 - удален самим участником
-	 *  
-	 */
-	$db->query_write("
+    );
+
+    /*
+     * Отношение пользователя к группе
+     * определяется флагом ismember (0 - гость группы, 1 - участник группы)
+     *
+     * статус приглашения пользователя isinvite:
+     * 0 - нет статуса,
+     * 1 - пользователь приглашен в группу одним из ее участников (система ждет его подтверждения),
+     * 2 - пользователь подтвердил это приглашение (теперь он член группы),
+     * 3 - пользователь отказался от приглашения
+     *
+     * флаг удаление из группы isremove:
+     * 0 - не удален,
+     * 1 - удален админом,
+     * 2 - удален самим участником
+     *
+     */
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team_userrole (
 			`teamid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Сообщество',
 			`userid` int(10) unsigned NOT NULL DEFAULT 0 COMMENT 'Пользователь',
@@ -87,13 +86,13 @@ if ($updateManager->isInstall()){
 			KEY `isremove` (`isremove`),
 			KEY `invite` (`isjoinrequest`, `isinvite`)
 		)".$charset
-	);
-	
+    );
+
 }
 if ($updateManager->isUpdate('0.1.2')){
 
-	// файлы
-	$db->query_write("
+    // файлы
+    $db->query_write("
 		CREATE TABLE IF NOT EXISTS `".$pfx."team_filebuffer` (
 			`fileid` int(10) UNSIGNED NOT NULL auto_increment,
 			`userid` int(10) UNSIGNED NOT NULL COMMENT 'Пользователь',
@@ -103,18 +102,17 @@ if ($updateManager->isUpdate('0.1.2')){
 			`dateline` int(10) UNSIGNED NOT NULL default '0' COMMENT 'Дата добавления',
 			PRIMARY KEY (`fileid`),
 			KEY `dateline` (`dateline`)
-		)". $charset
-	);
+		)".$charset
+    );
 }
 if ($updateManager->isUpdate('0.1.2') && !$updateManager->isInstall()){
 
-	$db->query_write("
+    $db->query_write("
 		ALTER TABLE `".$pfx."team`
 		ADD `teamtype` varchar(25) NOT NULL DEFAULT '' COMMENT 'Тип сообщества - содержит имя модуля (обработчик типа)',
 		ADD `ismoder` tinyint(1) UNSIGNED NOT NULL default '0' COMMENT '1-ожидает модерацию',
 		DROP INDEX `team`,
 		ADD INDEX `team` (`ismoder`, `module`, `deldate`)
 	");
-	
+
 }
-?>

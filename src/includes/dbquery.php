@@ -2,49 +2,56 @@
 /**
  * @package Abricos
  * @subpackage Team
+ * @copyright 2013-2016 Alexander Kuzmin
+ * @license http://opensource.org/licenses/mit-license.php MIT License
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
+/**
+ * Class TeamQuery
+ */
 class TeamQuery {
-	
-	const FILECLEARTIME = 86400;
-	
-	public static function TeamModuleName(Ab_Database $db, $teamid){
-		$sql = "
+
+    const FILECLEARTIME = 86400;
+
+    public static function TeamModuleName(Ab_Database $db, $teamid){
+        $sql = "
 			SELECT t.module as m
 			FROM ".$db->prefix."team t
 			WHERE t.deldate=0 AND t.teamid=".bkint($teamid)."
 			LIMIT 1
 		";
-		$row = $db->query_first($sql);
-		if (empty($row)){ return null; }
-		
-		return $row['m'];
-	}
-	
-	public static function TeamModuleNameList(Ab_Database $db){
-		$sql = "
+        $row = $db->query_first($sql);
+        if (empty($row)){
+            return null;
+        }
+
+        return $row['m'];
+    }
+
+    public static function TeamModuleNameList(Ab_Database $db){
+        $sql = "
 			SELECT 
 				DISTINCT t.module as m
 			FROM ".$db->prefix."team t
 			WHERE t.deldate=0 
 		";
-		return $db->query_read($sql);
-	}
-	
-	/**
-	 * Список групп с правами текущего пользователя на эти группы
-	 *
-	 * @param Ab_Database $db
-	 * @param string $module имя модуля
-	 */
-	public static function TeamList(TeamManager $man, $page = 1, $memberid = 0, $teamid = 0){
-		$db = $man->db;
-		$module = $man->moduleName;
-		$memberid = intval($memberid);
-		$teamid = intval($teamid);
-		
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    /**
+     * Список групп с правами текущего пользователя на эти группы
+     *
+     * @param Ab_Database $db
+     * @param string $module имя модуля
+     */
+    public static function TeamList(TeamManager $man, $page = 1, $memberid = 0, $teamid = 0){
+        $db = $man->db;
+        $module = $man->moduleName;
+        $memberid = intval($memberid);
+        $teamid = intval($teamid);
+
+        $sql = "
 			SELECT
 				t.teamid as id,
 				t.module as m,
@@ -59,9 +66,9 @@ class TeamQuery {
 				t.isanyjoin as anj,
 				t.membercount as mcnt
 		";
-		
-		if (Abricos::$user->id > 0){
-			$sql .= "
+
+        if (Abricos::$user->id > 0){
+            $sql .= "
 				,ur.ismember
 				,ur.isadmin
 				,ur.isjoinrequest
@@ -70,111 +77,111 @@ class TeamQuery {
 				,ur.isremove
 			";
 
-			foreach($man->fldExtTeamUserRole as $key => $value){
-				$far = explode(",", $value);
-				foreach($far as $f){
-					$sql .= " ,".$key.".".trim($f)." ";
-				}
-			}
-		}
-		
-		if ($teamid > 0){
-			foreach($man->fldExtTeamDetail as $key => $value){
-				$far = explode(",", $value);
-				foreach($far as $f){
-					$sql .= " ,".$key.".".trim($f)." ";
-				}
-			}
-		}
-		
-		$sql .= "
+            foreach ($man->fldExtTeamUserRole as $key => $value){
+                $far = explode(",", $value);
+                foreach ($far as $f){
+                    $sql .= " ,".$key.".".trim($f)." ";
+                }
+            }
+        }
+
+        if ($teamid > 0){
+            foreach ($man->fldExtTeamDetail as $key => $value){
+                $far = explode(",", $value);
+                foreach ($far as $f){
+                    $sql .= " ,".$key.".".trim($f)." ";
+                }
+            }
+        }
+
+        $sql .= "
 			FROM ".$db->prefix."team t
 		";
-		
-		if (Abricos::$user->id > 0){
-			$sql .= "
+
+        if (Abricos::$user->id > 0){
+            $sql .= "
 				LEFT JOIN ".$db->prefix."team_userrole ur ON t.teamid=ur.teamid
 					AND ur.userid=".bkint(Abricos::$user->id)."
 			";
-			
-			foreach($man->fldExtTeamUserRole as $key => $value){
-				$sql .= "
+
+            foreach ($man->fldExtTeamUserRole as $key => $value){
+                $sql .= "
 					LEFT JOIN ".$db->prefix.$key." ".$key." ON t.teamid=".$key.".teamid
 						AND ".$key.".userid=".bkint(Abricos::$user->id)."
 				";
-			}
-		}
-		if ($teamid > 0){
-			foreach($man->fldExtTeamDetail as $key => $value){
-				$sql .= "
+            }
+        }
+        if ($teamid > 0){
+            foreach ($man->fldExtTeamDetail as $key => $value){
+                $sql .= "
 					LEFT JOIN ".$db->prefix.$key." ".$key." ON t.teamid=".$key.".teamid
 				";
-			}
-				
-		}
-		if ($memberid>0){
-			$sql .= "
+            }
+
+        }
+        if ($memberid > 0){
+            $sql .= "
 				LEFT JOIN ".$db->prefix."team_userrole urm ON t.teamid=urm.teamid
 					AND urm.userid=".bkint($memberid)."
 			";
-		}
-	
-		$sql .= "
+        }
+
+        $sql .= "
 			WHERE t.deldate=0
 		";
-		
-		/*
-		// отключена дополнительная проверка на принадлежность сообещства к вызывающему модулю
-		$sql .= "
-			WHERE t.deldate=0 AND t.module='".bkstr($module)."'
-		";
-		/**/
-		
-		if (!$man->IsAdminRole()){
-			// не админу доступны только группы прошедшии модерацию или ожидающие модерацию,
-			// но только для авторов
-			if (Abricos::$user->id > 0){
-				$sql .= "
+
+        /*
+        // отключена дополнительная проверка на принадлежность сообещства к вызывающему модулю
+        $sql .= "
+            WHERE t.deldate=0 AND t.module='".bkstr($module)."'
+        ";
+        /**/
+
+        if (!$man->IsAdminRole()){
+            // не админу доступны только группы прошедшии модерацию или ожидающие модерацию,
+            // но только для авторов
+            if (Abricos::$user->id > 0){
+                $sql .= "
 					AND (t.ismoder=0 OR (t.ismoder=1 AND t.userid=".bkint(Abricos::$user->id)."))
 				";
-			}else{
-				$sql .= "
+            } else {
+                $sql .= "
 					AND t.ismoder=0
 				";
-			}
-		}
-		
-		if ($memberid>0){
-			$sql .= "
+            }
+        }
+
+        if ($memberid > 0){
+            $sql .= "
 				AND urm.ismember=1
 			";
-		}
-		if ($teamid > 0){
-			$sql .= "
+        }
+        if ($teamid > 0){
+            $sql .= "
 				AND t.teamid=".bkint($teamid)."
 				LIMIT 1
 			";
-		}
+        }
 
-		return $db->query_read($sql);
-	}
-	
-	/**
-	 * Группа с правами текущего пользователя на неё
-	 *
-	 * @param TeamManager $man
-	 * @param unknown_type $teamid
-	 */
-	public static function Team(TeamManager $man, $teamid){
-		$rows = TeamQuery::TeamList($man, 1, 0, $teamid);
-		while (($row = $man->db->fetch_array($rows))){
-			return $row;
-		}
-		return null;
-	}
-	
-	public static function TeamUserRole(Ab_Database $db, $teamid, $userid){
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    /**
+     * Группа с правами текущего пользователя на неё
+     *
+     * @param TeamManager $man
+     * @param unknown_type $teamid
+     */
+    public static function Team(TeamManager $man, $teamid){
+        $rows = TeamQuery::TeamList($man, 1, 0, $teamid);
+        while (($row = $man->db->fetch_array($rows))){
+            return $row;
+        }
+        return null;
+    }
+
+    public static function TeamUserRole(Ab_Database $db, $teamid, $userid){
+        $sql = "
 			SELECT
 				ur.userid as id,
 				ur.ismember,
@@ -189,30 +196,30 @@ class TeamQuery {
 			WHERE t.deldate=0 AND t.teamid=".bkint($teamid)."
 			LIMIT 1
 		";
-		return $db->query_first($sql);		
-	}
-	
-	public static function TeamMemberCountRecalc(Ab_Database $db, $teamid){
-		$sql = "
+        return $db->query_first($sql);
+    }
+
+    public static function TeamMemberCountRecalc(Ab_Database $db, $teamid){
+        $sql = "
 			SELECT count(ur.teamid) as cnt
 			FROM ".$db->prefix."team_userrole ur
 			WHERE ur.teamid=".bkint($teamid)." AND ur.ismember=1
 			GROUP BY ur.teamid
 		";
-		$row = $db->query_first($sql);
-		$cnt = intval($row['cnt']);
-		$sql = "
+        $row = $db->query_first($sql);
+        $cnt = intval($row['cnt']);
+        $sql = "
 			UPDATE ".$db->prefix."team
 			SET membercount=".$cnt."
 			WHERE teamid=".bkint($teamid)." 
 			LIMIT 1
 		";
-		$db->query_write($sql);
-		return $cnt;
-	}
-	
-	public static function TeamAppend(Ab_Database $db, $module, $userid, $isModer, $d){
-		$sql = "
+        $db->query_write($sql);
+        return $cnt;
+    }
+
+    public static function TeamAppend(Ab_Database $db, $module, $userid, $isModer, $d){
+        $sql = "
 			INSERT INTO ".$db->prefix."team
 				(module, teamtype, userid, ismoder, title, email, descript, site, logo, isanyjoin, dateline, upddate) VALUES (
 				'".bkstr($module)."',
@@ -229,12 +236,12 @@ class TeamQuery {
 				".TIMENOW."
 			)
 		";
-		$db->query_write($sql);
-		return $db->insert_id();
-	}
-	
-	public static function TeamUpdate(Ab_Database $db, $d){
-		$sql = "
+        $db->query_write($sql);
+        return $db->insert_id();
+    }
+
+    public static function TeamUpdate(Ab_Database $db, $d){
+        $sql = "
 			UPDATE ".$db->prefix."team
 			SET
 				title='".bkstr($d->tl)."',
@@ -247,21 +254,21 @@ class TeamQuery {
 			WHERE teamid=".bkint($d->id)."
 			LIMIT 1
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function TeamRemove(Ab_Database $db, $teamid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function TeamRemove(Ab_Database $db, $teamid){
+        $sql = "
 			UPDATE ".$db->prefix."team
 			SET deldate=".TIMENOW."
 			WHERE teamid=".bkint($teamid)."
 			LIMIT 1
 		";
-		$db->query_write($sql);		
-	}
-	
-	public static function UserRoleUpdate(Ab_Database $db, $teamid, $userid, $ismember, $isadmin){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function UserRoleUpdate(Ab_Database $db, $teamid, $userid, $ismember, $isadmin){
+        $sql = "
 			INSERT INTO ".$db->prefix."team_userrole
 			(teamid, userid, ismember, isadmin, dateline, upddate) VALUES (
 				".bkint($teamid).",
@@ -275,18 +282,18 @@ class TeamQuery {
 				isadmin=".bkint($isadmin).",
 				upddate=".TIMENOW."
 		";
-		$db->query_write($sql);
-	}
-	
-	/**
-	 * Пользователь userid просматривает группу teamid
-	 * 
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid
-	 */
-	public static function TeamViewUser(Ab_Database $db, $teamid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    /**
+     * Пользователь userid просматривает группу teamid
+     *
+     * @param Ab_Database $db
+     * @param integer $teamid
+     * @param integer $userid
+     */
+    public static function TeamViewUser(Ab_Database $db, $teamid){
+        $sql = "
 			INSERT INTO ".$db->prefix."team_userrole
 			(teamid, userid, lastview, dateline, upddate) VALUES (
 				".bkint($teamid).",
@@ -297,18 +304,18 @@ class TeamQuery {
 			) ON DUPLICATE KEY UPDATE
 				lastview=".TIMENOW."
 		";
-		$db->query_write($sql);
-	}
-	
-	/**
-	 * Пользователь userid стал членом группы teamid
-	 *
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid
-	 */
-	public static function UserSetMember(Ab_Database $db, $teamid, $userid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    /**
+     * Пользователь userid стал членом группы teamid
+     *
+     * @param Ab_Database $db
+     * @param integer $teamid
+     * @param integer $userid
+     */
+    public static function UserSetMember(Ab_Database $db, $teamid, $userid){
+        $sql = "
 			INSERT INTO ".$db->prefix."team_userrole
 			(teamid, userid, ismember, dateline, upddate) VALUES (
 				".bkint($teamid).",
@@ -319,18 +326,18 @@ class TeamQuery {
 			) ON DUPLICATE KEY UPDATE
 				ismember=1
 		";
-		$db->query_write($sql);
-	}
-	
-	/**
-	 * Админ группы отправил приглашение на вступление пользователю userid
-	 *
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid
-	 */
-	public static function MemberInviteSetWait(Ab_Database $db, $teamid, $userid, $adminid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    /**
+     * Админ группы отправил приглашение на вступление пользователю userid
+     *
+     * @param Ab_Database $db
+     * @param integer $teamid
+     * @param integer $userid
+     */
+    public static function MemberInviteSetWait(Ab_Database $db, $teamid, $userid, $adminid){
+        $sql = "
 			INSERT INTO ".$db->prefix."team_userrole
 			(teamid, userid, reluserid, isinvite, dateline, upddate) VALUES (
 				".bkint($teamid).",
@@ -343,40 +350,40 @@ class TeamQuery {
 				reluserid=".bkint($adminid).",
 				isinvite=1
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function MemberInviteWaitCountByTeam(Ab_Database $db, $teamid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function MemberInviteWaitCountByTeam(Ab_Database $db, $teamid){
+        $sql = "
 			SELECT
 				count(*) as cnt
 			FROM ".$db->prefix."team_userrole
 			WHERE teamid=".bkint($teamid)." AND ismember=0 AND isinvite=1
 		";
-		$row = $db->query_first($sql);
-		return intval($row['cnt']);
-	}
-	
-	public static function MemberInviteWaitCountByUser(Ab_Database $db, $userid){
-		$sql = "
+        $row = $db->query_first($sql);
+        return intval($row['cnt']);
+    }
+
+    public static function MemberInviteWaitCountByUser(Ab_Database $db, $userid){
+        $sql = "
 			SELECT
 				count(*) as cnt
 			FROM ".$db->prefix."team_userrole
 			WHERE reluserid=".bkint($userid)." AND ismember=0 AND isinvite=1
 		";
-		$row = $db->query_first($sql);
-		return intval($row['cnt']);
-	}
-	
-	/**
-	 * Пользователь принял приглашение вступить в группу
-	 *
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid
-	 */
-	public static function MemberInviteSetAccept(Ab_Database $db, $teamid, $userid){
-		$sql = "
+        $row = $db->query_first($sql);
+        return intval($row['cnt']);
+    }
+
+    /**
+     * Пользователь принял приглашение вступить в группу
+     *
+     * @param Ab_Database $db
+     * @param integer $teamid
+     * @param integer $userid
+     */
+    public static function MemberInviteSetAccept(Ab_Database $db, $teamid, $userid){
+        $sql = "
 			UPDATE ".$db->prefix."team_userrole
 			SET
 				isinvite=2,
@@ -385,11 +392,11 @@ class TeamQuery {
 				AND ismember=0
 			LIMIT 1
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function MemberRemove(Ab_Database $db, $teamid, $userid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function MemberRemove(Ab_Database $db, $teamid, $userid){
+        $sql = "
 			UPDATE ".$db->prefix."team_userrole
 			SET
 				isremove=".(Abricos::$user->id == $userid ? 2 : 1).",
@@ -397,18 +404,18 @@ class TeamQuery {
 			WHERE teamid=".bkint($teamid)." AND userid=".bkint($userid)."
 			LIMIT 1
 		";
-		$db->query_write($sql);
-	}
-	
-	/**
-	 * Пользователь отклонил приглашение вступить в группу
-	 *
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid
-	 */
-	public static function MemberInviteSetReject(Ab_Database $db, $teamid, $userid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    /**
+     * Пользователь отклонил приглашение вступить в группу
+     *
+     * @param Ab_Database $db
+     * @param integer $teamid
+     * @param integer $userid
+     */
+    public static function MemberInviteSetReject(Ab_Database $db, $teamid, $userid){
+        $sql = "
 			UPDATE ".$db->prefix."team_userrole
 			SET
 				isinvite=3,
@@ -417,18 +424,18 @@ class TeamQuery {
 				AND ismember=0
 			LIMIT 1
 		";
-		$db->query_write($sql);
-	}
-	
-	/**
-	 * Пользователь userid сам запросил вступление в группу
-	 *
-	 * @param Ab_Database $db
-	 * @param integer $teamid
-	 * @param integer $userid
-	 */
-	public static function MemeberJoinRequestSet(Ab_Database $db, $teamid, $userid){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    /**
+     * Пользователь userid сам запросил вступление в группу
+     *
+     * @param Ab_Database $db
+     * @param integer $teamid
+     * @param integer $userid
+     */
+    public static function MemeberJoinRequestSet(Ab_Database $db, $teamid, $userid){
+        $sql = "
 			INSERT INTO ".$db->prefix."team_userrole
 			(teamid, userid, isjoinrequest, dateline, upddate) VALUES (
 				".bkint($teamid).",
@@ -439,18 +446,20 @@ class TeamQuery {
 			) ON DUPLICATE KEY UPDATE
 				isjoinrequest=1
 		";
-		$db->query_write($sql);
-	}
-	
-	
-	public static function UserByIds(Ab_Database $db, $ids){
-		if (count($ids) == 0){ return; }
-	
-		$wh = array();
-		for ($i=0; $i<count($ids); $i++){
-			array_push($wh, "u.userid=".bkint($ids[$i]));
-		}
-		$sql = "
+        $db->query_write($sql);
+    }
+
+
+    public static function UserByIds(Ab_Database $db, $ids){
+        if (count($ids) == 0){
+            return;
+        }
+
+        $wh = array();
+        for ($i = 0; $i < count($ids); $i++){
+            array_push($wh, "u.userid=".bkint($ids[$i]));
+        }
+        $sql = "
 			SELECT
 				u.userid as id,
 				u.avatar as avt,
@@ -461,11 +470,11 @@ class TeamQuery {
 			FROM ".$db->prefix."user u
 			WHERE ".implode(" OR ", $wh)."
 		";
-		return $db->query_read($sql);
-	}
-	
-	public static function FileAddToBuffer(Ab_Database $db, $userid, $fhash, $fname){
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    public static function FileAddToBuffer(Ab_Database $db, $userid, $fhash, $fname){
+        $sql = "
 			INSERT INTO ".$db->prefix."team_filebuffer (userid, filehash, filename, dateline) VALUES (
 				".bkint($userid).",
 				'".bkstr($fhash)."',
@@ -473,11 +482,11 @@ class TeamQuery {
 				".TIMENOW."
 			)
 		";
-		$db->query_write($sql);
-	}
-	
-	public static function FileBufferCheck(Ab_Database $db, $fhash){
-		$sql = "
+        $db->query_write($sql);
+    }
+
+    public static function FileBufferCheck(Ab_Database $db, $fhash){
+        $sql = "
 			SELECT
 				fileid as id,
 				filehash as fh
@@ -485,38 +494,33 @@ class TeamQuery {
 			WHERE filehash='".bkstr($fhash)."'
 			LIMIT 1
 		";
-		return $db->query_first($sql);
-	}
-	
-	public static function FileRemoveFromBuffer(Ab_Database $db, $fhash){
-		$sql = "
+        return $db->query_first($sql);
+    }
+
+    public static function FileRemoveFromBuffer(Ab_Database $db, $fhash){
+        $sql = "
 			DELETE FROM ".$db->prefix."team_filebuffer
 			WHERE filehash='".bkstr($fhash)."'
 		";
-		return $db->query_read($sql);
-	}
-	
-	public static function FileFreeFromBufferList(Ab_Database $db){
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    public static function FileFreeFromBufferList(Ab_Database $db){
+        $sql = "
 			SELECT
 				fileid as id,
 				filehash as fh
 			FROM ".$db->prefix."team_filebuffer
-			WHERE dateline<".(TIMENOW-TeamQuery::FILECLEARTIME)."
+			WHERE dateline<".(TIMENOW - TeamQuery::FILECLEARTIME)."
 		";
-		return $db->query_read($sql);
-	}
-	
-	public static function FileFreeListClear(Ab_Database $db){
-		$sql = "
+        return $db->query_read($sql);
+    }
+
+    public static function FileFreeListClear(Ab_Database $db){
+        $sql = "
 			DELETE FROM ".$db->prefix."team_filebuffer
-			WHERE dateline<".(TIMENOW-TeamQuery::FILECLEARTIME)."
+			WHERE dateline<".(TIMENOW - TeamQuery::FILECLEARTIME)."
 		";
-		return $db->query_read($sql);
-	}
-	
-
+        return $db->query_read($sql);
+    }
 }
-
-
-?>
