@@ -12,15 +12,22 @@ Component.entryPoint = function(NS){
 
     NS.TeamEditorFormWidget = Y.Base.create('TeamEditorFormWidget', SYS.AppWidget, [], {
         onInitAppWidget: function(err, appInstance){
+            var tp = this.template;
 
         },
+        toJSON: function(){
+            var tp = this.template;
+
+            return {
+                title: tp.getValue('title')
+            };
+        }
     }, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'form'},
             teamid: {value: 0},
         },
-        CLICKS: {
-        },
+        CLICKS: {},
     });
 };
