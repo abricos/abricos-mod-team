@@ -1,0 +1,43 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "teamid"
+    },
+    "module": {
+      "type": "string"
+    },
+    "userid": {
+      "type": "int"
+    },
+    "title": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "descript": {
+      "type": "string"
+    },
+    "site": {
+      "type": "string"
+    },
+    "logo": {
+      "type": "string"
+    },
+    "memberCount": {
+      "type": "int",
+      "dbField": "membercount"
+    },
+    "isAnyJoin": {
+      "type": "bool",
+      "rolefn": "IsAdminRole"
+    },
+    "isModer": {
+      "type": "bool",
+      "rolefn": "IsAdminRole"
+    }
+  }
+}

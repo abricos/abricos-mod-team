@@ -1,0 +1,52 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "id": {
+      "type": "string",
+      "dbField": "userRoleId"
+    },
+    "teamid": {
+      "type": "int"
+    },
+    "userid": {
+      "type": "int"
+    },
+    "isMember": {
+      "type": "bool",
+      "dbField": "ismember"
+    },
+    "isAdmin": {
+      "type": "bool",
+      "dbField": "isadmin"
+    },
+    "isInvite": {
+      "type": "bool",
+      "dbField": "isinvite"
+    },
+    "isJoinRequest": {
+      "type": "bool",
+      "dbField": "isjoinrequest"
+    },
+    "isRemove": {
+      "type": "bool",
+      "dbField": "isremove"
+    },
+    "relUserId": {
+      "type": "int",
+      "dbField": "reluserid"
+    },
+    "isPrivate": {
+      "type": "bool",
+      "dbField": "isprivate"
+    },
+    "date": {
+      "type": "date",
+      "json": "dateline"
+    },
+    "view": {
+      "type": "date",
+      "json": "lastview"
+    }
+  }
+}
