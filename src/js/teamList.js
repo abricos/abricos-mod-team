@@ -10,7 +10,12 @@ Component.entryPoint = function(NS){
         COMPONENT = this,
         SYS = Brick.mod.sys;
 
-    NS.TeamRowWidget = Y.Base.create('TeamRowWidget', SYS.AppWidget, [], {
+    var TeamRowWidgetExt = function(){
+    };
+    TeamRowWidgetExt.ATTRS = {
+        team: {value: null}
+    };
+    TeamRowWidgetExt.prototype = {
         buildTData: function(){
             return this.get('team').toJSON(true);
         },
@@ -19,11 +24,16 @@ Component.entryPoint = function(NS){
 
             this.appURLUpdate();
         },
+    };
+    NS.TeamRowWidgetExt = TeamRowWidgetExt;
+
+    NS.TeamRowWidget = Y.Base.create('TeamRowWidget', SYS.AppWidget, [
+        NS.TeamRowWidgetExt
+    ], {
     }, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'item'},
-            team: {value: null}
         },
         CLICKS: {}
     });
@@ -73,8 +83,11 @@ Component.entryPoint = function(NS){
                 wsList = this._cleanTeamList();
 
             teamList.each(function(team){
-                var w = new NS.TeamRowWidget({
-                    srcNode: tp.append('list', '<div></div>'),
+                var ownerModule = team.get('module'),
+                    TeamRowWidget = Brick.mod[ownerModule].TeamRowWidget || NS.TeamRowWidget;
+
+                var w = new TeamRowWidget({
+                    boundingBox: tp.append('list', tp.replace('itemWrap')),
                     team: team
                 });
                 wsList[wsList.length] = w;
@@ -83,7 +96,7 @@ Component.entryPoint = function(NS){
     }, {
         ATTRS: {
             component: {value: COMPONENT},
-            templateBlockName: {value: 'widget'},
+            templateBlockName: {value: 'widget,itemWrap'},
             teamList: {value: null},
             ownerModule: {value: ''}
         },
