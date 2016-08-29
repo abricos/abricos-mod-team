@@ -16,6 +16,14 @@ Component.entryPoint = function(NS){
         appItem: NS.Team,
     });
 
+    NS.Member = Y.Base.create('member', SYS.AppModel, [], {
+        structureName: 'Member'
+    });
+
+    NS.MemberList = Y.Base.create('memberList', SYS.AppModelList, [], {
+        appItem: NS.Member,
+    });
+
     NS.Config = Y.Base.create('config', SYS.AppModel, [], {
         structureName: 'Config'
     });

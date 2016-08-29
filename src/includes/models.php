@@ -9,6 +9,14 @@
 
 /**
  * Class Team
+ *
+ * @property string $module Owner module name
+ * @property string $title
+ * @property int $userid
+ * @property int $memberCount
+ * @property bool $isAnyJoin
+ * @property bool $isAwaitModer
+ * @property TeamMemberList $members
  */
 class Team extends AbricosModel {
     protected $_structModule = 'team';
@@ -24,10 +32,24 @@ class Team extends AbricosModel {
 class TeamList extends AbricosModelList {
 }
 
-class TeamUserRole extends AbricosModel {
+/**
+ * Class TeamMember
+ *
+ * @property int $teamid
+ * @property int $userid
+ * @property int $relUserId
+ * @property bool $isMember
+ * @property bool $isAdmin
+ * @property bool $isInvite
+ * @property bool $isJoinRequest
+ * @property bool $isRemove
+ * @property bool $isPrivate
+ * @property int $date
+ */
+class TeamMember extends AbricosModel {
     protected $_structModule = 'team';
-    protected $_structName = 'UserRole';
+    protected $_structName = 'Member';
 }
 
-class TeamUserRoleList extends AbricosModelList {
+class TeamMemberList extends AbricosModelList {
 }

@@ -4,7 +4,7 @@
   "fields": {
     "id": {
       "type": "string",
-      "dbField": "userRoleId"
+      "dbField": "memberid"
     },
     "teamid": {
       "type": "int"
@@ -13,40 +13,35 @@
       "type": "int"
     },
     "isMember": {
-      "type": "bool",
-      "dbField": "ismember"
+      "type": "bool"
     },
     "isAdmin": {
-      "type": "bool",
-      "dbField": "isadmin"
+      "type": "bool"
     },
     "isInvite": {
       "type": "bool",
-      "dbField": "isinvite"
+      "rolefn": "IsAdminRole"
     },
     "isJoinRequest": {
       "type": "bool",
-      "dbField": "isjoinrequest"
+      "rolefn": "IsAdminRole"
     },
     "isRemove": {
       "type": "bool",
-      "dbField": "isremove"
+      "rolefn": "IsAdminRole"
     },
     "relUserId": {
       "type": "int",
-      "dbField": "reluserid"
+      "rolefn": "IsAdminRole"
     },
     "isPrivate": {
       "type": "bool",
-      "dbField": "isprivate"
+      "rolefn": "IsAdminRole"
     },
     "date": {
       "type": "date",
-      "json": "dateline"
-    },
-    "view": {
-      "type": "date",
-      "json": "lastview"
+      "json": "dateline",
+      "rolefn": "IsAdminRole"
     }
   }
 }
