@@ -29,6 +29,8 @@ class TeamApp extends AbricosApplication {
 
     public function ResponseToJSON($d){
         switch ($d->do){
+            case "teamSave":
+                return $this->TeamSaveToJSON($d->data);
             case 'teamList':
                 return $this->TeamListToJSON($d->filter);
             case 'team':
@@ -49,24 +51,63 @@ class TeamApp extends AbricosApplication {
         return $this->manager->IsViewRole();
     }
 
-    public function TeamSave($ownerModule, $d){
+    private function OwnerAppFunctionExist($module, $fn){
+        $ownerApp = Abricos::GetApp($module);
+        if (empty($ownerApp)){
+            return false;
+        }
+        if (!method_exists($ownerApp, $fn)){
+            return false;
+        }
+        return true;
+    }
+
+    public function TeamSaveToJSON($d){
+        $res = $this->TeamSave($d);
+        return $this->ResultToJSON('teamSave', $res);
+    }
+
+    public function IsTeamAppend($ownerModule){
+        if (!$this->OwnerAppFunctionExist($ownerModule, 'Team_IsAppend')){
+            return AbricosResponse::ERR_SERVER_ERROR;
+        }
+        $ownerApp = Abricos::GetApp($ownerModule);
+        if (!$ownerApp->Team_IsAppend()){
+            return AbricosResponse::ERR_FORBIDDEN;
+        }
+        return 0;
+    }
+
+    public function OnTeamSave(Team $team, $d){
+        if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnTeamSave')){
+            return;
+        }
+        $ownerApp = Abricos::GetApp($team->module);
+        $ownerApp->Team_OnTeamSave($team, $d);
+    }
+
+    public function TeamSave($d){
         if (!$this->IsWriteRole()){
             return AbricosResponse::ERR_FORBIDDEN;
         }
 
         $utmf = Abricos::TextParser(true);
-        $d->id = intval($d->id);
-        $d->title = $utmf->Parser($d->title);
 
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
+        $team->title = $utmf->Parser($team->title);
 
-        if ($d->id === 0){
-            $d->id = TeamQuery::TeamAppend($this->db, $ownerModule, $team);
+        if ($team->id === 0){
+            if (($err = $this->IsTeamAppend($team->module)) > 0){
+                return $err;
+            }
 
-            if (empty($d->id)){
+            $team->id = TeamQuery::TeamAppend($this->db, $team->module, $team);
+
+            if (empty($team->id)){
                 return AbricosResponse::ERR_SERVER_ERROR;
             }
+
             $admin = $this->InstanceClass('Member', array(
                 "teamid" => $d->id,
                 "userid" => Abricos::$user->id,
@@ -80,8 +121,10 @@ class TeamApp extends AbricosApplication {
         } else {
         }
 
+        $this->OnTeamSave($team, $d);
+
         $ret = new stdClass();
-        $ret->teamid = $d->id;
+        $ret->teamid = $team->id;
         return $ret;
     }
 

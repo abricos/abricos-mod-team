@@ -16,8 +16,10 @@ Component.entryPoint = function(NS){
 
     SYS.Application.build(COMPONENT, {}, {
         initializer: function(){
-            NS.roles.load(function(){
-                this.initCallbackFire();
+            this.appStructure(function(){
+                NS.roles.load(function(){
+                    this.initCallbackFire();
+                }, this);
             }, this);
         },
     }, [], {
@@ -33,6 +35,9 @@ Component.entryPoint = function(NS){
             Config: {value: NS.Config}
         },
         REQS: {
+            teamSave: {
+                args: ['data']
+            },
             team: {
                 args: ['teamid'],
                 type: 'model:Team',
