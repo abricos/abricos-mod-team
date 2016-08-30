@@ -21,6 +21,26 @@
 class Team extends AbricosModel {
     protected $_structModule = 'team';
     protected $_structName = 'Team';
+
+    public $extends = array();
+
+    public function ToJSON(){
+        $json = parent::ToJSON();
+
+        /**
+         * @var string $key
+         * @var AbricosModel $value
+         */
+        foreach ($this->extends as $key => $value){
+            if (!isset($json->extends)){
+                $json->extends = array();
+            }
+            $json->extends[$key] = $value->ToJSON();
+        }
+
+        return $json;
+    }
+
 }
 
 /**

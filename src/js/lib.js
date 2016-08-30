@@ -16,8 +16,8 @@ Component.entryPoint = function(NS){
 
     SYS.Application.build(COMPONENT, {}, {
         initializer: function(){
-            this.appStructure(function(){
-                NS.roles.load(function(){
+            NS.roles.load(function(){
+                this.appStructure(function(){
                     this.initCallbackFire();
                 }, this);
             }, this);
@@ -27,7 +27,7 @@ Component.entryPoint = function(NS){
             uprofile: {}
         },
         ATTRS: {
-            isLoadAppStructure: {value: true},
+            isLoadAppStructure: {value: false},
             Team: {value: NS.Team},
             TeamList: {value: NS.TeamList},
             Member: {value: NS.Member},
@@ -41,14 +41,26 @@ Component.entryPoint = function(NS){
             team: {
                 args: ['teamid'],
                 type: 'model:Team',
-                onResponse: function(team){
-                    var memberList = team.get('members'),
-                        userIds = memberList.toArray('userid', {distinct: true});
-
+                onResponse: function(team, data){
                     return function(callback, context){
-                        this.getApp('uprofile').userListByIds(userIds, function(err, result){
-                            callback.call(context || null);
-                        }, context);
+                        var ownerModule = team.get('module');
+                        NS.initApps([ownerModule], function(){
+                            var extendApp = Brick.mod[ownerModule].appInstance,
+                                teamExtends = team.get('extends');
+
+                            data.extends = data.extends || {};
+                            for (var className in data.extends){
+                                teamExtends[className] = extendApp.instanceClass(className, data.extends[className]);
+                            }
+
+                            var memberList = team.get('members'),
+                                userIds = memberList.toArray('userid', {distinct: true});
+
+                            this.getApp('uprofile').userListByIds(userIds, function(err, result){
+                                callback.call(context || null);
+                            }, context);
+
+                        }, this);
                     };
                 }
             },

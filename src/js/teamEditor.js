@@ -13,13 +13,8 @@ Component.entryPoint = function(NS){
     var TeamEditorWidgetExt = function(){
     };
     TeamEditorWidgetExt.ATTRS = {
-        teamid: {
-            value: 0,
-            setter: function(val){
-                return val | 0;
-            }
-        },
-        team: {value: null},
+        teamid: NS.ATTRIBUTE.teamid,
+        team: NS.ATTRIBUTE.team,
     };
     TeamEditorWidgetExt.prototype = {
         onInitAppWidget: function(err, appInstance){

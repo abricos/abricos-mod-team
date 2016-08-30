@@ -128,6 +128,63 @@ class TeamApp extends AbricosApplication {
         return $ret;
     }
 
+    public function TeamToJSON($teamid){
+        $res = $this->Team($teamid);
+        if (AbricosResponse::IsError($res)){
+            return $res;
+        }
+
+        return $this->ResultToJSON('team', $res);
+    }
+
+    public function OnTeam(Team $team){
+        if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnTeam')){
+            return;
+        }
+        $ownerApp = Abricos::GetApp($team->module);
+        $ownerApp->Team_OnTeam($team);
+    }
+
+    /**
+     * @param int $teamid
+     * @return int|Team
+     */
+    public function Team($teamid){
+        $teamid = intval($teamid);
+        if (!isset($this->_cache['Team'])){
+            $this->_cache['Team'] = array();
+        }
+        if (isset($this->_cache['Team'][$teamid])){
+            return $this->_cache['Team'][$teamid];
+        }
+        if (!$this->IsViewRole()){
+            return AbricosResponse::ERR_FORBIDDEN;
+        }
+
+        $d = TeamQuery::Team($this->db, $teamid);
+        if (empty($d)){
+            return AbricosResponse::ERR_NOT_FOUND;
+        }
+
+        /** @var Team $team */
+        $team = $this->InstanceClass('Team', $d);
+
+        /** @var TeamMemberList $list */
+        $list = $this->InstanceClass('MemberList');
+        $rows = TeamQuery::MemberList($this->db, $teamid);
+        while (($d = $this->db->fetch_array($rows))){
+            $list->Add($this->InstanceClass('Member', $d));
+        }
+
+        $team->members = $list;
+
+        $this->_cache['Team'][$teamid] = $team;
+
+        $this->OnTeam($team);
+
+        return $team;
+    }
+
     public function TeamListToJSON($filter){
         $res = $this->TeamList($filter);
         return $this->ResultToJSON('teamList', $res);
@@ -152,37 +209,4 @@ class TeamApp extends AbricosApplication {
         return $list;
     }
 
-    public function TeamToJSON($teamid){
-        $res = $this->Team($teamid);
-        return $this->ResultToJSON('team', $res);
-    }
-
-    /**
-     * @param int $teamid
-     * @return int|Team
-     */
-    public function Team($teamid){
-        if (!$this->IsViewRole()){
-            return AbricosResponse::ERR_FORBIDDEN;
-        }
-
-        $d = TeamQuery::Team($this->db, $teamid);
-        if (empty($d)){
-            return AbricosResponse::ERR_NOT_FOUND;
-        }
-
-        /** @var Team $team */
-        $team = $this->InstanceClass('Team', $d);
-
-        /** @var TeamMemberList $list */
-        $list = $this->InstanceClass('MemberList');
-        $rows = TeamQuery::MemberList($this->db, $teamid);
-        while (($d = $this->db->fetch_array($rows))){
-            $list->Add($this->InstanceClass('Member', $d));
-        }
-
-        $team->members = $list;
-
-        return $team;
-    }
 }

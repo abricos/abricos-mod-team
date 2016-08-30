@@ -39,10 +39,8 @@
       "type": "bool",
       "rolefn": "IsAdminRole"
     },
-
     "members": {
       "type": "modelList:MemberList"
     }
-
   }
 }

@@ -10,6 +10,10 @@ Component.entryPoint = function(NS){
 
     NS.Team = Y.Base.create('team', SYS.AppModel, [], {
         structureName: 'Team'
+    }, {
+        ATTRS: {
+            extends: {value: {}}
+        }
     });
 
     NS.TeamList = Y.Base.create('teamList', SYS.AppModelList, [], {
