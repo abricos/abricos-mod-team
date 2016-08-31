@@ -40,7 +40,6 @@ class Team extends AbricosModel {
 
         return $json;
     }
-
 }
 
 /**
@@ -69,7 +68,33 @@ class TeamList extends AbricosModelList {
 class TeamMember extends AbricosModel {
     protected $_structModule = 'team';
     protected $_structName = 'Member';
+
+    public $extends = array();
+
+    public function ToJSON(){
+        $json = parent::ToJSON();
+
+        /**
+         * @var string $key
+         * @var AbricosModel $value
+         */
+        foreach ($this->extends as $key => $value){
+            if (!isset($json->extends)){
+                $json->extends = array();
+            }
+            $json->extends[$key] = $value->ToJSON();
+        }
+
+        return $json;
+    }
+
 }
 
+/**
+ * Class TeamMemberList
+ *
+ * @method TeamMember Get($id)
+ * @method TeamMember GetByIndex($i)
+ */
 class TeamMemberList extends AbricosModelList {
 }

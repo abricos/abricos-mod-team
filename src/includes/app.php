@@ -108,20 +108,19 @@ class TeamApp extends AbricosApplication {
                 return AbricosResponse::ERR_SERVER_ERROR;
             }
 
-            $admin = $this->InstanceClass('Member', array(
+            $this->MemberSaveMethod($team, array(
                 "teamid" => $team->id,
                 "userid" => Abricos::$user->id,
                 "relUserId" => Abricos::$user->id,
                 "isMember" => true,
                 "isAdmin" => true,
             ));
-
-            TeamQuery::MemberAppend($this->db, $admin);
-
         } else {
         }
 
         $this->OnTeamSave($team, $d);
+
+        $this->CacheClear();
 
         $ret = new stdClass();
         $ret->teamid = $team->id;
@@ -169,14 +168,7 @@ class TeamApp extends AbricosApplication {
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
 
-        /** @var TeamMemberList $list */
-        $list = $this->InstanceClass('MemberList');
-        $rows = TeamQuery::MemberList($this->db, $teamid);
-        while (($d = $this->db->fetch_array($rows))){
-            $list->Add($this->InstanceClass('Member', $d));
-        }
-
-        $team->members = $list;
+        $team->members = $this->MemberListMethod($team);
 
         $this->_cache['Team'][$teamid] = $team;
 
@@ -209,4 +201,55 @@ class TeamApp extends AbricosApplication {
         return $list;
     }
 
+    public function OnMemberSave(Team $team, TeamMember $member, $d){
+        if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnMemberSave')){
+            return;
+        }
+        $ownerApp = Abricos::GetApp($team->module);
+        $ownerApp->Team_OnMemberSave($team, $member, $d);
+    }
+
+    public function MemberSaveMethod(Team $team, $d){
+        /** @var TeamMember $member */
+        $member = $this->InstanceClass('Member', $d);
+
+        if ($member->id === 0){
+            $member->id = TeamQuery::MemberAppend($this->db, $member);
+        } else {
+        }
+        $this->OnMemberSave($team, $member, $d);
+    }
+
+    public function MemberSave($teamid, $d){
+
+    }
+
+    public function OnMemberList(Team $team, TeamMemberList $list){
+        if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnMemberList')){
+            return;
+        }
+        $ownerApp = Abricos::GetApp($team->module);
+        $ownerApp->Team_OnMemberList($team, $list);
+    }
+
+    private function MemberListMethod(Team $team){
+        /** @var TeamMemberList $list */
+        $list = $this->InstanceClass('MemberList');
+        $rows = TeamQuery::MemberList($this->db, $team->id);
+        while (($d = $this->db->fetch_array($rows))){
+            $list->Add($this->InstanceClass('Member', $d));
+        }
+
+        $this->OnMemberList($team, $list);
+        return $list;
+    }
+
+    /**
+     * @param $filter
+     * @return int|TeamMemberList
+     */
+    public function MemberList($teamid){
+        $team = $this->Team($teamid);
+        return $team->members;
+    }
 }
