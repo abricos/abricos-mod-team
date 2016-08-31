@@ -10,27 +10,24 @@ Component.entryPoint = function(NS){
         COMPONENT = this,
         SYS = Brick.mod.sys;
 
-    var TeamRowWidgetExt = function(){
+    var TeamListRowWidgetExt = function(){
     };
-    TeamRowWidgetExt.ATTRS = {
+    TeamListRowWidgetExt.ATTRS = {
         team: {value: null}
     };
-    TeamRowWidgetExt.prototype = {
+    TeamListRowWidgetExt.prototype = {
         buildTData: function(){
             return this.get('team').toJSON(true);
         },
         onInitAppWidget: function(err, appInstance, options){
-            var tp = this.template;
-
             this.appURLUpdate();
         },
     };
-    NS.TeamRowWidgetExt = TeamRowWidgetExt;
+    NS.TeamListRowWidgetExt = TeamListRowWidgetExt;
 
-    NS.TeamRowWidget = Y.Base.create('TeamRowWidget', SYS.AppWidget, [
-        NS.TeamRowWidgetExt
-    ], {
-    }, {
+    NS.TeamListRowWidget = Y.Base.create('TeamListRowWidget', SYS.AppWidget, [
+        NS.TeamListRowWidgetExt
+    ], {}, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'item'},
@@ -38,8 +35,14 @@ Component.entryPoint = function(NS){
         CLICKS: {}
     });
 
-    NS.TeamListWidget = Y.Base.create('teamListWidget', SYS.AppWidget, [], {
-        onInitAppWidget: function(err, appInstance, options){
+    var TeamListWidgetExt = function(){
+    };
+    TeamListWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
+        teamList: {value: null},
+    };
+    TeamListWidgetExt.prototype = {
+        onInitAppWidget: function(err, appInstance){
             this._wsList = [];
             this.reloadTeamList();
         },
@@ -47,24 +50,54 @@ Component.entryPoint = function(NS){
             this._cleanTeamList();
         },
         reloadTeamList: function(){
-            this.set('waiting', true);
-
             var appInstance = this.get('appInstance'),
-                filter = {
-                    ownerModule: this.get('ownerModule')
-                };
+                teamApp = this.get('teamApp'),
+                ownerModule = appInstance.get('moduleName'),
+                filter = {};
 
-            appInstance.teamList(filter, function(err, result){
-                this.set('waiting', false);
-                if (!err){
-                    this.set('teamList', result.teamList);
+            if (ownerModule !== 'team'){
+                filter.ownerModule = ownerModule;
+            }
 
-                    var modules = result.teamList.toArray('module', {distinct: true});
-                    NS.uses(modules, 'teamList', function(){
-                        this.renderTeamList();
-                    }, this);
+            this.set('waiting', true);
+            teamApp.teamList(filter, function(err, result){
+                if (err){
+                    return this._onLoadTeamList(null);
                 }
+
+                var teamList = result.teamList,
+                    modules = teamList.toArray('module', {distinct: true});
+
+                NS.uses(modules, 'teamList', function(){
+                    this._onLoadTeamList(teamList);
+                }, this);
             }, this);
+        },
+        _onLoadTeamList: function(teamList){
+            this.set('waiting', false);
+            this.set('teamList', teamList);
+
+            if (!teamList){
+                return this.onLoadTeamList(null);
+            }
+
+            var tp = this.template,
+                wsList = this._cleanTeamList();
+
+            teamList.each(function(team){
+                var ownerModule = team.get('module'),
+                    TeamListRowWidget = Brick.mod[ownerModule].TeamListRowWidget || NS.TeamListRowWidget;
+
+                var w = new TeamListRowWidget({
+                    boundingBox: tp.append('list', tp.replace('itemWrap')),
+                    team: team
+                });
+                wsList[wsList.length] = w;
+            });
+
+            return this.onLoadTeamList(teamList);
+        },
+        onLoadTeamList: function(teamList){
         },
         _cleanTeamList: function(){
             var list = this._wsList;
@@ -73,34 +106,17 @@ Component.entryPoint = function(NS){
             }
             return this._wsList = [];
         },
-        renderTeamList: function(){
-            var teamList = this.get('teamList');
-            if (!teamList){
-                return;
-            }
 
-            var tp = this.template,
-                wsList = this._cleanTeamList();
+    };
+    NS.TeamListWidgetExt = TeamListWidgetExt;
 
-            teamList.each(function(team){
-                var ownerModule = team.get('module'),
-                    TeamRowWidget = Brick.mod[ownerModule].TeamRowWidget || NS.TeamRowWidget;
-
-                var w = new TeamRowWidget({
-                    boundingBox: tp.append('list', tp.replace('itemWrap')),
-                    team: team
-                });
-                wsList[wsList.length] = w;
-            });
-        }
-    }, {
+    NS.TeamListWidget = Y.Base.create('teamListWidget', SYS.AppWidget, [
+        NS.TeamListWidgetExt
+    ], {}, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'widget,itemWrap'},
-            teamList: {value: null},
-            ownerModule: {value: ''}
         },
         CLICKS: {}
     });
-
 };
