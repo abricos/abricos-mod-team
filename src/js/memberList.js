@@ -10,25 +10,24 @@ Component.entryPoint = function(NS){
         COMPONENT = this,
         SYS = Brick.mod.sys;
 
-    var MemberRowWidgetExt = function(){
+    var MemberListRowWidgetExt = function(){
     };
-    MemberRowWidgetExt.ATTRS = {
+    MemberListRowWidgetExt.ATTRS = {
         member: {value: null}
     };
-    MemberRowWidgetExt.prototype = {
+    MemberListRowWidgetExt.prototype = {
         buildTData: function(){
-            return this.get('member').toJSON(true);
+            return this.get('member').toReplace();
         },
         onInitAppWidget: function(err, appInstance, options){
             this.appURLUpdate();
         },
     };
-    NS.MemberRowWidgetExt = MemberRowWidgetExt;
+    NS.MemberListRowWidgetExt = MemberListRowWidgetExt;
 
-    NS.MemberRowWidget = Y.Base.create('MemberRowWidget', SYS.AppWidget, [
-        NS.MemberRowWidgetExt
-    ], {
-    }, {
+    NS.MemberListRowWidget = Y.Base.create('MemberListRowWidget', SYS.AppWidget, [
+        NS.MemberListRowWidgetExt
+    ], {}, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'item'},
@@ -36,33 +35,63 @@ Component.entryPoint = function(NS){
         CLICKS: {}
     });
 
-    NS.MemberListWidget = Y.Base.create('memberListWidget', SYS.AppWidget, [], {
-        onInitAppWidget: function(err, appInstance, options){
+    var MemberListWidgetExt = function(){
+    };
+    MemberListWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
+        teamid: NS.ATTRIBUTE.teamid,
+        memberList: {value: null},
+        memberListFilter: NS.ATTRIBUTE.memberListFilter,
+    };
+    MemberListWidgetExt.prototype = {
+        onInitAppWidget: function(err, appInstance){
             this._wsList = [];
-            this.reloadMemberList();
+
+            var memberList = this.get('memberList');
+            if (!memberList){
+                this.reloadMemberList();
+            } else {
+                this._onLoadMemberList(memberList);
+            }
         },
         destructor: function(){
             this._cleanMemberList();
         },
         reloadMemberList: function(){
+            var teamApp = this.get('teamApp'),
+                filter = this.get('memberListFilter');
+
             this.set('waiting', true);
+            teamApp.memberList(filter, function(err, result){
+                var memberList = err ? null : result.memberList;
+                this._onLoadMemberList(memberList);
+            }, this);
+        },
+        _onLoadMemberList: function(memberList){
+            this.set('waiting', false);
+            this.set('memberList', memberList);
+
+            if (!memberList){
+                return this.onLoadMemberList(null);
+            }
 
             var appInstance = this.get('appInstance'),
-                filter = {
-                    ownerModule: this.get('ownerModule')
-                };
+                ownerModule = appInstance.get('moduleName'),
+                tp = this.template,
+                wsList = this._cleanMemberList(),
+                MemberListRowWidget = Brick.mod[ownerModule].MemberListRowWidget || NS.MemberListRowWidget;
 
-            appInstance.memberList(filter, function(err, result){
-                this.set('waiting', false);
-                if (!err){
-                    this.set('memberList', result.memberList);
+            memberList.each(function(member){
+                var w = new MemberListRowWidget({
+                    boundingBox: tp.append('list', tp.replace('itemWrap')),
+                    member: member
+                });
+                wsList[wsList.length] = w;
+            });
 
-                    var modules = result.memberList.toArray('module', {distinct: true});
-                    NS.uses(modules, 'memberList', function(){
-                        this.renderMemberList();
-                    }, this);
-                }
-            }, this);
+            return this.onLoadMemberList(memberList);
+        },
+        onLoadMemberList: function(memberList){
         },
         _cleanMemberList: function(){
             var list = this._wsList;
@@ -71,34 +100,17 @@ Component.entryPoint = function(NS){
             }
             return this._wsList = [];
         },
-        renderMemberList: function(){
-            var memberList = this.get('memberList');
-            if (!memberList){
-                return;
-            }
 
-            var tp = this.template,
-                wsList = this._cleanMemberList();
+    };
+    NS.MemberListWidgetExt = MemberListWidgetExt;
 
-            memberList.each(function(member){
-                var ownerModule = member.get('module'),
-                    MemberRowWidget = Brick.mod[ownerModule].MemberRowWidget || NS.MemberRowWidget;
-
-                var w = new MemberRowWidget({
-                    boundingBox: tp.append('list', tp.replace('itemWrap')),
-                    member: member
-                });
-                wsList[wsList.length] = w;
-            });
-        }
-    }, {
+    NS.MemberListWidget = Y.Base.create('memberListWidget', SYS.AppWidget, [
+        NS.MemberListWidgetExt
+    ], {}, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'widget,itemWrap'},
-            memberList: {value: null},
-            ownerModule: {value: ''}
         },
         CLICKS: {}
     });
-
 };

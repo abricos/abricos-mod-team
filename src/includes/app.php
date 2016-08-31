@@ -109,7 +109,7 @@ class TeamApp extends AbricosApplication {
             }
 
             $admin = $this->InstanceClass('Member', array(
-                "teamid" => $d->id,
+                "teamid" => $team->id,
                 "userid" => Abricos::$user->id,
                 "relUserId" => Abricos::$user->id,
                 "isMember" => true,

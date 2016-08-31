@@ -56,6 +56,15 @@ Component.entryPoint = function(NS){
                 }
                 return app.getApp('team');
             }
+        },
+        memberList: {value: null},
+        memberListFilter: {
+            setter: function(val){
+                val = Y.merge({
+                    teamid: 0
+                }, val || {});
+                return val;
+            }
         }
     };
 

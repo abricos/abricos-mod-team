@@ -21,7 +21,32 @@ Component.entryPoint = function(NS){
     });
 
     NS.Member = Y.Base.create('member', SYS.AppModel, [], {
-        structureName: 'Member'
+        structureName: 'Member',
+        toReplace: function(){
+            var user = this.get('user');
+            return {
+                id: this.get('id'),
+                userid: this.get('userid'),
+                userViewName: user.get('viewName'),
+                userViewURL: user.get('viewURL'),
+                userAvatarSrc24: user.get('avatarSrc24'),
+                userAvatarSrc45: user.get('avatarSrc45'),
+                userAvatarSrc90: user.get('avatarSrc90'),
+                userAvatarSrc18: user.get('avatarSrc180'),
+            };
+        }
+    }, {
+        ATTRS: {
+            user: {
+                readOnly: true,
+                getter: function(){
+                    var userid = this.get('userid'),
+                        userList = this.appInstance.getApp('uprofile').get('userList');
+
+                    return userList.getById(userid);
+                }
+            }
+        }
     });
 
     NS.MemberList = Y.Base.create('memberList', SYS.AppModelList, [], {
