@@ -19,6 +19,9 @@ Component.entryPoint = function(NS){
     };
 
     NS.initApps = function(stack, callback, context){
+        if (Y.Lang.isString(stack)){
+            stack = [stack];
+        }
         if (stack.length === 0){
             return callback.call(context || this);
         }
@@ -57,6 +60,7 @@ Component.entryPoint = function(NS){
                 return app.getApp('team');
             }
         },
+        member: {value: null},
         memberList: {value: null},
         memberListFilter: {
             setter: function(val){
