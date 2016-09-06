@@ -16,11 +16,39 @@ Component.entryPoint = function(NS){
 
     SYS.Application.build(COMPONENT, {}, {
         initializer: function(){
+            this._teamCache = {};
             NS.roles.load(function(){
                 this.appStructure(function(){
                     this.initCallbackFire();
                 }, this);
             }, this);
+        },
+        getTeamCache: function(teamid, name){
+            teamid = teamid | 0;
+            var cache = this._teamCache;
+            if (!cache[teamid]){
+                cache[teamid] = {};
+            }
+            return cache[teamid][name];
+        },
+        setTeamCache: function(teamid, name, obj){
+            teamid = teamid | 0;
+            var cache = this._teamCache;
+            if (!cache[teamid]){
+                cache[teamid] = {};
+            }
+            cache[teamid][name] = obj;
+        },
+        cleanTeamCache: function(teamid, name){
+            teamid = teamid | 0;
+            var cache = this._teamCache;
+            if (teamid && name && cache[teamid] && cache[teamid][name]){
+                delete cache[teamid][name];
+            } else if (teamid && cache[teamid]){
+                delete cache[teamid];
+            } else if (!teamid && !name){
+                this._teamCache = {};
+            }
         },
     }, [], {
         APPS: {
