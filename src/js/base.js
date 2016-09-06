@@ -60,6 +60,12 @@ Component.entryPoint = function(NS){
                 return app.getApp('team');
             }
         },
+        memberid: {
+            value: 0,
+            setter: function(val){
+                return val | 0;
+            }
+        },
         member: {value: null},
         memberList: {value: null},
         memberListFilter: {
@@ -69,7 +75,17 @@ Component.entryPoint = function(NS){
                 }, val || {});
                 return val;
             }
-        }
+        },
+        inviteApp: {
+            readOnly: true,
+            getter: function(){
+                if (!Brick.mod['invite']){
+                    return null;
+                }
+                return Brick.mod.invite.appInstance;
+            }
+        },
+
     };
 
 };

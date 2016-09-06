@@ -6,9 +6,6 @@ Component.requires = {
     ]
 };
 Component.entryPoint = function(NS){
-    var Y = Brick.YUI,
-        COMPONENT = this,
-        SYS = Brick.mod.sys;
 
     var TeamEditorWidgetExt = function(){
     };

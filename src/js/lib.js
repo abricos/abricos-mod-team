@@ -109,6 +109,9 @@ Component.entryPoint = function(NS){
                     };
                 }
             },
+            memberSave: {
+                args: ['teamid', 'data']
+            }
         },
         URLS: {
             ws: "#app={C#MODNAMEURI}/wspace/ws/",
