@@ -252,4 +252,12 @@ class TeamApp extends AbricosApplication {
         $team = $this->Team($teamid);
         return $team->members;
     }
+
+    public function Invite_IsInvite($type, $ownerid){
+        $team = $this->Team($ownerid);
+        if (AbricosResponse::IsError($team)){
+            return false;
+        }
+        return true;
+    }
 }

@@ -8,6 +8,18 @@ Component.entryPoint = function(NS){
     var Y = Brick.YUI,
         SYS = Brick.mod.sys;
 
+    NS.ATTRIBUTE = {
+        user: {
+            readOnly: true,
+            getter: function(){
+                var userid = this.get('userid'),
+                    userList = this.appInstance.getApp('uprofile').get('userList');
+
+                return userList.getById(userid);
+            }
+        }
+    };
+
     NS.Team = Y.Base.create('team', SYS.AppModel, [], {
         structureName: 'Team'
     }, {
@@ -37,15 +49,7 @@ Component.entryPoint = function(NS){
         }
     }, {
         ATTRS: {
-            user: {
-                readOnly: true,
-                getter: function(){
-                    var userid = this.get('userid'),
-                        userList = this.appInstance.getApp('uprofile').get('userList');
-
-                    return userList.getById(userid);
-                }
-            }
+            user: NS.ATTRIBUTE.user
         }
     });
 

@@ -14,7 +14,7 @@ Component.entryPoint = function(NS){
     var MemberEditorWidgetExt = function(){
     };
     MemberEditorWidgetExt.ATTRS = {
-        teamApp: NS.ATTRIBUTE.inviteApp,
+        teamApp: NS.ATTRIBUTE.teamApp,
 
         teamid: NS.ATTRIBUTE.teamid,
         memberid: NS.ATTRIBUTE.teamid,
@@ -36,6 +36,8 @@ Component.entryPoint = function(NS){
                 memberid = this.get('memberid'),
                 member;
 
+            this.triggerHide('userSearch');
+
             this.set('waiting', true);
             if (memberid > 0){
                 teamApp.member(teamid, memberid, function(err, result){
@@ -49,8 +51,10 @@ Component.entryPoint = function(NS){
                     module: appInstance.get('moduleName')
                 });
 
-                NS.initApps('invite', function(){
-                    this._onLoadMember(member);
+                Brick.use('invite', 'form', function(){
+                    NS.initApps('invite', function(){
+                        this._onLoadMember(member);
+                    }, this);
                 }, this);
             }
         },
@@ -63,42 +67,91 @@ Component.entryPoint = function(NS){
                 return;
             }
 
-            var tp = this.template;
+            var tp = this.template,
+                teamid = this.get('teamid');
 
-            if (tp.one('inviteByEmailWidget')){
-                this.addWidget('inviteByEmail', new NS.MemberInviteByEmailWidget({
-                    srcNode: tp.one('inviteByEmailWidget'),
-                    callbackContext: this,
-                    cleanCallback: function(){
-                        tp.hide('editorPanel,inviteInfo,inviteButton');
+            if (tp.one('userInviteFormWidget')){
+                var widget = this.addWidget('userInviteForm', new Brick.mod.invite.UserInviteFormWidget({
+                    srcNode: tp.one('userInviteFormWidget'),
+                    owner: {
+                        module: 'team',
+                        type: this.get('appInstance').get('moduleName'),
+                        ownerid: this.get('teamid')
                     },
-                    callback: function(sr){
-                        if (sr.userid === 0){
-                            tp.show('editorPanel,inviteInfo,inviteButton');
-                        }
-                    }
                 }));
+                widget.on('request', this._onUserInviteRequest, this);
+                widget.on('response', this._onUserInviteResponse, this);
             }
 
             this.onLoadMember(member);
         },
         onLoadMember: function(member){
         },
-        save: function(){
+        _onUserInviteRequest: function(e){
+            this.set('waiting', true);
+            this.triggerHide('userSearch');
+
+            this.onUserInviteRequest(e);
+        },
+        onUserInviteRequest: function(e){
+        },
+        _onUserInviteResponse: function(e){
+            this.set('waiting', false);
+
+            if (e.error){
+                return;
+            }
+
+            var tp = this.template,
+                rUS = e.result,
+                codes = rUS.getCodesIsSet(),
+                user = rUS.get('user');
+
+            if (user){
+                tp.setHTML({
+                    firstNameRO: user.get('firstname'),
+                    lastNameRO: user.get('lastname'),
+                });
+                tp.setValue({
+                    firstName: user.get('firstname'),
+                    lastName: user.get('lastname'),
+                });
+            }
+
+            this.triggerShow('userSearch', codes);
+
+            this.onUserInviteResponse(e);
+        },
+        onUserInviteResponse: function(e){
+        },
+        onFillToJSON: function(data){
+            return data;
+        },
+        toJSON: function(){
             var tp = this.template,
                 member = this.get('member'),
-                teamid = member.get('teamid'),
+                teamid = this.get('teamid'),
                 callback = this.get('callback'),
+                userInviteForm = this.getWidget('inviteByEmail'),
                 data = {
                     id: member.get('id'),
-                    findEmail: tp.getValue('findEmail'),
+                    teamid: teamid,
                     firstName: tp.getValue('firstName'),
                     lastName: tp.getValue('lastName'),
-                    extends: {
-                        postid: this.getWidget('postSelect').getValue(),
-                        deptid: this.getWidget('deptSelect').getValue()
-                    }
                 };
+
+            if (userInviteForm){
+                data = Y.merge(userInviteForm.toJSON(), data);
+            }
+            return this.onFillToJSON(data);
+        },
+        save: function(){
+
+            var tp = this.template,
+                teamid = this.get('teamid'),
+                data = this.toJSON(),
+                callback = this.get('callback');
+
 
             this.set('waiting', true);
             this.get('teamApp').memberSave(teamid, data, function(err, result){
@@ -116,8 +169,8 @@ Component.entryPoint = function(NS){
                 callback.call(this.get('callbackContext'), null);
             }
         },
-        onClick: function(e){
-            switch(e.dataClick){
+        onClick1: function(e){
+            switch (e.dataClick) {
                 case 'save':
                     this.save();
                     return true;
@@ -125,72 +178,4 @@ Component.entryPoint = function(NS){
         }
     };
     NS.MemberEditorWidgetExt = MemberEditorWidgetExt;
-
-    NS.MemberInviteByEmailWidget = Y.Base.create('MemberInviteWidget', SYS.AppWidget, [], {
-        onInitAppWidget: function(err, appInstance){
-            this.set('waiting', true);
-            NS.initApps('invite', function(){
-                this.set('waiting', false);
-            }, this);
-        },
-        findUserByEmail: function(){
-            var tp = this.template,
-                inviteApp = this.get('inviteApp'),
-                cleanCallback = this.get('cleanCallback'),
-                callback = this.get('callback'),
-                callbackContext = this.get('callbackContext') || null,
-                email = tp.getValue('findEmail');
-
-            if (Y.Lang.isFunction(cleanCallback)){
-                cleanCallback.call(callbackContext);
-            }
-
-            tp.hide('findEmailNotValid,findNotInvite,findUserNotFound');
-
-            this.set('waiting', true);
-            inviteApp.userByEmail(email, function(err, result){
-                this.set('waiting', false);
-
-                if (err){
-                    return;
-                }
-
-                var sr = result.userByEmail;
-                if (sr.isNotValid){
-                    return tp.show('findEmailNotValid');
-                }
-
-                if (sr.isNotInvite){
-                    return tp.show('findNotInvite');
-                }
-
-                if (sr.userid === 0){
-                    tp.setHTML('email', email);
-                    tp.show('findUserNotFound');
-                }
-
-                if (Y.Lang.isFunction(callback)){
-                    callback.call(callbackContext, sr);
-                }
-            }, this);
-        },
-        toJSON: function(){
-            var tp = this.template;
-            return {
-                email: tp.getValue('findEmail')
-            };
-        },
-    }, {
-        ATTRS: {
-            component: {value: COMPONENT},
-            templateBlockName: {value: 'inviteByEmail'},
-            inviteApp: NS.ATTRIBUTE.inviteApp,
-            cleanCallback: {value: null},
-            callback: {value: null},
-            callbackContext: {value: null},
-        },
-        CLICKS: {
-            findUserByEmail: 'findUserByEmail',
-        }
-    });
 };
