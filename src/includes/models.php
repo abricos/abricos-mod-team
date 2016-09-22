@@ -8,6 +8,32 @@
  */
 
 /**
+ * Interface TeamSaveVars
+ *
+ * @property int $teamid
+ * @property string $module
+ * @property string $title
+ */
+interface TeamSaveVars {
+}
+
+/**
+ * Class TeamSave
+ *
+ * @property TeamSaveVars $vars
+ *
+ * @property int $teamid
+ */
+class TeamSave extends AbricosResponse {
+    const CODE_OK = 1;
+    const CODE_ERR_FIELDS = 2;
+    const CODE_ERR_TITLE = 4;
+
+    protected $_structModule = 'team';
+    protected $_structName = 'TeamSave';
+}
+
+/**
  * Class Team
  *
  * @property string $module Owner module name
@@ -56,16 +82,21 @@ class TeamList extends AbricosModelList {
  *
  * @property int $teamid
  * @property int $userid
- * @property int $relUserId
- * @property bool $isMember
- * @property bool $isAdmin
- * @property bool $isInvite
- * @property bool $isJoinRequest
- * @property bool $isRemove
+ * @property string $status
+ * @property string $role
  * @property bool $isPrivate
- * @property int $date
  */
 class TeamMember extends AbricosModel {
+
+    const STATUS_WAITING = 'waiting';
+    const STATUS_JOINED = 'joined';
+    const STATUS_REMOVED = 'removed';
+
+    const ROLE_USER = 'user';
+    const ROLE_EDITOR = 'editor';
+    const ROLE_MODERATOR = 'moderator';
+    const ROLE_ADMIN = 'admin';
+
     protected $_structModule = 'team';
     protected $_structName = 'Member';
 
@@ -97,4 +128,35 @@ class TeamMember extends AbricosModel {
  * @method TeamMember GetByIndex($i)
  */
 class TeamMemberList extends AbricosModelList {
+}
+
+/**
+ * Class TeamMemberSaveVars
+ *
+ * @property int $memberid
+ * @property int $teamid
+ * @property object $invite
+ * @property string $firstName
+ * @property string $lastName
+ */
+class TeamMemberSaveVars {
+}
+
+/**
+ * Interface TeamMemberSaveCodes
+ *
+ * @property int $OK
+ */
+interface TeamMemberSaveCodes {
+}
+
+/**
+ * Class TeamMemberSave
+ *
+ * @property TeamMemberSaveVars $vars
+ * @property TeamMemberSaveCodes $codes
+ */
+class TeamMemberSave extends AbricosResponse {
+    protected $_structModule = 'team';
+    protected $_structName = 'MemberSave';
 }

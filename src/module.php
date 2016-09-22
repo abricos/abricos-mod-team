@@ -36,8 +36,7 @@ class TeamModule extends Ab_Module {
 class TeamAction {
     const VIEW = 10;
     const WRITE = 20;
-    const TEAM_WRITE = 30;
-    const MEMBER_WRITE = 40;
+    const TEAM_APPEND = 30;
     const ADMIN = 50;
 }
 
@@ -52,11 +51,8 @@ class TeamPermission extends Ab_UserPermission {
             new Ab_UserRole(TeamAction::WRITE, Ab_UserGroup::REGISTERED),
             new Ab_UserRole(TeamAction::WRITE, Ab_UserGroup::ADMIN),
 
-            new Ab_UserRole(TeamAction::TEAM_WRITE, Ab_UserGroup::REGISTERED),
-            new Ab_UserRole(TeamAction::TEAM_WRITE, Ab_UserGroup::ADMIN),
-
-            new Ab_UserRole(TeamAction::MEMBER_WRITE, Ab_UserGroup::REGISTERED),
-            new Ab_UserRole(TeamAction::MEMBER_WRITE, Ab_UserGroup::ADMIN),
+            new Ab_UserRole(TeamAction::TEAM_APPEND, Ab_UserGroup::REGISTERED),
+            new Ab_UserRole(TeamAction::TEAM_APPEND, Ab_UserGroup::ADMIN),
 
             new Ab_UserRole(TeamAction::ADMIN, Ab_UserGroup::ADMIN),
         );
@@ -67,8 +63,7 @@ class TeamPermission extends Ab_UserPermission {
         return array(
             TeamAction::VIEW => $this->CheckAction(TeamAction::VIEW),
             TeamAction::WRITE => $this->CheckAction(TeamAction::WRITE),
-            TeamAction::TEAM_WRITE => $this->CheckAction(TeamAction::TEAM_WRITE),
-            TeamAction::MEMBER_WRITE => $this->CheckAction(TeamAction::MEMBER_WRITE),
+            TeamAction::TEAM_APPEND => $this->CheckAction(TeamAction::TEAM_APPEND),
             TeamAction::ADMIN => $this->CheckAction(TeamAction::ADMIN)
         );
     }

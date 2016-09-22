@@ -7,9 +7,7 @@ Component.requires = {
 };
 Component.entryPoint = function(NS){
 
-    var Y = Brick.YUI,
-        COMPONENT = this,
-        SYS = Brick.mod.sys;
+    var Y = Brick.YUI;
 
     var MemberEditorWidgetExt = function(){
     };
@@ -130,9 +128,10 @@ Component.entryPoint = function(NS){
         toJSON: function(){
             var tp = this.template,
                 member = this.get('member'),
+                memberid = this.get('memberid'),
                 teamid = this.get('teamid'),
                 callback = this.get('callback'),
-                userInviteForm = this.getWidget('inviteByEmail'),
+                userInviteForm = this.getWidget('userInviteForm'),
                 data = {
                     id: member.get('id'),
                     teamid: teamid,
@@ -140,18 +139,15 @@ Component.entryPoint = function(NS){
                     lastName: tp.getValue('lastName'),
                 };
 
-            if (userInviteForm){
-                data = Y.merge(userInviteForm.toJSON(), data);
+            if (memberid === 0 && userInviteForm){
+                data.invite = userInviteForm.toJSON();
             }
             return this.onFillToJSON(data);
         },
         save: function(){
-
-            var tp = this.template,
-                teamid = this.get('teamid'),
+            var teamid = this.get('teamid'),
                 data = this.toJSON(),
                 callback = this.get('callback');
-
 
             this.set('waiting', true);
             this.get('teamApp').memberSave(teamid, data, function(err, result){
@@ -169,10 +165,13 @@ Component.entryPoint = function(NS){
                 callback.call(this.get('callbackContext'), null);
             }
         },
-        onClick1: function(e){
+        onClick: function(e){
             switch (e.dataClick) {
                 case 'save':
                     this.save();
+                    return true;
+                case 'cancel':
+                    this.cancel();
                     return true;
             }
         }

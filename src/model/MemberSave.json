@@ -1,0 +1,37 @@
+{
+  "type": "response",
+  "version": "0.1.0",
+  "vars": {
+    "teamid": {
+      "type": "int"
+    },
+    "memberid": {
+      "type": "int"
+    },
+    "invite": {
+      "type": "object"
+    },
+    "firstName": {
+      "type": "string",
+      "parse": "full"
+    },
+    "lastName": {
+      "type": "string",
+      "parse": "full"
+    }
+  },
+  "codes": {
+    "OK": 1
+  },
+  "fields": {
+    "teamid": {
+      "type": "int"
+    },
+    "memberid": {
+      "type": "int"
+    },
+    "userid": {
+      "type": "int"
+    }
+  }
+}

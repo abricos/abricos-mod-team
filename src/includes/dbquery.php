@@ -12,13 +12,13 @@
  */
 class TeamQuery {
 
-    public static function TeamAppend(Ab_Database $db, $ownerModule, Team $team){
+    public static function TeamAppend(Ab_Database $db, TeamSave $r){
         $sql = "
 			INSERT INTO ".$db->prefix."team
 				(ownerModule, userid, title, dateline, upddate) VALUES (
-				'".bkstr($ownerModule)."',
+				'".bkstr($r->vars->module)."',
 				".bkint(Abricos::$user->id).",
-				'".bkstr($team->title)."',
+				'".bkstr($r->vars->title)."',
 				".TIMENOW.",
 				".TIMENOW."
 			)
@@ -47,6 +47,22 @@ class TeamQuery {
     }
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
+
+    public static function MemberAppendByNewTeam(Ab_Database $db, TeamSave $r){
+        $sql = "
+			INSERT INTO ".$db->prefix."team_member
+				(teamid, userid, status, role, dateline) VALUES (
+				".bkint($r->teamid).",
+				".bkint(Abricos::$user->id).",
+				'joined',
+				'admin',
+				".TIMENOW."
+			)
+		";
+        $db->query_write($sql);
+        return $db->insert_id();
+
+    }
 
     public static function MemberAppend(Ab_Database $db, TeamMember $member){
         $sql = "

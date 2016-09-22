@@ -46,36 +46,16 @@ if ($updateManager->isInstall()){
 		)".$charset
     );
 
-    /*
-     * Отношение пользователя к группе
-     * определяется флагом isMember (0 - гость группы, 1 - участник группы)
-     *
-     * статус приглашения пользователя isInvite:
-     * 0 - нет статуса,
-     * 1 - пользователь приглашен в группу одним из ее участников (система ждет его подтверждения),
-     * 2 - пользователь подтвердил это приглашение (теперь он член группы),
-     * 3 - пользователь отказался от приглашения
-     *
-     * флаг удаление из группы isRemove:
-     * 0 - не удален,
-     * 1 - удален админом,
-     * 2 - удален самим участником
-     */
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team_member (
 			memberid int(10) UNSIGNED NOT NULL auto_increment,
 			teamid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Сообщество',
 			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 
-			isMember tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Член общества: 0 - нет, 1 - да',
-			isAdmin tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Админ общества',
-
-			isInvite tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '1 - приглашен админом группы',
-			isJoinRequest tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '1 - сам сделал запрос на вступление',
-
-			isRemove tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Флаг удаления из группы',
+			status ENUM('waiting', 'joined', 'removed') DEFAULT 'joined' COMMENT 'Статус',
 			
-			relUserId int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Автор приглашения или подтверждения вступления в группу',
+			role ENUM('user', 'editor', 'moderator', 'admin') DEFAULT 'user' COMMENT 'Роль',
+
 			isPrivate tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Скрывать свое участие не членам группы',
 			
 			dateline int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
@@ -83,9 +63,10 @@ if ($updateManager->isInstall()){
 			
 			PRIMARY KEY (memberid),
 			UNIQUE KEY member (teamid, userid),
-			KEY isMember (isMember),
-			KEY isRemove (isRemove),
-			KEY invite (isInvite, isJoinRequest)
+			KEY teamid (teamid),
+			KEY userid (userid),
+			KEY status (status),
+			KEY role (role)
 		)".$charset
     );
 

@@ -1,0 +1,27 @@
+{
+  "type": "response",
+  "version": "0.1.0",
+  "vars": {
+    "teamid": {
+      "type": "int"
+    },
+    "module": {
+      "type": "string",
+      "parse": "full"
+    },
+    "title": {
+      "type": "string",
+      "parse": "full"
+    }
+  },
+  "codes": {
+    "OK": 1,
+    "EMPTY_FIELDS": 2,
+    "EMPTY_TITLE": 4
+  },
+  "fields": {
+    "teamid": {
+      "type": "int"
+    }
+  }
+}

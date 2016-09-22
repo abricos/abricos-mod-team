@@ -12,35 +12,20 @@
     "userid": {
       "type": "int"
     },
-    "isMember": {
-      "type": "bool"
+    "status": {
+      "type": "string",
+      "valid": "waiting,joined,removed",
+      "default": "waiting",
+      "notNULL": true
     },
-    "isAdmin": {
-      "type": "bool"
-    },
-    "isInvite": {
-      "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
-    "isJoinRequest": {
-      "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
-    "isRemove": {
-      "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
-    "relUserId": {
-      "type": "int",
-      "rolefn": "IsAdminRole"
+    "role": {
+      "type": "string",
+      "valid": "user,editor,moderator,admin",
+      "default": "user",
+      "notNULL": true
     },
     "isPrivate": {
       "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
-    "date": {
-      "type": "date",
-      "json": "dateline",
       "rolefn": "IsAdminRole"
     }
   }

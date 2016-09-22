@@ -16,6 +16,10 @@ class TeamManager extends Ab_ModuleManager {
         return $this->IsRoleEnable(TeamAction::ADMIN);
     }
 
+    public function IsTeamAppendRole(){
+        return $this->IsRoleEnable(TeamAction::TEAM_APPEND);
+    }
+
     public function IsWriteRole(){
         return $this->IsRoleEnable(TeamAction::WRITE);
     }
