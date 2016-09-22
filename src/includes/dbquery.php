@@ -27,11 +27,11 @@ class TeamQuery {
         return $db->insert_id();
     }
 
-    public static function TeamList(Ab_Database $db, $ownerModule){
+    public static function TeamList(Ab_Database $db, TeamListFilter $r){
         $sql = "
 			SELECT *
             FROM ".$db->prefix."team
-            WHERE ownerModule='".bkstr($ownerModule)."'
+            WHERE ownerModule='".bkstr($r->vars->module)."'
 		";
         return $db->query_read($sql);
     }

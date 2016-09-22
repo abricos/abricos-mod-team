@@ -9,9 +9,10 @@ Component.entryPoint = function(NS){
         SYS = Brick.mod.sys;
 
     NS.roles = new Brick.AppRoles('{C#MODNAME}', {
-        isAdmin: 50,
-        isWrite: 30,
-        isView: 10
+        isView: 10,
+        isWrite: 20,
+        isTeamAppend: 30,
+        isAdmin: 50
     });
 
     SYS.Application.build(COMPONENT, {}, {
@@ -58,6 +59,7 @@ Component.entryPoint = function(NS){
             isLoadAppStructure: {value: false},
             Team: {value: NS.Team},
             TeamList: {value: NS.TeamList},
+            TeamListFilter: {value: NS.TeamListFilter},
             Member: {value: NS.Member},
             MemberList: {value: NS.MemberList},
             Config: {value: NS.Config}
@@ -94,7 +96,7 @@ Component.entryPoint = function(NS){
             },
             teamList: {
                 args: ['filter'],
-                type: 'modelList:TeamList'
+                type: 'response:TeamListFilter'
             },
             memberList: {
                 args: ['filter'],

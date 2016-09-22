@@ -40,13 +40,6 @@ Component.entryPoint = function(NS){
     };
 
     NS.ATTRIBUTE = {
-        teamid: {
-            value: 0,
-            setter: function(val){
-                return val | 0;
-            }
-        },
-        team: {value: null},
         teamApp: {
             readOnly: true,
             getter: function(){
@@ -58,6 +51,21 @@ Component.entryPoint = function(NS){
                     return app;
                 }
                 return app.getApp('team');
+            }
+        },
+        teamid: {
+            value: 0,
+            setter: function(val){
+                return val | 0;
+            }
+        },
+        team: {value: null},
+        teamListFilter: {
+            value: {},
+            setter: function(val){
+                return Y.merge({
+                    module: ''
+                }, val || {});
             }
         },
         memberid: {

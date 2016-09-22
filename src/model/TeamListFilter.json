@@ -1,0 +1,16 @@
+{
+  "type": "response",
+  "version": "0.1.0",
+  "vars": {
+    "module": {
+      "type": "string",
+      "parse": "full"
+    }
+  },
+  "fields": {
+    "items": {
+      "type": "modelList:TeamList",
+      "notNULL": true
+    }
+  }
+}

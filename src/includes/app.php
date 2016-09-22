@@ -18,6 +18,7 @@ class TeamApp extends AbricosApplication {
         return array(
             "Team" => "Team",
             "TeamList" => "TeamList",
+            "TeamListFilter" => "TeamListFilter",
             "TeamSave" => "TeamSave",
             "Member" => "TeamMember",
             "MemberList" => "TeamMemberList",
@@ -26,7 +27,7 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Team,TeamSave,Member,MemberSave';
+        return 'Team,TeamSave,TeamListFilter,Member,MemberSave';
     }
 
     public function ResponseToJSON($d){
@@ -183,28 +184,24 @@ class TeamApp extends AbricosApplication {
         return $team;
     }
 
-    public function TeamListToJSON($filter){
-        $res = $this->TeamList($filter);
+    public function TeamListToJSON($d){
+        $res = $this->TeamList($d);
         return $this->ResultToJSON('teamList', $res);
     }
 
-    public function TeamList($filter){
+    public function TeamList($d){
+        /** @var TeamListFilter $r */
+        $r = $this->InstanceClass('TeamListFilter', $d);
+
         if (!$this->IsViewRole()){
-            return AbricosResponse::ERR_FORBIDDEN;
+            return $r->SetError(AbricosResponse::ERR_FORBIDDEN);
         }
 
-        if (!is_object($filter)){
-            $filter = new stdClass();
-        }
-        $filter->ownerModule = isset($filter->ownerModule) ? $filter->ownerModule : '';
-
-        /** @var TeamList $list */
-        $list = $this->InstanceClass('TeamList');
-        $rows = TeamQuery::TeamList($this->db, $filter->ownerModule);
+        $rows = TeamQuery::TeamList($this->db, $r);
         while (($d = $this->db->fetch_array($rows))){
-            $list->Add($this->InstanceClass('Team', $d));
+            $r->items->Add($this->InstanceClass('Team', $d));
         }
-        return $list;
+        return $r;
     }
 
     /* * * * * * * * * * * * Member * * * * * * * * * */

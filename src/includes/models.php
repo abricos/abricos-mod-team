@@ -78,6 +78,25 @@ class TeamList extends AbricosModelList {
 }
 
 /**
+ * Interface TeamListFilterVars
+ *
+ * @property string $module Owner Module
+ */
+interface TeamListFilterVars {
+}
+
+/**
+ * Class TeamListFilter
+ *
+ * @property TeamListFilterVars $vars
+ * @property TeamList $items
+ */
+class TeamListFilter extends AbricosResponse {
+    protected $_structModule = 'team';
+    protected $_structName = 'TeamListFilter';
+}
+
+/**
  * Class TeamMember
  *
  * @property int $teamid

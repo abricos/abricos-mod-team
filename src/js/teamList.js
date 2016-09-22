@@ -40,6 +40,7 @@ Component.entryPoint = function(NS){
     TeamListWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
         teamList: {value: null},
+        teamListFilter: NS.ATTRIBUTE.teamListFilter,
     };
     TeamListWidgetExt.prototype = {
         onInitAppWidget: function(err, appInstance){
@@ -53,10 +54,10 @@ Component.entryPoint = function(NS){
             var appInstance = this.get('appInstance'),
                 teamApp = this.get('teamApp'),
                 ownerModule = appInstance.get('moduleName'),
-                filter = {};
+                filter = this.get('teamListFilter');
 
             if (ownerModule !== 'team'){
-                filter.ownerModule = ownerModule;
+                filter.module = ownerModule;
             }
 
             this.set('waiting', true);
@@ -65,7 +66,7 @@ Component.entryPoint = function(NS){
                     return this._onLoadTeamList(null);
                 }
 
-                var teamList = result.teamList,
+                var teamList = result.teamList.get('items'),
                     modules = teamList.toArray('module', {distinct: true});
 
                 NS.uses(modules, 'teamList', function(){

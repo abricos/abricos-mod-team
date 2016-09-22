@@ -32,6 +32,10 @@ Component.entryPoint = function(NS){
         appItem: NS.Team,
     });
 
+    NS.TeamListFilter = Y.Base.create('teamListFilter', SYS.AppResponse, [], {
+        structureName: 'TeamListFilter'
+    });
+
     NS.Member = Y.Base.create('member', SYS.AppModel, [], {
         structureName: 'Member',
         toReplace: function(){
