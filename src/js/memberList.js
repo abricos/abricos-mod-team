@@ -39,9 +39,9 @@ Component.entryPoint = function(NS){
     };
     MemberListWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
-        teamid: NS.ATTRIBUTE.teamid,
         memberList: {value: null},
         memberListFilter: NS.ATTRIBUTE.memberListFilter,
+
     };
     MemberListWidgetExt.prototype = {
         onInitAppWidget: function(err, appInstance){
@@ -55,6 +55,7 @@ Component.entryPoint = function(NS){
             }
         },
         destructor: function(){
+            this.closeAction();
             this._cleanMemberList();
         },
         reloadMemberList: function(){
@@ -63,7 +64,7 @@ Component.entryPoint = function(NS){
 
             this.set('waiting', true);
             teamApp.memberList(filter, function(err, result){
-                var memberList = err ? null : result.memberList;
+                var memberList = err ? null : result.memberList.get('items');
                 this._onLoadMemberList(memberList);
             }, this);
         },
@@ -100,7 +101,58 @@ Component.entryPoint = function(NS){
             }
             return this._wsList = [];
         },
+        closeAction: function(){
+            if (this.actionWidget){
+                this.actionWidget.destroy();
+                this.actionWidget = null;
+            }
+            var tp = this.template;
+            tp.toggleView(false, 'action', 'list,buttons');
+        },
+        _actionCallback: function(memberList){
+            if (memberList){
+                this.set('memberList', memberList);
+            }
+            this._onLoadMemberList(memberList);
+            this.closeAction();
+        },
+        _showAction: function(actionType, member){
+            var tp = this.template,
+                ActionWidget = actionType === 'editor'
+                    ? NS.MemberEditorWidget
+                    : NS.MemberRemoveWidget;
 
+            tp.toggleView(true, 'action', 'list,buttons');
+
+            this.actionWidget = new ActionWidget({
+                srcNode: tp.append('action', '<div></div>'),
+                member: member,
+                callbackContext: this,
+                callback: this._actionCallback
+            });
+        },
+        showEditor: function(memberid){
+            memberid = memberid | 0;
+
+            var tp = this.template;
+
+            tp.toggleView(true, 'action', 'list,buttons');
+
+            this.actionWidget = new NS.MemberEditorWidget({
+                srcNode: tp.append('action', '<div></div>'),
+                teamid: this.get('teamid'),
+                memberid: memberid,
+                callbackContext: this,
+                callback: this._actionCallback
+            });
+        },
+        showRemove: function(itemid){
+            itemid = itemid | 0;
+
+            var member = this.get('memberList').getById(itemid);
+
+            this._showAction('remove', member);
+        },
     };
     NS.MemberListWidgetExt = MemberListWidgetExt;
 

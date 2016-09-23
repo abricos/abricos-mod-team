@@ -21,7 +21,24 @@ Component.entryPoint = function(NS){
     };
 
     NS.Team = Y.Base.create('team', SYS.AppModel, [], {
-        structureName: 'Team'
+        structureName: 'Team',
+        getRole: function(){
+            var member = this.get('member');
+            return member ? member.get('role') : '';
+        },
+        isUser: function(){
+            return this.getRole === 'user';
+        },
+        isAdmin: function(){
+            return this.getRole === 'admin';
+        },
+        getStatus: function(){
+            var member = this.get('member');
+            return member ? member.get('status') : '';
+        },
+        isJoined: function(){
+            return this.getStatus() === 'joined';
+        }
     }, {
         ATTRS: {
             extends: {value: {}}
@@ -59,6 +76,10 @@ Component.entryPoint = function(NS){
 
     NS.MemberList = Y.Base.create('memberList', SYS.AppModelList, [], {
         appItem: NS.Member,
+    });
+
+    NS.MemberListFilter = Y.Base.create('MemberListFilter', SYS.AppResponse, [], {
+        structureName: 'MemberListFilter'
     });
 
     NS.Config = Y.Base.create('config', SYS.AppModel, [], {

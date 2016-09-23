@@ -41,6 +41,8 @@ class TeamApp extends AbricosApplication {
                 return $this->TeamToJSON($d->teamid);
             case "memberSave":
                 return $this->MemberSaveToJSON($d->data);
+            case 'memberList':
+                return $this->MemberListToJSON($d->filter);
         }
         return null;
     }
@@ -176,7 +178,10 @@ class TeamApp extends AbricosApplication {
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
 
-        $team->members = $this->MemberListMethod($team);
+        $team->members = $this->MemberList(array(
+            "method" => "team",
+            "teamid" => $team->id
+        ));
 
         $this->_cache['Team'][$teamid] = $team;
 
@@ -303,6 +308,11 @@ class TeamApp extends AbricosApplication {
             ));
 
         }
+    }
+
+    public function MemberListToJSON($d){
+        $res = $this->MemberList($d);
+        return $this->ResultToJSON('memberList', $res);
     }
 
     /*

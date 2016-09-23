@@ -1,6 +1,7 @@
 var Component = new Brick.Component();
 Component.requires = {
     mod: [
+        {name: 'sys', files: ['tabView.js']},
         {name: '{C#MODNAME}', files: ['lib.js']}
     ]
 };
@@ -13,9 +14,9 @@ Component.entryPoint = function(NS){
     var TeamViewerWidgetExt = function(){
     };
     TeamViewerWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
         teamid: NS.ATTRIBUTE.teamid,
         team: NS.ATTRIBUTE.team,
-        teamApp: NS.ATTRIBUTE.teamApp,
     };
     TeamViewerWidgetExt.prototype = {
         onInitAppWidget: function(err, appInstance){
@@ -38,6 +39,12 @@ Component.entryPoint = function(NS){
                 tp.setHTML({
                     title: team.get('title')
                 });
+            }
+
+            if (tp.one('tabViewWidget')){
+                this.addWidget('tabView', new SYS.TabViewWidget({
+                    srcNode: tp.one('tabViewWidget')
+                }));
             }
 
             this.onLoadTeam(team);

@@ -62,6 +62,7 @@ Component.entryPoint = function(NS){
             TeamListFilter: {value: NS.TeamListFilter},
             Member: {value: NS.Member},
             MemberList: {value: NS.MemberList},
+            MemberListFilter: {value: NS.MemberListFilter},
             Config: {value: NS.Config}
         },
         REQS: {
@@ -83,13 +84,7 @@ Component.entryPoint = function(NS){
                                 teamExtends[className] = extendApp.instanceClass(className, data.extends[className]);
                             }
 
-                            var memberList = team.get('members'),
-                                userIds = memberList.toArray('userid', {distinct: true});
-
-                            this.getApp('uprofile').userListByIds(userIds, function(err, result){
-                                callback.call(context || null);
-                            }, context);
-
+                            callback.call(context || null);
                         }, this);
                     };
                 }
@@ -100,9 +95,9 @@ Component.entryPoint = function(NS){
             },
             memberList: {
                 args: ['filter'],
-                type: 'modelList:MemberList',
-                onResponse: function(memberList){
-                    var userIds = memberList.toArray('userid', {distinct: true});
+                type: 'response:MemberListFilter',
+                onResponse: function(filter){
+                    var userIds = filter.get('items').toArray('userid', {distinct: true});
 
                     return function(callback, context){
                         this.getApp('uprofile').userListByIds(userIds, function(err, result){

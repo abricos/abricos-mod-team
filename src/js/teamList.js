@@ -19,9 +19,6 @@ Component.entryPoint = function(NS){
         buildTData: function(){
             return this.get('team').toJSON(true);
         },
-        onInitAppWidget: function(err, appInstance, options){
-            this.appURLUpdate();
-        },
     };
     NS.TeamListRowWidgetExt = TeamListRowWidgetExt;
 
