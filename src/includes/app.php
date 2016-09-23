@@ -16,6 +16,7 @@ class TeamApp extends AbricosApplication {
 
     protected function GetClasses(){
         return array(
+            "TeamUserRole" => "TeamUserRole",
             "Team" => "Team",
             "TeamList" => "TeamList",
             "TeamListFilter" => "TeamListFilter",
@@ -41,6 +42,8 @@ class TeamApp extends AbricosApplication {
                 return $this->TeamToJSON($d->teamid);
             case "memberSave":
                 return $this->MemberSaveToJSON($d->data);
+            case 'member':
+                return $this->MemberToJSON($d->teamid, $d->memberid);
             case 'memberList':
                 return $this->MemberListToJSON($d->filter);
         }
@@ -59,6 +62,25 @@ class TeamApp extends AbricosApplication {
         return $this->manager->IsViewRole();
     }
 
+    /**
+     * @param int $teamid
+     * @return TeamUserRole
+     */
+    public function TeamUserRole($teamid){
+        if (isset($this->_cache['TeamUserRole'][$teamid])){
+            return $this->_cache['TeamUserRole'][$teamid];
+        }
+        if (!isset($this->_cache['TeamUserRole'])){
+            $this->_cache['TeamUserRole'] = array();
+        }
+
+        $d = TeamQuery::TeamUserRole($this->db, $teamid);
+        /** @var TeamUserRole $userRole */
+        $userRole = $this->InstanceClass('TeamUserRole', $d);
+
+        return $this->_cache['TeamUserRole'][$teamid] = $userRole;
+    }
+
     private function OwnerAppFunctionExist($module, $fn){
         $ownerApp = Abricos::GetApp($module);
         if (empty($ownerApp)){
@@ -73,20 +95,6 @@ class TeamApp extends AbricosApplication {
     public function TeamSaveToJSON($d){
         $res = $this->TeamSave($d);
         return $this->ResultToJSON('teamSave', $res);
-    }
-
-    public function IsTeamAppend(TeamSave $r){
-        if (!$this->manager->IsTeamAppendRole()){
-            return AbricosResponse::ERR_FORBIDDEN;
-        }
-        if (!$this->OwnerAppFunctionExist($r->vars->module, 'Team_IsAppend')){
-            return AbricosResponse::ERR_SERVER_ERROR;
-        }
-        $ownerApp = Abricos::GetApp($r->vars->module);
-        if (!$ownerApp->Team_IsAppend()){
-            return AbricosResponse::ERR_FORBIDDEN;
-        }
-        return 0;
     }
 
     public function OnTeamAppend(TeamSave $r){
@@ -137,15 +145,6 @@ class TeamApp extends AbricosApplication {
         return $r;
     }
 
-    public function TeamToJSON($teamid){
-        $res = $this->Team($teamid);
-        if (AbricosResponse::IsError($res)){
-            return $res;
-        }
-
-        return $this->ResultToJSON('team', $res);
-    }
-
     public function OnTeam(Team $team){
         if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnTeam')){
             return;
@@ -154,34 +153,37 @@ class TeamApp extends AbricosApplication {
         $ownerApp->Team_OnTeam($team);
     }
 
+    public function TeamToJSON($teamid){
+        $res = $this->Team($teamid);
+        return $this->ResultToJSON('team', $res);
+    }
     /**
      * @param int $teamid
      * @return int|Team
      */
     public function Team($teamid){
-        $teamid = intval($teamid);
-        if (!isset($this->_cache['Team'])){
-            $this->_cache['Team'] = array();
+        $userRole = $this->TeamUserRole($teamid);
+        if (!$userRole->IsExist()){
+            return AbricosResponse::ERR_NOT_FOUND;
         }
-        if (isset($this->_cache['Team'][$teamid])){
-            return $this->_cache['Team'][$teamid];
-        }
-        if (!$this->IsViewRole()){
+        if (!$userRole->IsView()){
             return AbricosResponse::ERR_FORBIDDEN;
         }
 
-        $d = TeamQuery::Team($this->db, $teamid);
-        if (empty($d)){
-            return AbricosResponse::ERR_NOT_FOUND;
+        $teamid = intval($teamid);
+
+        if (isset($this->_cache['Team'][$teamid])){
+            return $this->_cache['Team'][$teamid];
         }
+
+        if (!isset($this->_cache['Team'])){
+            $this->_cache['Team'] = array();
+        }
+
+        $d = TeamQuery::Team($this->db, $teamid);
 
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
-
-        $team->members = $this->MemberList(array(
-            "method" => "team",
-            "teamid" => $team->id
-        ));
 
         $this->_cache['Team'][$teamid] = $team;
 
@@ -310,20 +312,27 @@ class TeamApp extends AbricosApplication {
         }
     }
 
+    public function MemberToJSON($teamid, $memberid){
+        $res = $this->Member($teamid, $memberid);
+        return $this->ResultToJSON('memberList', $res);
+    }
+
+    public function Member($teamid, $memberid){
+
+    }
+
     public function MemberListToJSON($d){
         $res = $this->MemberList($d);
         return $this->ResultToJSON('memberList', $res);
     }
 
-    /*
-        public function OnMemberList(Team $team, TeamMemberListFilter $result){
-            if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnMemberList')){
-                return;
-            }
-            $ownerApp = Abricos::GetApp($team->module);
-            $ownerApp->Team_OnMemberList($team, $result);
+    public function OnMemberList($module, TeamMemberList $list){
+        if (!$this->OwnerAppFunctionExist($module, 'Team_OnMemberList')){
+            return;
         }
-    /**/
+        $ownerApp = Abricos::GetApp($module);
+        $ownerApp->Team_OnMemberList($list);
+    }
 
     /**
      * @param object|array|TeamMemberListFilter $filter
@@ -350,15 +359,24 @@ class TeamApp extends AbricosApplication {
                 );
         }
 
+        $arr = array();
+
         $rows = TeamQuery::MemberList($this->db, $filter);
         while (($d = $this->db->fetch_array($rows))){
             /** @var TeamMember $member */
             $member = $this->InstanceClass('Member', $d);
 
+            if (!isset($arr[$member->module])){
+                $arr[$member->module] = $this->InstanceClass('MemberList');
+            }
+            $arr[$member->module]->Add($member);
+
             $filter->items->Add($member);
         }
 
-        // $this->OnMemberList($team, $list);
+        foreach ($arr as $module => $list){
+            $this->OnMemberList($module, $list);
+        }
 
         return $filter;
     }

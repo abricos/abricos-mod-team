@@ -10,8 +10,7 @@
       "type": "int"
     },
     "module": {
-      "type": "string",
-      "rolefn": "IsAdminRole"
+      "type": "string"
     },
     "userid": {
       "type": "int"

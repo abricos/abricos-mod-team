@@ -12,6 +12,25 @@
  */
 class TeamQuery {
 
+    public static function TeamUserRole(Ab_Database $db, $teamid){
+        $sql = "
+			SELECT
+                m.memberid,
+                t.teamid,
+			    t.ownerModule as module,
+                m.status,
+                m.role,
+                m.isPrivate as isPrivate
+            FROM ".$db->prefix."team t
+            LEFT JOIN ".$db->prefix."team_member m ON m.teamid=t.teamid
+            WHERE teamid=".intval($teamid)." 
+                AND m.userid=".intval(Abricos::$user->id)."
+                AND t.deldate=0
+            LIMIT 1
+		";
+        return $db->query_first($sql);
+    }
+
     public static function TeamAppend(Ab_Database $db, TeamSave $r){
         $sql = "
 			INSERT INTO ".$db->prefix."team
@@ -29,18 +48,20 @@ class TeamQuery {
 
     public static function TeamList(Ab_Database $db, TeamListFilter $r){
         $sql = "
-			SELECT *
-            FROM ".$db->prefix."team
-            WHERE ownerModule='".bkstr($r->vars->module)."'
+			SELECT t.*
+            FROM ".$db->prefix."team t
+            WHERE t.ownerModule='".bkstr($r->vars->module)."'
+                AND t.deldate=0
 		";
         return $db->query_read($sql);
     }
 
     public static function Team(Ab_Database $db, $teamid){
         $sql = "
-			SELECT *
-            FROM ".$db->prefix."team
-            WHERE teamid=".intval($teamid)."
+			SELECT t.*
+            FROM ".$db->prefix."team t
+            WHERE t.teamid=".intval($teamid)."
+                AND t.deldate=0
             LIMIT 1
 		";
         return $db->query_first($sql);
@@ -115,7 +136,7 @@ class TeamQuery {
         }
 
         $sql = "
-			SELECT m.*
+			SELECT m.*, t.ownerModule as module
             FROM ".$db->prefix."team_member m
             INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
             WHERE ".$where."

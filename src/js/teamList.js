@@ -107,14 +107,4 @@ Component.entryPoint = function(NS){
 
     };
     NS.TeamListWidgetExt = TeamListWidgetExt;
-
-    NS.TeamListWidget = Y.Base.create('teamListWidget', SYS.AppWidget, [
-        NS.TeamListWidgetExt
-    ], {}, {
-        ATTRS: {
-            component: {value: COMPONENT},
-            templateBlockName: {value: 'widget,itemWrap'},
-        },
-        CLICKS: {}
-    });
 };

@@ -27,14 +27,8 @@ if ($updateManager->isInstall()){
 			descript TEXT NOT NULL  COMMENT 'Описание',
 			site varchar(50) NOT NULL DEFAULT '' COMMENT '',
 			logo varchar(8) NOT NULL DEFAULT '' COMMENT '',
-
+			
 			memberCount int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
-			
-			isPrivate tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Группа видна только участникам',
-			
-			isAnyJoin tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '1 - любой может вступить в группу',
-
-			isAwaitModer tinyint(1) UNSIGNED NOT NULL default '0' COMMENT '1-ожидает модерацию',
 			
 			dateline int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
 			deldate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
@@ -53,7 +47,6 @@ if ($updateManager->isInstall()){
 			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 
 			status ENUM('waiting', 'joined', 'removed') DEFAULT 'joined' COMMENT 'Статус',
-			
 			role ENUM('user', 'editor', 'moderator', 'admin') DEFAULT 'user' COMMENT 'Роль',
 
 			isPrivate tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Скрывать свое участие не членам группы',

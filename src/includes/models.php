@@ -8,6 +8,54 @@
  */
 
 /**
+ * Class TeamUserRole
+ *
+ * @property TeamApp $app
+ * @property int $id Team ID
+ * @property int $memberid
+ * @property string $module
+ * @property string $status
+ * @property string $role
+ * @property bool $isPrivate
+ */
+class TeamUserRole extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'TeamUserRole';
+
+    public function IsExist(){
+        return $this->id > 0;
+    }
+
+    public function IsJoined(){
+        return $this->status === TeamMember::STATUS_JOINED;
+    }
+
+    public function IsWaiting(){
+        return $this->status === TeamMember::STATUS_WAITING;
+    }
+
+    public function IsRemoved(){
+        return $this->status === TeamMember::STATUS_REMOVED;
+    }
+
+    public function IsAdmin(){
+        if ($this->app->IsAdminRole()){
+            return true;
+        }
+        return
+            $this->role === TeamMember::ROLE_ADMIN
+            && $this->IsJoined();
+    }
+
+    public function IsView(){
+        if ($this->app->IsViewRole()){
+            return true;
+        }
+        return true;
+    }
+}
+
+/**
  * Interface TeamSaveVars
  *
  * @property int $teamid
@@ -44,8 +92,6 @@ class TeamSave extends AbricosResponse {
  * @property string $site
  * @property string $logo
  * @property int $memberCount
- * @property bool $isAnyJoin
- * @property bool $isAwaitModer
  * @property TeamMember $member
  */
 class Team extends AbricosModel {
@@ -103,6 +149,7 @@ class TeamListFilter extends AbricosResponse {
 /**
  * Class TeamMember
  *
+ * @property string $module
  * @property int $teamid
  * @property int $userid
  * @property string $status

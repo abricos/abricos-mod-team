@@ -32,14 +32,6 @@
     "memberCount": {
       "type": "int"
     },
-    "isAnyJoin": {
-      "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
-    "isAwaitModer": {
-      "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
     "member": {
       "type": "model:Member"
     }

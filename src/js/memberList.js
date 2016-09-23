@@ -20,20 +20,17 @@ Component.entryPoint = function(NS){
             return this.get('member').toReplace();
         },
         onInitAppWidget: function(err, appInstance, options){
-            this.appURLUpdate();
+            // this.appURLUpdate();
+
+            this.onRenderMember();
         },
+        onRenderMember: function(){
+        },
+        onClick1: function(e){
+            console.log(arguments);
+        }
     };
     NS.MemberListRowWidgetExt = MemberListRowWidgetExt;
-
-    NS.MemberListRowWidget = Y.Base.create('MemberListRowWidget', SYS.AppWidget, [
-        NS.MemberListRowWidgetExt
-    ], {}, {
-        ATTRS: {
-            component: {value: COMPONENT},
-            templateBlockName: {value: 'item'},
-        },
-        CLICKS: {}
-    });
 
     var MemberListWidgetExt = function(){
     };
@@ -85,10 +82,18 @@ Component.entryPoint = function(NS){
             memberList.each(function(member){
                 var w = new MemberListRowWidget({
                     boundingBox: tp.append('list', tp.replace('itemWrap')),
-                    member: member
+                    member: member,
+                    CLICKS: {
+                        edit: {
+                            context: this,
+                            event: function(){
+                                this.showEditor(member.get('id'));
+                            }
+                        }
+                    }
                 });
                 wsList[wsList.length] = w;
-            });
+            }, this);
 
             return this.onLoadMemberList(memberList);
         },
@@ -134,11 +139,18 @@ Component.entryPoint = function(NS){
         showEditor: function(memberid){
             memberid = memberid | 0;
 
-            var tp = this.template;
+            var appInstance = this.get('appInstance'),
+                ownerModule = appInstance.get('moduleName'),
+                tp = this.template,
+                MemberEditorWidget = Brick.mod[ownerModule].MemberEditorWidget;
+
+            if (!MemberEditorWidget){
+                return;
+            }
 
             tp.toggleView(true, 'action', 'list,buttons');
 
-            this.actionWidget = new NS.MemberEditorWidget({
+            this.actionWidget = new MemberEditorWidget({
                 srcNode: tp.append('action', '<div></div>'),
                 teamid: this.get('teamid'),
                 memberid: memberid,
@@ -155,14 +167,4 @@ Component.entryPoint = function(NS){
         },
     };
     NS.MemberListWidgetExt = MemberListWidgetExt;
-
-    NS.MemberListWidget = Y.Base.create('memberListWidget', SYS.AppWidget, [
-        NS.MemberListWidgetExt
-    ], {}, {
-        ATTRS: {
-            component: {value: COMPONENT},
-            templateBlockName: {value: 'widget,itemWrap'},
-        },
-        CLICKS: {}
-    });
 };

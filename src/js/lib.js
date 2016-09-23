@@ -93,6 +93,10 @@ Component.entryPoint = function(NS){
                 args: ['filter'],
                 type: 'response:TeamListFilter'
             },
+            member: {
+                args: ['teamid', 'memberid'],
+                type: "model:Member"
+            },
             memberList: {
                 args: ['filter'],
                 type: 'response:MemberListFilter',
