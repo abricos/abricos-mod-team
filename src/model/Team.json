@@ -11,7 +11,8 @@
       "dbField": "ownerModule"
     },
     "userid": {
-      "type": "int"
+      "type": "int",
+      "rolefn": "IsAdminRole"
     },
     "title": {
       "type": "string"
@@ -39,8 +40,8 @@
       "type": "bool",
       "rolefn": "IsAdminRole"
     },
-    "members": {
-      "type": "modelList:MemberList"
+    "member": {
+      "type": "model:Member"
     }
   }
 }

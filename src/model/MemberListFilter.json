@@ -1,0 +1,27 @@
+{
+  "type": "response",
+  "version": "0.1.0",
+  "vars": {
+    "method": {
+      "type": "string",
+      "valid": "team,iInTeams",
+      "default": "team"
+    },
+    "teamid": {
+      "type": "int"
+    },
+    "teamids": {
+      "type": "array"
+    }
+  },
+  "codes": {
+    "OK": 1,
+    "BAD_METHOD": 2
+  },
+  "fields": {
+    "items": {
+      "type": "modelList:MemberList",
+      "notNULL": true
+    }
+  }
+}

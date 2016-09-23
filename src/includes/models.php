@@ -37,12 +37,16 @@ class TeamSave extends AbricosResponse {
  * Class Team
  *
  * @property string $module Owner module name
- * @property string $title
  * @property int $userid
+ * @property string $title
+ * @property string $email
+ * @property string $descript
+ * @property string $site
+ * @property string $logo
  * @property int $memberCount
  * @property bool $isAnyJoin
  * @property bool $isAwaitModer
- * @property TeamMemberList $members
+ * @property TeamMember $member
  */
 class Team extends AbricosModel {
     protected $_structModule = 'team';
@@ -137,7 +141,6 @@ class TeamMember extends AbricosModel {
 
         return $json;
     }
-
 }
 
 /**
@@ -147,6 +150,33 @@ class TeamMember extends AbricosModel {
  * @method TeamMember GetByIndex($i)
  */
 class TeamMemberList extends AbricosModelList {
+}
+
+/**
+ * Interface TeamMemberListFilterVars
+ *
+ * @property string $method Must be: team|inTeams
+ * @property int $teamid
+ * @property array $teamids
+ */
+interface TeamMemberListFilterVars {
+}
+
+/**
+ * Class TeamMemberListFilter
+ *
+ * @property TeamMemberListFilterVars $vars
+ * @property TeamMemberList $items
+ */
+class TeamMemberListFilter extends AbricosResponse {
+    const CODE_OK = 1;
+    const CODE_BAD_METHOD = 2;
+
+    const METHOD_TEAM = 'team';
+    const METHOD_IINTEAMS = 'iInTeams';
+
+    protected $_structModule = 'team';
+    protected $_structName = 'MemberListFilter';
 }
 
 /**

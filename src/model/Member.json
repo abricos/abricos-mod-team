@@ -9,6 +9,10 @@
     "teamid": {
       "type": "int"
     },
+    "module": {
+      "type": "string",
+      "rolefn": "IsAdminRole"
+    },
     "userid": {
       "type": "int"
     },

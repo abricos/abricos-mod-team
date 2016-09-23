@@ -84,11 +84,41 @@ class TeamQuery {
         return $db->insert_id();
     }
 
-    public static function MemberList(Ab_Database $db, $teamid){
+    public static function MemberListMyByTeams(Ab_Database $db, $teamids){
+
         $sql = "
 			SELECT *
             FROM ".$db->prefix."team_member
-            WHERE teamid=".intval($teamid)."
+            WHERE 
+		";
+        return $db->query_read($sql);
+    }
+
+    public static function MemberList(Ab_Database $db, TeamMemberListFilter $filter){
+        $vars = $filter->vars;
+
+        if ($vars->method === 'team'){
+            $where = "m.teamid=".intval($vars->teamid)."";
+        } else if ($vars->method === 'iInTeams'){
+            $count = count($vars->teamids);
+            if ($count === 0){
+                return;
+            }
+            $wha = array();
+            for ($i = 0; $i < $count; $i++){
+                $wha[] = "m.teamid=".intval($vars->teamids[$i]);
+            }
+            $where = "m.userid=".intval(Abricos::$user->id)." 
+                AND (".implode(" OR ", $wha).")";
+        } else {
+            return null;
+        }
+
+        $sql = "
+			SELECT m.*
+            FROM ".$db->prefix."team_member m
+            INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
+            WHERE ".$where."
 		";
         return $db->query_read($sql);
     }

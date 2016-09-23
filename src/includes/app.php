@@ -22,12 +22,13 @@ class TeamApp extends AbricosApplication {
             "TeamSave" => "TeamSave",
             "Member" => "TeamMember",
             "MemberList" => "TeamMemberList",
+            "MemberListFilter" => "TeamMemberListFilter",
             "MemberSave" => "TeamMemberSave",
         );
     }
 
     protected function GetStructures(){
-        return 'Team,TeamSave,TeamListFilter,Member,MemberSave';
+        return 'Team,TeamSave,TeamListFilter,Member,MemberSave,MemberListFilter';
     }
 
     public function ResponseToJSON($d){
@@ -201,6 +202,23 @@ class TeamApp extends AbricosApplication {
         while (($d = $this->db->fetch_array($rows))){
             $r->items->Add($this->InstanceClass('Team', $d));
         }
+
+        $members = $this->MemberList(array(
+            "method" => TeamMemberListFilter::METHOD_IINTEAMS,
+            "teamids" => $r->items->ToArray('id')
+        ));
+
+        if ($members->error > 0){
+            return $r->SetError(AbricosResponse::ERR_SERVER_ERROR);
+        }
+
+        $count = $members->items->Count();
+        for ($i = 0; $i < $count; $i++){
+            $member = $members->items->GetByIndex($i);
+            $team = $r->items->Get($member->teamid);
+            $team->member = $member;
+        }
+
         return $r;
     }
 
@@ -285,37 +303,54 @@ class TeamApp extends AbricosApplication {
             ));
 
         }
-
-
     }
 
-    public function OnMemberList(Team $team, TeamMemberList $list){
-        if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnMemberList')){
-            return;
+    /*
+        public function OnMemberList(Team $team, TeamMemberListFilter $result){
+            if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnMemberList')){
+                return;
+            }
+            $ownerApp = Abricos::GetApp($team->module);
+            $ownerApp->Team_OnMemberList($team, $result);
         }
-        $ownerApp = Abricos::GetApp($team->module);
-        $ownerApp->Team_OnMemberList($team, $list);
-    }
-
-    private function MemberListMethod(Team $team){
-        /** @var TeamMemberList $list */
-        $list = $this->InstanceClass('MemberList');
-        $rows = TeamQuery::MemberList($this->db, $team->id);
-        while (($d = $this->db->fetch_array($rows))){
-            $list->Add($this->InstanceClass('Member', $d));
-        }
-
-        $this->OnMemberList($team, $list);
-        return $list;
-    }
+    /**/
 
     /**
-     * @param $filter
-     * @return int|TeamMemberList
+     * @param object|array|TeamMemberListFilter $filter
+     * @return TeamMemberListFilter
      */
-    public function MemberList($teamid){
-        $team = $this->Team($teamid);
-        return $team->members;
+    public function MemberList($filter){
+        if (!($filter instanceof TeamMemberListFilter)){
+            /** @var TeamMemberListFilter $filter */
+            $filter = $this->InstanceClass('MemberListFilter', $filter);
+        }
+
+        if (!$this->IsViewRole()){
+            return $filter->SetError(AbricosResponse::ERR_FORBIDDEN);
+        }
+
+        switch ($filter->vars->method){
+            case 'team':
+            case 'iInTeams':
+                break;
+            default:
+                return $filter->SetError(
+                    AbricosResponse::ERR_BAD_REQUEST,
+                    TeamMemberListFilter::CODE_BAD_METHOD
+                );
+        }
+
+        $rows = TeamQuery::MemberList($this->db, $filter);
+        while (($d = $this->db->fetch_array($rows))){
+            /** @var TeamMember $member */
+            $member = $this->InstanceClass('Member', $d);
+
+            $filter->items->Add($member);
+        }
+
+        // $this->OnMemberList($team, $list);
+
+        return $filter;
     }
 
     public function Invite_IsInvite($type, $ownerid){
