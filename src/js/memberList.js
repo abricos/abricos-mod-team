@@ -13,6 +13,7 @@ Component.entryPoint = function(NS){
     var MemberListRowWidgetExt = function(){
     };
     MemberListRowWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
         member: {value: null}
     };
     MemberListRowWidgetExt.prototype = {
@@ -35,7 +36,6 @@ Component.entryPoint = function(NS){
         teamApp: NS.ATTRIBUTE.teamApp,
         memberList: {value: null},
         memberListFilter: NS.ATTRIBUTE.memberListFilter,
-
     };
     MemberListWidgetExt.prototype = {
         onInitAppWidget: function(err, appInstance){
@@ -139,9 +139,25 @@ Component.entryPoint = function(NS){
             var appInstance = this.get('appInstance'),
                 ownerModule = appInstance.get('moduleName'),
                 tp = this.template,
+                filter = this.get('memberListFilter'),
+                teamid = 0,
                 MemberEditorWidget = Brick.mod[ownerModule].MemberEditorWidget;
 
             if (!MemberEditorWidget){
+                return;
+            }
+
+            if (memberid === 0 && filter.get('method') !== 'team'){
+                teamid = filter.get('teamid') | 0;
+            } else if (memberid > 0){
+                var member = this.get('memberList').getById(memberid);
+                if (!member){
+                    return;
+                }
+                teamid = member.get('teamid');
+            }
+
+            if (teamid === 0){
                 return;
             }
 
@@ -149,7 +165,7 @@ Component.entryPoint = function(NS){
 
             this.actionWidget = new MemberEditorWidget({
                 srcNode: tp.append('action', '<div></div>'),
-                teamid: this.get('teamid'),
+                teamid: teamid,
                 memberid: memberid,
                 callbackContext: this,
                 callback: this._actionCallback

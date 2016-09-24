@@ -24,8 +24,11 @@ Component.entryPoint = function(NS){
                 }, this);
             }, this);
         },
+        _teamidToKey: function(teamid){
+            return 't' + (teamid | 0);
+        },
         getTeamCache: function(teamid, name){
-            teamid = teamid | 0;
+            teamid = this._teamidToKey(teamid);
             var cache = this._teamCache;
             if (!cache[teamid]){
                 cache[teamid] = {};
@@ -33,7 +36,7 @@ Component.entryPoint = function(NS){
             return cache[teamid][name];
         },
         setTeamCache: function(teamid, name, obj){
-            teamid = teamid | 0;
+            teamid = this._teamidToKey(teamid);
             var cache = this._teamCache;
             if (!cache[teamid]){
                 cache[teamid] = {};
@@ -41,7 +44,7 @@ Component.entryPoint = function(NS){
             cache[teamid][name] = obj;
         },
         cleanTeamCache: function(teamid, name){
-            teamid = teamid | 0;
+            teamid = this._teamidToKey(teamid);
             var cache = this._teamCache;
             if (teamid && name && cache[teamid] && cache[teamid][name]){
                 delete cache[teamid][name];
@@ -96,18 +99,53 @@ Component.entryPoint = function(NS){
             },
             member: {
                 args: ['teamid', 'memberid'],
-                type: "model:Member"
+                type: "model:Member",
+                onResponse: function(member, data){
+                    return function(callback, context){
+                        var ownerModule = member.get('module');
+
+                        NS.initApps([ownerModule], function(){
+                            var extendApp = Brick.mod[ownerModule].appInstance,
+                                memberExtends = member.get('extends');
+
+                            data.extends = data.extends || {};
+                            for (var className in data.extends){
+                                memberExtends[className] = extendApp.instanceClass(className, data.extends[className]);
+                            }
+
+                            var userid = member.get('userid');
+                            this.getApp('uprofile').user(userid, function(err, result){
+                                callback.call(context || null);
+                            }, context);
+                        }, this);
+                    };
+                }
             },
             memberList: {
                 args: ['filter'],
                 type: 'response:MemberListFilter',
                 onResponse: function(filter){
-                    var userIds = filter.get('items').toArray('userid', {distinct: true});
-
                     return function(callback, context){
-                        this.getApp('uprofile').userListByIds(userIds, function(err, result){
-                            callback.call(context || null);
-                        }, context);
+                        var memberList = filter.get('items'),
+                            ownerModules = memberList.toArray('module', {distinct: true});
+
+                        NS.initApps(ownerModules, function(){
+                            memberList.each(function(member){
+                                var ownerModule = member.get('module'),
+                                    extendApp = Brick.mod[ownerModule].appInstance,
+                                    mExtends = member.get('extends');
+
+                                for (var className in mExtends){
+                                    mExtends[className] = extendApp.instanceClass(className, mExtends[className]);
+                                }
+                            }, this);
+
+                            var userIds = memberList.toArray('userid', {distinct: true});
+                            this.getApp('uprofile').userListByIds(userIds, function(err, result){
+                                callback.call(context || null);
+                            }, context);
+
+                        }, this);
                     };
                 }
             },

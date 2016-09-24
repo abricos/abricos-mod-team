@@ -53,6 +53,10 @@ Component.entryPoint = function(NS){
 
     NS.Member = Y.Base.create('member', SYS.AppModel, [], {
         structureName: 'Member',
+        initializer: function(d){
+            d = d || {};
+            this.set('extends', d.extends || {});
+        },
         toReplace: function(){
             var user = this.get('user');
             return {
@@ -68,7 +72,8 @@ Component.entryPoint = function(NS){
         }
     }, {
         ATTRS: {
-            user: NS.ATTRIBUTE.user
+            user: NS.ATTRIBUTE.user,
+            extends: {}
         }
     });
 

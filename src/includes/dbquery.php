@@ -63,6 +63,16 @@ class TeamQuery {
         return $db->insert_id();
     }
 
+    public static function TeamUpdate(Ab_Database $db, TeamSave $r){
+        $sql = "
+			UPDATE ".$db->prefix."team
+			SET title='".bkstr($r->vars->title)."', 
+			    upddate=".TIMENOW."
+			WHERE teamid=".intval($r->vars->teamid)."
+		";
+        $db->query_write($sql);
+    }
+
     public static function TeamList(Ab_Database $db, TeamListFilter $r){
         $sql = "
 			SELECT t.*
@@ -99,7 +109,6 @@ class TeamQuery {
 		";
         $db->query_write($sql);
         return $db->insert_id();
-
     }
 
     public static function MemberAppend(Ab_Database $db, TeamMember $member){
@@ -122,14 +131,29 @@ class TeamQuery {
         return $db->insert_id();
     }
 
-    public static function MemberListMyByTeams(Ab_Database $db, $teamids){
+    public static function MemberUpdate(){
 
+    }
+
+    public static function MemberListMyByTeams(Ab_Database $db, $teamids){
         $sql = "
 			SELECT *
             FROM ".$db->prefix."team_member
             WHERE 
 		";
         return $db->query_read($sql);
+    }
+
+    public static function Member(Ab_Database $db, $teamid, $memberid){
+        $sql = "
+			SELECT m.*, t.ownerModule as module
+            FROM ".$db->prefix."team_member m
+            INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
+            WHERE m.teamid=".intval($teamid)."
+                AND m.memberid=".intval($memberid)."
+                AND t.deldate=0
+		";
+        return $db->query_first($sql);
     }
 
     public static function MemberList(Ab_Database $db, TeamMemberListFilter $filter){
@@ -157,6 +181,7 @@ class TeamQuery {
             FROM ".$db->prefix."team_member m
             INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
             WHERE ".$where."
+                AND t.deldate=0
 		";
         return $db->query_read($sql);
     }

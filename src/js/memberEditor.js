@@ -15,7 +15,7 @@ Component.entryPoint = function(NS){
         teamApp: NS.ATTRIBUTE.teamApp,
 
         teamid: NS.ATTRIBUTE.teamid,
-        memberid: NS.ATTRIBUTE.teamid,
+        memberid: NS.ATTRIBUTE.memberid,
         member: NS.ATTRIBUTE.member,
 
         callback: {value: null},
@@ -37,6 +37,7 @@ Component.entryPoint = function(NS){
             this.triggerHide('userSearch');
 
             this.set('waiting', true);
+
             if (memberid > 0){
                 teamApp.member(teamid, memberid, function(err, result){
                     member = err ? null : result.member;
@@ -66,19 +67,31 @@ Component.entryPoint = function(NS){
             }
 
             var tp = this.template,
-                teamid = this.get('teamid');
+                teamid = this.get('teamid'),
+                memberid = member.get('id');
 
-            if (tp.one('userInviteFormWidget')){
-                var widget = this.addWidget('userInviteForm', new Brick.mod.invite.UserInviteFormWidget({
-                    srcNode: tp.one('userInviteFormWidget'),
-                    owner: {
-                        module: 'team',
-                        type: this.get('appInstance').get('moduleName'),
-                        ownerid: this.get('teamid')
-                    },
-                }));
-                widget.on('request', this._onUserInviteRequest, this);
-                widget.on('response', this._onUserInviteResponse, this);
+            if (memberid > 0){
+                var user = member.get('user');
+                tp.setHTML({
+                    username: user.get('username'),
+                    firstNameRO: user.get('firstname'),
+                    lastNameRO: user.get('lastname'),
+                });
+                this.triggerShow('userSearch', 'EDIT_ALLOWED, EXISTS');
+            } else {
+                if (tp.one('userInviteFormWidget')){
+                    tp.show('searchPanel');
+                    var widget = this.addWidget('userInviteForm', new Brick.mod.invite.UserInviteFormWidget({
+                        srcNode: tp.one('userInviteFormWidget'),
+                        owner: {
+                            module: 'team',
+                            type: this.get('appInstance').get('moduleName'),
+                            ownerid: this.get('teamid')
+                        },
+                    }));
+                    widget.on('request', this._onUserInviteRequest, this);
+                    widget.on('response', this._onUserInviteResponse, this);
+                }
             }
 
             this.onLoadMember(member);
@@ -130,10 +143,9 @@ Component.entryPoint = function(NS){
                 member = this.get('member'),
                 memberid = this.get('memberid'),
                 teamid = this.get('teamid'),
-                callback = this.get('callback'),
                 userInviteForm = this.getWidget('userInviteForm'),
                 data = {
-                    id: member.get('id'),
+                    memberid: member.get('id'),
                     teamid: teamid,
                     firstName: tp.getValue('firstName'),
                     lastName: tp.getValue('lastName'),

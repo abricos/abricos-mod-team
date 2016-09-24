@@ -19,7 +19,13 @@ interface ITeamOwnerApp {
 
     public function IsViewRole();
 
-    public function Team_OnTeamAppend(TeamSave $r);
+    public function Team_OnTeamSave(TeamSave $r);
 
     public function Team_OnTeam(Team $team);
+
+    public function Team_OnMemberList(TeamMemberList $memberList);
+
+    public function Team_OnMember(TeamMember $member);
+
+    public function Team_OnMemberSave(TeamMemberSave $r);
 }

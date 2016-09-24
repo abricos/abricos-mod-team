@@ -230,6 +230,7 @@ class TeamMemberListFilter extends AbricosResponse {
 
     const METHOD_TEAM = 'team';
     const METHOD_IINTEAMS = 'iInTeams';
+    const METHOD_MEMBER = 'member';
 
     protected $_structModule = 'team';
     protected $_structName = 'MemberListFilter';
@@ -260,6 +261,9 @@ interface TeamMemberSaveCodes {
  *
  * @property TeamMemberSaveVars $vars
  * @property TeamMemberSaveCodes $codes
+ * @property int $teamid
+ * @property int $memberid
+ * @property int $userid
  */
 class TeamMemberSave extends AbricosResponse {
     protected $_structModule = 'team';

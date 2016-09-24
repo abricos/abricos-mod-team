@@ -56,7 +56,7 @@ Component.entryPoint = function(NS){
             var tp = this.template,
                 team = this.get('team'),
                 data = {
-                    id: this.get('teamid'),
+                    teamid: this.get('teamid'),
                     module: team.get('module'),
                     title: tp.getValue('title')
                 };
