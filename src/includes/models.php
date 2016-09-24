@@ -22,7 +22,7 @@ class TeamUserRole extends AbricosModel {
     protected $_structModule = 'team';
     protected $_structName = 'TeamUserRole';
 
-    public function IsExist(){
+    public function TeamIsExist(){
         return $this->id > 0;
     }
 
@@ -53,6 +53,15 @@ class TeamUserRole extends AbricosModel {
         }
         return true;
     }
+}
+
+/**
+ * Class TeamUserRoleList
+ *
+ * @method TeamUserRole Get($teamid)
+ * @method TeamUserRole GetByIndex($i)
+ */
+class TeamUserRoleList extends AbricosModelList {
 }
 
 /**
@@ -92,7 +101,7 @@ class TeamSave extends AbricosResponse {
  * @property string $site
  * @property string $logo
  * @property int $memberCount
- * @property TeamMember $member
+ * @property TeamUserRole $userRole
  */
 class Team extends AbricosModel {
     protected $_structModule = 'team';

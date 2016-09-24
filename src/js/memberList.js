@@ -26,9 +26,6 @@ Component.entryPoint = function(NS){
         },
         onRenderMember: function(){
         },
-        onClick1: function(e){
-            console.log(arguments);
-        }
     };
     NS.MemberListRowWidgetExt = MemberListRowWidgetExt;
 

@@ -35,8 +35,8 @@ if ($updateManager->isInstall()){
 			upddate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
 
 			PRIMARY KEY (teamid),
-			KEY team (isAwaitModer, ownerModule, deldate),
-			KEY (userid)
+			KEY ownerModule (ownerModule),
+			KEY deldate (deldate)
 		)".$charset
     );
 

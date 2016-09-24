@@ -19,6 +19,11 @@ Component.entryPoint = function(NS){
         team: NS.ATTRIBUTE.team,
     };
     TeamViewerWidgetExt.prototype = {
+        buildTData: function(){
+            return {
+                id: this.get('teamid')
+            };
+        },
         onInitAppWidget: function(err, appInstance){
             var teamApp = this.get('teamApp'),
                 teamid = this.get('teamid') | 0;
@@ -46,6 +51,8 @@ Component.entryPoint = function(NS){
                     srcNode: tp.one('tabViewWidget')
                 }));
             }
+
+            this.appTriggerUpdate();
 
             this.onLoadTeam(team);
         },

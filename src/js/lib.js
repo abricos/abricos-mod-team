@@ -57,6 +57,7 @@ Component.entryPoint = function(NS){
         },
         ATTRS: {
             isLoadAppStructure: {value: false},
+            TeamUserRole: {value: NS.TeamUserRole},
             Team: {value: NS.Team},
             TeamList: {value: NS.TeamList},
             TeamListFilter: {value: NS.TeamListFilter},

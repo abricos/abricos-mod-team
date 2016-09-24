@@ -22,16 +22,6 @@ Component.entryPoint = function(NS){
     };
     NS.TeamListRowWidgetExt = TeamListRowWidgetExt;
 
-    NS.TeamListRowWidget = Y.Base.create('TeamListRowWidget', SYS.AppWidget, [
-        NS.TeamListRowWidgetExt
-    ], {}, {
-        ATTRS: {
-            component: {value: COMPONENT},
-            templateBlockName: {value: 'item'},
-        },
-        CLICKS: {}
-    });
-
     var TeamListWidgetExt = function(){
     };
     TeamListWidgetExt.ATTRS = {
@@ -84,14 +74,14 @@ Component.entryPoint = function(NS){
 
             teamList.each(function(team){
                 var ownerModule = team.get('module'),
-                    TeamListRowWidget = Brick.mod[ownerModule].TeamListRowWidget || NS.TeamListRowWidget;
+                    TeamListRowWidget = Brick.mod[ownerModule].TeamListRowWidget;
 
                 var w = new TeamListRowWidget({
                     boundingBox: tp.append('list', tp.replace('itemWrap')),
                     team: team
                 });
                 wsList[wsList.length] = w;
-            });
+            }, this);
 
             return this.onLoadTeamList(teamList);
         },

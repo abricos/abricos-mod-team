@@ -7,6 +7,8 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
+require_once 'interfaces.php';
+
 /**
  * Class TeamApp
  *
@@ -17,6 +19,7 @@ class TeamApp extends AbricosApplication {
     protected function GetClasses(){
         return array(
             "TeamUserRole" => "TeamUserRole",
+            "TeamUserRoleList" => "TeamUserRoleList",
             "Team" => "Team",
             "TeamList" => "TeamList",
             "TeamListFilter" => "TeamListFilter",
@@ -29,7 +32,8 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Team,TeamSave,TeamListFilter,Member,MemberSave,MemberListFilter';
+        return 'TeamUserRole,Team,TeamSave,TeamListFilter'.
+        ',Member,MemberSave,MemberListFilter';
     }
 
     public function ResponseToJSON($d){
@@ -52,6 +56,10 @@ class TeamApp extends AbricosApplication {
 
     public function IsAdminRole(){
         return $this->manager->IsAdminRole();
+    }
+
+    public function IsTeamAppendRole(){
+        return $this->manager->IsTeamAppendRole();
     }
 
     public function IsWriteRole(){
@@ -81,6 +89,21 @@ class TeamApp extends AbricosApplication {
         return $this->_cache['TeamUserRole'][$teamid] = $userRole;
     }
 
+    /**
+     * @param $teamids
+     * @return TeamUserRoleList
+     */
+    public function TeamUserRoleList($teamids){
+        /** @var TeamUserRoleList $list */
+        $list = $this->InstanceClass('TeamUserRoleList');
+
+        $rows = TeamQuery::TeamUserRole($this->db, $teamids);
+        while (($d = $this->db->fetch_array($rows))){
+            $list->Add($this->InstanceClass('TeamUserRole', $d));
+        }
+        return $list;
+    }
+
     private function OwnerAppFunctionExist($module, $fn){
         $ownerApp = Abricos::GetApp($module);
         if (empty($ownerApp)){
@@ -97,23 +120,17 @@ class TeamApp extends AbricosApplication {
         return $this->ResultToJSON('teamSave', $res);
     }
 
-    public function OnTeamAppend(TeamSave $r){
-        if (!$this->OwnerAppFunctionExist($r->vars->module, 'Team_OnTeamAppend')){
-            return;
-        }
-        $ownerApp = Abricos::GetApp($r->vars->module);
-        $ownerApp->Team_OnTeamAppend($r);
-    }
-
     public function TeamSave($d){
         /** @var TeamSave $r */
         $r = $this->InstanceClass("TeamSave", $d);
+        $vars = $r->vars;
 
-        if (!$this->IsWriteRole()){
-            return $r->SetError(AbricosResponse::ERR_FORBIDDEN);
+        /** @var ITeamOwnerApp $ownerApp */
+        $ownerApp = Abricos::GetApp($vars->module);
+        if (empty($ownerApp)){
+            return $r->SetError(AbricosResponse::ERR_BAD_REQUEST);
         }
 
-        $vars = $r->vars;
 
         if (empty($vars->title)){
             $r->AddCode(TeamSave::CODE_ERR_FIELDS, TeamSave::CODE_ERR_TITLE);
@@ -124,8 +141,8 @@ class TeamApp extends AbricosApplication {
         }
 
         if ($vars->teamid === 0){
-            if (($err = $this->IsTeamAppend($r)) > 0){
-                return $r->SetError($err);
+            if (!$ownerApp->IsTeamAppendRole()){
+                return $r->SetError(AbricosResponse::ERR_FORBIDDEN);
             }
 
             $r->teamid = TeamQuery::TeamAppend($this->db, $r);
@@ -136,8 +153,16 @@ class TeamApp extends AbricosApplication {
 
             TeamQuery::MemberAppendByNewTeam($this->db, $r);
 
-            $this->OnTeamAppend($r);
+            $ownerApp->Team_OnTeamAppend($r);
         } else {
+            $team = $this->Team($vars->teamid);
+            if (AbricosResponse::IsError($team)){
+                return $team;
+            }
+
+            if (!$team->userRole->IsAdmin()){
+                return $r->SetError(AbricosResponse::ERR_FORBIDDEN);
+            }
         }
 
         $this->CacheClear();
@@ -145,35 +170,28 @@ class TeamApp extends AbricosApplication {
         return $r;
     }
 
-    public function OnTeam(Team $team){
-        if (!$this->OwnerAppFunctionExist($team->module, 'Team_OnTeam')){
-            return;
-        }
-        $ownerApp = Abricos::GetApp($team->module);
-        $ownerApp->Team_OnTeam($team);
-    }
-
     public function TeamToJSON($teamid){
         $res = $this->Team($teamid);
         return $this->ResultToJSON('team', $res);
     }
+
     /**
      * @param int $teamid
      * @return int|Team
      */
     public function Team($teamid){
+        $teamid = intval($teamid);
+        if (isset($this->_cache['Team'][$teamid])){
+            return $this->_cache['Team'][$teamid];
+        }
+
         $userRole = $this->TeamUserRole($teamid);
-        if (!$userRole->IsExist()){
+
+        if (!$userRole->TeamIsExist()){
             return AbricosResponse::ERR_NOT_FOUND;
         }
         if (!$userRole->IsView()){
             return AbricosResponse::ERR_FORBIDDEN;
-        }
-
-        $teamid = intval($teamid);
-
-        if (isset($this->_cache['Team'][$teamid])){
-            return $this->_cache['Team'][$teamid];
         }
 
         if (!isset($this->_cache['Team'])){
@@ -184,10 +202,14 @@ class TeamApp extends AbricosApplication {
 
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
+        $team->userRole = $userRole;
 
         $this->_cache['Team'][$teamid] = $team;
 
-        $this->OnTeam($team);
+        /** @var ITeamOwnerApp $ownerApp */
+        $ownerApp = Abricos::GetApp($team->module);
+
+        $ownerApp->Team_OnTeam($team);
 
         return $team;
     }
@@ -210,20 +232,13 @@ class TeamApp extends AbricosApplication {
             $r->items->Add($this->InstanceClass('Team', $d));
         }
 
-        $members = $this->MemberList(array(
-            "method" => TeamMemberListFilter::METHOD_IINTEAMS,
-            "teamids" => $r->items->ToArray('id')
-        ));
+        $userRoleList = $this->TeamUserRoleList($r->items->ToArray('id'));
 
-        if ($members->error > 0){
-            return $r->SetError(AbricosResponse::ERR_SERVER_ERROR);
-        }
-
-        $count = $members->items->Count();
+        $count = $userRoleList->Count();
         for ($i = 0; $i < $count; $i++){
-            $member = $members->items->GetByIndex($i);
-            $team = $r->items->Get($member->teamid);
-            $team->member = $member;
+            $userRole = $userRoleList->GetByIndex($i);
+            $team = $r->items->Get($userRole->id);
+            $team->userRole = $userRole;
         }
 
         return $r;

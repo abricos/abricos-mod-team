@@ -20,25 +20,23 @@ Component.entryPoint = function(NS){
         }
     };
 
-    NS.Team = Y.Base.create('team', SYS.AppModel, [], {
-        structureName: 'Team',
-        getRole: function(){
-            var member = this.get('member');
-            return member ? member.get('role') : '';
+    NS.TeamUserRole = Y.Base.create('teamUserRole', SYS.AppModel, [], {
+        structureName: 'TeamUserRole',
+        isJoined: function(){
+            return this.get('status') === 'joined';
         },
-        isUser: function(){
-            return this.getRole === 'user';
+        isWaiting: function(){
+            return this.get('status') === 'waiting';
         },
         isAdmin: function(){
-            return this.getRole === 'admin';
+            return NS.roles.isAdmin ||
+                (this.get('role') === 'admin' && this.isJoined());
         },
-        getStatus: function(){
-            var member = this.get('member');
-            return member ? member.get('status') : '';
-        },
-        isJoined: function(){
-            return this.getStatus() === 'joined';
-        }
+    });
+
+
+    NS.Team = Y.Base.create('team', SYS.AppModel, [], {
+        structureName: 'Team',
     }, {
         ATTRS: {
             extends: {value: {}}

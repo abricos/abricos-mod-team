@@ -23,12 +23,29 @@ class TeamQuery {
                 m.isPrivate as isPrivate
             FROM ".$db->prefix."team t
             LEFT JOIN ".$db->prefix."team_member m ON m.teamid=t.teamid
-            WHERE teamid=".intval($teamid)." 
-                AND m.userid=".intval(Abricos::$user->id)."
+            WHERE m.userid=".intval(Abricos::$user->id)."
                 AND t.deldate=0
-            LIMIT 1
 		";
-        return $db->query_first($sql);
+        if (is_array($teamid)){
+            $count = count($teamid);
+            if ($count === 0){
+                return;
+            }
+            $wha = array();
+            for ($i = 0; $i < $count; $i++){
+                $wha[] = "t.teamid=".intval($teamid[$i])."";
+            }
+            $sql .= "
+                AND (".implode(" OR ", $wha).")
+            ";
+            return $db->query_read($sql);
+        } else {
+            $sql .= "
+                AND t.teamid=".intval($teamid)."
+                LIMIT 1
+            ";
+            return $db->query_first($sql);
+        }
     }
 
     public static function TeamAppend(Ab_Database $db, TeamSave $r){

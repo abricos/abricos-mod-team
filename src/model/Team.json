@@ -32,8 +32,8 @@
     "memberCount": {
       "type": "int"
     },
-    "member": {
-      "type": "model:Member"
+    "userRole": {
+      "type": "model:TeamUserRole"
     }
   }
 }
