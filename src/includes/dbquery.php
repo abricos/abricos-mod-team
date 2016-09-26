@@ -111,19 +111,14 @@ class TeamQuery {
         return $db->insert_id();
     }
 
-    public static function MemberAppend(Ab_Database $db, TeamMember $member){
+    public static function MemberInviteNewUser(Ab_Database $db, TeamMemberSave $rSave){
         $sql = "
 			INSERT INTO ".$db->prefix."team_member
-				(teamid, userid, relUserid, isMember, isAdmin, 
-				isInvite, isJoinRequest, isPrivate, dateline) VALUES (
-				".bkint($member->teamid).",
-				".bkint($member->userid).",
-				".bkint($member->relUserId).",
-				".bkint($member->isMember).",
-				".bkint($member->isAdmin).",
-				".bkint($member->isInvite).",
-				".bkint($member->isJoinRequest).",
-				".bkint($member->isPrivate).",
+				(teamid, userid, status, role, dateline) VALUES (
+				".bkint($rSave->vars->teamid).",
+				".bkint($rSave->userid).",
+				'waiting',
+				'user',
 				".TIMENOW."
 			)
 		";

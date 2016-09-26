@@ -70,6 +70,17 @@ class TeamApp extends AbricosApplication {
         return $this->manager->IsViewRole();
     }
 
+    private function OwnerAppFunctionExist($module, $fn){
+        $ownerApp = Abricos::GetApp($module);
+        if (empty($ownerApp)){
+            return false;
+        }
+        if (!method_exists($ownerApp, $fn)){
+            return false;
+        }
+        return true;
+    }
+
     /**
      * @param int $teamid
      * @return TeamUserRole
@@ -102,17 +113,6 @@ class TeamApp extends AbricosApplication {
             $list->Add($this->InstanceClass('TeamUserRole', $d));
         }
         return $list;
-    }
-
-    private function OwnerAppFunctionExist($module, $fn){
-        $ownerApp = Abricos::GetApp($module);
-        if (empty($ownerApp)){
-            return false;
-        }
-        if (!method_exists($ownerApp, $fn)){
-            return false;
-        }
-        return true;
     }
 
     public function TeamSaveToJSON($d){
@@ -272,20 +272,14 @@ class TeamApp extends AbricosApplication {
             return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
         }
 
-        $codes = $ret->codes;
+        /** @var ITeamOwnerApp $ownerApp */
+        $ownerApp = Abricos::GetApp($userRole->module);
 
-        $team = $this->Team($vars->teamid);
-        if (AbricosResponse::IsError($team)){
-            return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
+        if ($this->OwnerAppFunctionExist($userRole->module, 'Team_OnMemberSave')){
+            return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
         }
 
-        /** @var ITeamOwnerApp $ownerApp */
-        $ownerApp = Abricos::GetApp($team->module);
-
         if ($vars->memberid === 0){
-            if (($err = $this->IsMemberAppend($team)) > 0){
-                return $ret->SetError($err);
-            }
 
             /** @var InviteApp $inviteApp */
             $inviteApp = Abricos::GetApp('invite');
@@ -293,20 +287,22 @@ class TeamApp extends AbricosApplication {
 
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
 
-
             } else if ($rUS->IsSetCode($rUS->codes->INVITE_ALLOWED)){
 
+                /** @var InviteCreate $rCreate */
+                $rCreate = $inviteApp->Create($rUS, $d);
+
+                if (!$rCreate->IsSetCode(InviteCreate::CODE_OK)){
+                    return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
+                }
+
+                $ret->userid = $rCreate->userid;
+                $ret->memberid = TeamQuery::MemberInviteNewUser($this->db, $ret);
+
+                $ownerApp->Team_OnMemberInvite($ret, $rCreate);
             } else {
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
-
-            $this->MemberSaveMethod($team, array(
-                "teamid" => $team->id,
-                "userid" => Abricos::$user->id,
-                "relUserId" => Abricos::$user->id,
-                "isMember" => true,
-                "isAdmin" => true,
-            ));
         } else {
             $member = $this->Member($vars->teamid, $vars->memberid);
             if (AbricosResponse::IsError($member)){
@@ -315,9 +311,9 @@ class TeamApp extends AbricosApplication {
 
             $ret->memberid = $member->id;
             $ret->userid = $member->userid;
-        }
 
-        $ownerApp->Team_OnMemberSave($ret);
+            $ownerApp->Team_OnMemberUpdate($ret);
+        }
 
         return $ret;
     }
@@ -404,11 +400,14 @@ class TeamApp extends AbricosApplication {
         return $filter;
     }
 
-    public function Invite_IsInvite($type, $ownerid){
-        $team = $this->Team($ownerid);
-        if (AbricosResponse::IsError($team)){
-            return false;
-        }
-        return true;
+    /**
+     * @param InviteUserSearchVars $rUSVars
+     * @return bool
+     */
+    public function Invite_IsUserSearch($rUSVars){
+        $owner = $rUSVars->owner;
+        $userRole = $this->TeamUserRole($owner->ownerid);
+        return $userRole->IsAdmin();
     }
+
 }

@@ -22,7 +22,7 @@ if ($updateManager->isInstall()){
 			
 			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Основатель',
 			
-			title varchar(50) NOT NULL DEFAULT '' COMMENT 'Название общества',
+			title varchar(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
 			email varchar(50) NOT NULL DEFAULT '' COMMENT '',
 			descript TEXT NOT NULL  COMMENT 'Описание',
 			site varchar(50) NOT NULL DEFAULT '' COMMENT '',

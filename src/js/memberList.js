@@ -147,8 +147,8 @@ Component.entryPoint = function(NS){
                 return;
             }
 
-            if (memberid === 0 && filter.get('method') !== 'team'){
-                teamid = filter.get('teamid') | 0;
+            if (memberid === 0 && filter.method === 'team'){
+                teamid = filter.teamid | 0;
             } else if (memberid > 0){
                 var member = this.get('memberList').getById(memberid);
                 if (!member){

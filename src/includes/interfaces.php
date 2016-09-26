@@ -27,5 +27,11 @@ interface ITeamOwnerApp {
 
     public function Team_OnMember(TeamMember $member);
 
-    public function Team_OnMemberSave(TeamMemberSave $r);
+    /**
+     * @param TeamMemberSave $r
+     * @param InviteCreate $rCreate
+     */
+    public function Team_OnMemberInvite(TeamMemberSave $r, $rCreate);
+
+    public function Team_OnMemberUpdate(TeamMemberSave $r);
 }

@@ -39,19 +39,19 @@ class TeamUserRole extends AbricosModel {
     }
 
     public function IsAdmin(){
-        if ($this->app->IsAdminRole()){
-            return true;
+        if (!$this->TeamIsExist()){
+            return false;
         }
-        return
-            $this->role === TeamMember::ROLE_ADMIN
-            && $this->IsJoined();
+        return $this->app->IsAdminRole()
+        || ($this->role === TeamMember::ROLE_ADMIN
+            && $this->IsJoined());
     }
 
     public function IsView(){
-        if ($this->app->IsViewRole()){
-            return true;
+        if (!$this->TeamIsExist()){
+            return false;
         }
-        return true;
+        return $this->app->IsViewRole();
     }
 }
 
@@ -249,18 +249,9 @@ class TeamMemberSaveVars {
 }
 
 /**
- * Interface TeamMemberSaveCodes
- *
- * @property int $OK
- */
-interface TeamMemberSaveCodes {
-}
-
-/**
  * Class TeamMemberSave
  *
  * @property TeamMemberSaveVars $vars
- * @property TeamMemberSaveCodes $codes
  * @property int $teamid
  * @property int $memberid
  * @property int $userid
