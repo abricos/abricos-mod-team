@@ -164,6 +164,8 @@ class TeamListFilter extends AbricosResponse {
  * @property string $status
  * @property string $role
  * @property bool $isPrivate
+ * @property string $myStatus
+ * @property string $myRole
  */
 class TeamMember extends AbricosModel {
 

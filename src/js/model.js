@@ -58,18 +58,24 @@ Component.entryPoint = function(NS){
             this.set('extends', d.extends || {});
         },
         toReplace: function(){
-            var user = this.get('user');
-            return {
-                id: this.get('id'),
-                userid: this.get('userid'),
-                userViewName: user.get('viewName'),
-                userViewURL: user.get('viewURL'),
-                userAvatarSrc24: user.get('avatarSrc24'),
-                userAvatarSrc45: user.get('avatarSrc45'),
-                userAvatarSrc90: user.get('avatarSrc90'),
-                userAvatarSrc18: user.get('avatarSrc180'),
-            };
-        }
+            var user = this.get('user'),
+                ret = {
+                    id: this.get('id'),
+                    userid: this.get('userid'),
+                    userViewName: user.get('viewName'),
+                    userViewURL: user.get('viewURL'),
+                    userAvatarSrc24: user.get('avatarSrc24'),
+                    userAvatarSrc45: user.get('avatarSrc45'),
+                    userAvatarSrc90: user.get('avatarSrc90'),
+                    userAvatarSrc18: user.get('avatarSrc180'),
+                },
+                exts = this.get('extends');
+
+            return ret;
+        },
+        myIsAdmin: function(){
+            return this.get('myStatus') === 'joined' && this.get('myRole') === 'admin';
+        },
     }, {
         ATTRS: {
             user: NS.ATTRIBUTE.user,

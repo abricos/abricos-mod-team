@@ -6,10 +6,6 @@ Component.requires = {
 };
 Component.entryPoint = function(NS){
 
-    var Y = Brick.YUI,
-        COMPONENT = this,
-        SYS = Brick.mod.sys;
-
     var MemberListRowWidgetExt = function(){
     };
     MemberListRowWidgetExt.ATTRS = {
@@ -85,6 +81,12 @@ Component.entryPoint = function(NS){
                             context: this,
                             event: function(){
                                 this.showEditor(member.get('id'));
+                            }
+                        },
+                        view: {
+                            context: this,
+                            event: function(){
+                                this.showViewer(member.get('id'));
                             }
                         }
                     }
@@ -166,6 +168,33 @@ Component.entryPoint = function(NS){
             this.actionWidget = new MemberEditorWidget({
                 srcNode: tp.append('action', '<div></div>'),
                 teamid: teamid,
+                memberid: memberid,
+                callbackContext: this,
+                callback: this._actionCallback
+            });
+        },
+        showViewer: function(memberid){
+            memberid = memberid | 0;
+
+            var appInstance = this.get('appInstance'),
+                ownerModule = appInstance.get('moduleName'),
+                tp = this.template,
+                MemberViewerWidget = Brick.mod[ownerModule].MemberViewerWidget;
+
+            if (!MemberViewerWidget){
+                return;
+            }
+
+            var member = this.get('memberList').getById(memberid);
+            if (!member){
+                return;
+            }
+
+            tp.toggleView(true, 'action', 'list,buttons');
+
+            this.actionWidget = new MemberViewerWidget({
+                srcNode: tp.append('action', '<div></div>'),
+                teamid: member.get('teamid'),
                 memberid: memberid,
                 callbackContext: this,
                 callback: this._actionCallback

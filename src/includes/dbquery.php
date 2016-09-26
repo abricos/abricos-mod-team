@@ -130,23 +130,25 @@ class TeamQuery {
 
     }
 
-    public static function MemberListMyByTeams(Ab_Database $db, $teamids){
-        $sql = "
-			SELECT *
-            FROM ".$db->prefix."team_member
-            WHERE 
-		";
-        return $db->query_read($sql);
-    }
-
     public static function Member(Ab_Database $db, $teamid, $memberid){
         $sql = "
-			SELECT m.*, t.ownerModule as module
+			SELECT 
+			    m.*, 
+			    t.ownerModule as module,
+			    rm.status as myStatus,
+			    rm.role as myRole
             FROM ".$db->prefix."team_member m
             INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
+            LEFT JOIN ".$db->prefix."team_member rm 
+                ON t.teamid=rm.teamid AND rm.userid=".intval(Abricos::$user->id)."
             WHERE m.teamid=".intval($teamid)."
                 AND m.memberid=".intval($memberid)."
                 AND t.deldate=0
+                AND (
+                    m.userid=rm.userid
+                    OR (m.status='joined')
+                    OR (rm.status='joined' AND rm.role='admin')
+                )
 		";
         return $db->query_first($sql);
     }
@@ -172,13 +174,22 @@ class TeamQuery {
         }
 
         $sql = "
-			SELECT m.*, t.ownerModule as module
+			SELECT 
+			    m.*, 
+			    t.ownerModule as module,
+			    rm.status as myStatus,
+			    rm.role as myRole
             FROM ".$db->prefix."team_member m
             INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
-            WHERE ".$where."
-                AND t.deldate=0
+            LEFT JOIN ".$db->prefix."team_member rm 
+                ON t.teamid=rm.teamid AND rm.userid=".intval(Abricos::$user->id)."
+            WHERE ".$where." AND t.deldate=0
+                AND (
+                    (m.userid=rm.userid)
+                    OR (m.status='joined')
+                    OR (rm.status='joined' AND rm.role='admin')
+                )
 		";
         return $db->query_read($sql);
     }
-
 }

@@ -131,7 +131,6 @@ class TeamApp extends AbricosApplication {
             return $r->SetError(AbricosResponse::ERR_BAD_REQUEST);
         }
 
-
         if (empty($vars->title)){
             $r->AddCode(TeamSave::CODE_ERR_FIELDS, TeamSave::CODE_ERR_TITLE);
         }
@@ -271,6 +270,8 @@ class TeamApp extends AbricosApplication {
         if (!$userRole->IsAdmin()){
             return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
         }
+
+        $ret->teamid = $vars->teamid;
 
         /** @var ITeamOwnerApp $ownerApp */
         $ownerApp = Abricos::GetApp($userRole->module);

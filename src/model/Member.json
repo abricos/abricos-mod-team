@@ -30,6 +30,12 @@
     "isPrivate": {
       "type": "bool",
       "rolefn": "IsAdminRole"
+    },
+    "myStatus": {
+      "type": "string"
+    },
+    "myRole": {
+      "type": "string"
     }
   }
 }
