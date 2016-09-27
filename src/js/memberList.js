@@ -35,6 +35,11 @@ Component.entryPoint = function(NS){
         memberListFilter: NS.ATTRIBUTE.memberListFilter,
     };
     MemberListWidgetExt.prototype = {
+        buildTData: function(){
+            return {
+                teamid: this.get('team').get('id')
+            };
+        },
         onInitAppWidget: function(err, appInstance){
             this._wsList = [];
 

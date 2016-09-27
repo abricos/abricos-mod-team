@@ -263,9 +263,6 @@ class TeamApp extends AbricosApplication {
 
         $vars = $ret->vars;
         $userRole = $this->TeamUserRole($vars->teamid);
-        if (!$userRole->TeamIsExist()){
-            return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
-        }
 
         if (!$userRole->IsAdmin()){
             return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
@@ -281,7 +278,6 @@ class TeamApp extends AbricosApplication {
         }
 
         if ($vars->memberid === 0){
-
             /** @var InviteApp $inviteApp */
             $inviteApp = Abricos::GetApp('invite');
             $rUS = $inviteApp->UserSearch($vars->invite);
@@ -289,7 +285,6 @@ class TeamApp extends AbricosApplication {
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
 
             } else if ($rUS->IsSetCode($rUS->codes->INVITE_ALLOWED)){
-
                 /** @var InviteCreate $rCreate */
                 $rCreate = $inviteApp->Create($rUS, $d);
 

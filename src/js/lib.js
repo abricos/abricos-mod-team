@@ -151,7 +151,7 @@ Component.entryPoint = function(NS){
                 }
             },
             memberSave: {
-                args: ['teamid', 'data']
+                args: ['data']
             }
         },
         URLS: {

@@ -144,7 +144,7 @@ Component.entryPoint = function(NS){
             var tp = this.template,
                 member = this.get('member'),
                 memberid = this.get('memberid'),
-                teamid = this.get('teamid'),
+                teamid = this.get('team').get('id'),
                 userInviteForm = this.getWidget('userInviteForm'),
                 data = {
                     memberid: member.get('id'),
@@ -159,12 +159,11 @@ Component.entryPoint = function(NS){
             return this.onFillToJSON(data);
         },
         save: function(){
-            var teamid = this.get('team').get('id'),
-                data = this.toJSON(),
+            var data = this.toJSON(),
                 callback = this.get('callback');
 
             this.set('waiting', true);
-            this.get('teamApp').memberSave(teamid, data, function(err, result){
+            this.get('teamApp').memberSave(data, function(err, result){
                 this.set('waiting', false);
 
                 var memberList = err ? null : result.memberList;
