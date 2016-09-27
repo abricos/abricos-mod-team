@@ -61,6 +61,7 @@ Component.entryPoint = function(NS){
             var user = this.get('user'),
                 ret = {
                     id: this.get('id'),
+                    teamid: this.get('teamid'),
                     userid: this.get('userid'),
                     userViewName: user.get('viewName'),
                     userViewURL: user.get('viewURL'),

@@ -14,12 +14,9 @@ Component.entryPoint = function(NS){
     MemberEditorWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
 
-        teamid: NS.ATTRIBUTE.teamid,
+        team: NS.ATTRIBUTE.team,
         memberid: NS.ATTRIBUTE.memberid,
         member: NS.ATTRIBUTE.member,
-
-        callback: {value: null},
-        callbackContext: {value: null},
 
         isEdit: {
             getter: function(){
@@ -28,9 +25,14 @@ Component.entryPoint = function(NS){
         }
     };
     MemberEditorWidgetExt.prototype = {
+        buildTData: function(){
+            return {
+                teamid: this.get('team').get('id')
+            };
+        },
         onInitAppWidget: function(err, appInstance){
             var teamApp = this.get('teamApp'),
-                teamid = this.get('teamid'),
+                teamid = this.get('team').get('id'),
                 memberid = this.get('memberid'),
                 member;
 
@@ -157,7 +159,7 @@ Component.entryPoint = function(NS){
             return this.onFillToJSON(data);
         },
         save: function(){
-            var teamid = this.get('teamid'),
+            var teamid = this.get('team').get('id'),
                 data = this.toJSON(),
                 callback = this.get('callback');
 
@@ -171,19 +173,10 @@ Component.entryPoint = function(NS){
                 }
             }, this);
         },
-        cancel: function(){
-            var callback = this.get('callback');
-            if (Y.Lang.isFunction(callback)){
-                callback.call(this.get('callbackContext'), null);
-            }
-        },
         onClick: function(e){
             switch (e.dataClick) {
                 case 'save':
                     this.save();
-                    return true;
-                case 'cancel':
-                    this.cancel();
                     return true;
             }
         }

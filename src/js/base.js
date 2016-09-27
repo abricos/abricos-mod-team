@@ -82,6 +82,16 @@ Component.entryPoint = function(NS){
                     teamid: 0
                 }, val || {});
                 return val;
+            },
+            getter: function(val){
+                var team = this.get('team');
+                if (!team){
+                    return val;
+                }
+                return {
+                    method: 'team',
+                    teamid: team.get('id')
+                };
             }
         },
         inviteApp: {

@@ -30,6 +30,7 @@ Component.entryPoint = function(NS){
     };
     MemberListWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
+        team: NS.ATTRIBUTE.team,
         memberList: {value: null},
         memberListFilter: NS.ATTRIBUTE.memberListFilter,
     };
@@ -76,20 +77,6 @@ Component.entryPoint = function(NS){
                 var w = new MemberListRowWidget({
                     boundingBox: tp.append('list', tp.replace('itemWrap')),
                     member: member,
-                    CLICKS: {
-                        edit: {
-                            context: this,
-                            event: function(){
-                                this.showEditor(member.get('id'));
-                            }
-                        },
-                        view: {
-                            context: this,
-                            event: function(){
-                                this.showViewer(member.get('id'));
-                            }
-                        }
-                    }
                 });
                 wsList[wsList.length] = w;
             }, this);

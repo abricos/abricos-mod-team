@@ -54,6 +54,16 @@ Component.entryPoint = function(NS){
                 this._teamCache = {};
             }
         },
+        _memberExtends: function(member){
+            var ownerModule = member.get('module'),
+                extendApp = Brick.mod[ownerModule].appInstance,
+                mExtends = member.get('extends');
+
+            for (var className in mExtends){
+                mExtends[className] = extendApp.instanceClass(className, mExtends[className]);
+                mExtends[className].member = member;
+            }
+        }
     }, [], {
         APPS: {
             uprofile: {}
@@ -76,7 +86,12 @@ Component.entryPoint = function(NS){
             team: {
                 args: ['teamid'],
                 type: 'model:Team',
+                cache: function(teamid){
+                    return this.getTeamCache(teamid, 'Team');
+                },
                 onResponse: function(team, data){
+                    this.setTeamCache(team.get('teamid'), 'Team', team);
+
                     return function(callback, context){
                         var ownerModule = team.get('module');
                         NS.initApps([ownerModule], function(){
@@ -100,18 +115,12 @@ Component.entryPoint = function(NS){
             member: {
                 args: ['teamid', 'memberid'],
                 type: "model:Member",
-                onResponse: function(member, data){
+                onResponse: function(member){
                     return function(callback, context){
                         var ownerModule = member.get('module');
 
                         NS.initApps([ownerModule], function(){
-                            var extendApp = Brick.mod[ownerModule].appInstance,
-                                memberExtends = member.get('extends');
-
-                            data.extends = data.extends || {};
-                            for (var className in data.extends){
-                                memberExtends[className] = extendApp.instanceClass(className, data.extends[className]);
-                            }
+                            this._memberExtends(member);
 
                             var userid = member.get('userid');
                             this.getApp('uprofile').user(userid, function(err, result){
@@ -130,15 +139,7 @@ Component.entryPoint = function(NS){
                             ownerModules = memberList.toArray('module', {distinct: true});
 
                         NS.initApps(ownerModules, function(){
-                            memberList.each(function(member){
-                                var ownerModule = member.get('module'),
-                                    extendApp = Brick.mod[ownerModule].appInstance,
-                                    mExtends = member.get('extends');
-
-                                for (var className in mExtends){
-                                    mExtends[className] = extendApp.instanceClass(className, mExtends[className]);
-                                }
-                            }, this);
+                            memberList.each(this._memberExtends, this);
 
                             var userIds = memberList.toArray('userid', {distinct: true});
                             this.getApp('uprofile').userListByIds(userIds, function(err, result){

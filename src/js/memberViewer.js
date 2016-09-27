@@ -13,14 +13,14 @@ Component.entryPoint = function(NS){
     };
     MemberViewerWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
-        teamid: NS.ATTRIBUTE.teamid,
+        team: NS.ATTRIBUTE.team,
         memberid: NS.ATTRIBUTE.memberid,
         member: NS.ATTRIBUTE.member,
     };
     MemberViewerWidgetExt.prototype = {
         onInitAppWidget: function(err, appInstance){
             var teamApp = this.get('teamApp'),
-                teamid = this.get('teamid'),
+                teamid = this.get('team').get('id'),
                 memberid = this.get('memberid'),
                 member;
 
