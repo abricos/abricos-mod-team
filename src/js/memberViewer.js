@@ -7,8 +7,6 @@ Component.requires = {
 };
 Component.entryPoint = function(NS){
 
-    var Y = Brick.YUI;
-
     var MemberViewerWidgetExt = function(){
     };
     MemberViewerWidgetExt.ATTRS = {
@@ -18,6 +16,12 @@ Component.entryPoint = function(NS){
         member: NS.ATTRIBUTE.member,
     };
     MemberViewerWidgetExt.prototype = {
+        buildTData: function(){
+            return {
+                teamid: this.get('team').get('id'),
+                id: this.get('memberid')
+            };
+        },
         onInitAppWidget: function(err, appInstance){
             var teamApp = this.get('teamApp'),
                 teamid = this.get('team').get('id'),
@@ -39,12 +43,8 @@ Component.entryPoint = function(NS){
                 // TODO: show member not found error
                 return;
             }
-
-            var tp = this.template,
-                teamid = this.get('teamid');
-
-            tp.setHTML(member.toReplace());
-
+            this.appSourceUpdate();
+            this.appTriggerUpdate();
             this.onLoadMember(member);
         },
         onLoadMember: function(member){

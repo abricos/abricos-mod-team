@@ -69,7 +69,7 @@ Component.entryPoint = function(NS){
             }
 
             var tp = this.template,
-                teamid = this.get('teamid'),
+                teamid = this.get('team').get('id'),
                 memberid = member.get('id');
 
             if (memberid > 0){
@@ -88,7 +88,7 @@ Component.entryPoint = function(NS){
                         owner: {
                             module: 'team',
                             type: this.get('appInstance').get('moduleName'),
-                            ownerid: this.get('teamid')
+                            ownerid: teamid
                         },
                     }));
                     widget.on('request', this._onUserInviteRequest, this);
@@ -159,26 +159,19 @@ Component.entryPoint = function(NS){
             return this.onFillToJSON(data);
         },
         save: function(){
-            var data = this.toJSON(),
+            var teamid = this.get('team').get('id'),
+                data = this.toJSON(),
                 callback = this.get('callback');
 
             this.set('waiting', true);
             this.get('teamApp').memberSave(data, function(err, result){
                 this.set('waiting', false);
 
-                var memberList = err ? null : result.memberList;
-                if (Y.Lang.isFunction(callback)){
-                    callback.call(this.get('callbackContext'), memberList);
+                if (!err){
+                    this.go('team.member.list', teamid);
                 }
             }, this);
         },
-        onClick: function(e){
-            switch (e.dataClick) {
-                case 'save':
-                    this.save();
-                    return true;
-            }
-        }
     };
     NS.MemberEditorWidgetExt = MemberEditorWidgetExt;
 };
