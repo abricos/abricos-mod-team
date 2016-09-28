@@ -6,6 +6,10 @@
       "type": "int",
       "dbField": "teamid"
     },
+    "teamid": {
+      "type": "int",
+      "dbField": "parentid"
+    },
     "module": {
       "type": "string",
       "dbField": "ownerModule"
@@ -16,12 +20,6 @@
     },
     "title": {
       "type": "string"
-    },
-    "logo": {
-      "type": "string"
-    },
-    "memberCount": {
-      "type": "int"
     },
     "userRole": {
       "type": "model:TeamUserRole"

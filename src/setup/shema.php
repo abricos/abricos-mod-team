@@ -23,16 +23,13 @@ if ($updateManager->isInstall()){
 			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Основатель',
 			
 			title varchar(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
-			email varchar(50) NOT NULL DEFAULT '' COMMENT '',
-			descript TEXT NOT NULL  COMMENT 'Описание',
-			site varchar(50) NOT NULL DEFAULT '' COMMENT '',
 			logo varchar(8) NOT NULL DEFAULT '' COMMENT '',
 			
 			memberCount int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
 			
 			dateline int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			deldate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
 			upddate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
+			deldate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
 
 			PRIMARY KEY (teamid),
 			KEY ownerModule (ownerModule),

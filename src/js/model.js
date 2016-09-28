@@ -9,6 +9,69 @@ Component.entryPoint = function(NS){
         SYS = Brick.mod.sys;
 
     NS.ATTRIBUTE = {
+        teamApp: {
+            readOnly: true,
+            getter: function(){
+                var app = this.get('appInstance');
+                if (!app){
+                    return null;
+                }
+                if (app.get('moduleName') === 'team'){
+                    return app;
+                }
+                return app.getApp('team');
+            }
+        },
+        teamid: {
+            value: 0,
+            setter: function(val){
+                return val | 0;
+            }
+        },
+        team: {value: null},
+        teamListFilter: {
+            value: {},
+            setter: function(val){
+                return Y.merge({
+                    module: ''
+                }, val || {});
+            }
+        },
+        memberid: {
+            value: 0,
+            setter: function(val){
+                return val | 0;
+            }
+        },
+        member: {value: null},
+        memberList: {value: null},
+        memberListFilter: {
+            setter: function(val){
+                val = Y.merge({
+                    teamid: 0
+                }, val || {});
+                return val;
+            },
+            getter: function(val){
+                var team = this.get('team');
+                if (!team){
+                    return val;
+                }
+                return {
+                    method: 'team',
+                    teamid: team.get('id')
+                };
+            }
+        },
+        inviteApp: {
+            readOnly: true,
+            getter: function(){
+                if (!Brick.mod['invite']){
+                    return null;
+                }
+                return Brick.mod.invite.appInstance;
+            }
+        },
         user: {
             readOnly: true,
             getter: function(){
@@ -19,6 +82,14 @@ Component.entryPoint = function(NS){
             }
         }
     };
+
+    NS.Plugin = Y.Base.create('plugin', SYS.AppModel, [], {
+        structureName: 'Plugin',
+    });
+
+    NS.PluginList = Y.Base.create('pluginList', SYS.AppModelList, [], {
+        appItem: NS.Plugin,
+    });
 
     NS.TeamUserRole = Y.Base.create('teamUserRole', SYS.AppModel, [], {
         structureName: 'TeamUserRole',
@@ -45,6 +116,18 @@ Component.entryPoint = function(NS){
 
     NS.TeamList = Y.Base.create('teamList', SYS.AppModelList, [], {
         appItem: NS.Team,
+    });
+
+    NS.Group = Y.Base.create('group', SYS.AppModel, [], {
+        structureName: 'Group',
+    }, {
+        ATTRS: {
+            extends: {value: {}}
+        }
+    });
+
+    NS.GroupList = Y.Base.create('groupList', SYS.AppModelList, [], {
+        appItem: NS.Group,
     });
 
     NS.TeamListFilter = Y.Base.create('teamListFilter', SYS.AppResponse, [], {

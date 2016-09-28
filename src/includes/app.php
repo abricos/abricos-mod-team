@@ -18,6 +18,8 @@ class TeamApp extends AbricosApplication {
 
     protected function GetClasses(){
         return array(
+            "Plugin" => "TeamPlugin",
+            "PluginList" => "TeamPluginList",
             "TeamUserRole" => "TeamUserRole",
             "TeamUserRoleList" => "TeamUserRoleList",
             "Team" => "Team",
@@ -32,12 +34,14 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'TeamUserRole,Team,TeamSave,TeamListFilter'.
+        return 'Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
         ',Member,MemberSave,MemberListFilter';
     }
 
     public function ResponseToJSON($d){
         switch ($d->do){
+            case 'pluginList':
+                return $this->PluginListToJSON();
             case "teamSave":
                 return $this->TeamSaveToJSON($d->data);
             case 'teamList':
@@ -79,6 +83,46 @@ class TeamApp extends AbricosApplication {
             return false;
         }
         return true;
+    }
+
+    public function PluginListToJSON(){
+        $res = $this->PluginList();
+        return $this->ResultToJSON('pluginList', $res);
+    }
+
+    public function PluginList(){
+        if (!$this->IsViewRole()){
+            return AbricosResponse::ERR_FORBIDDEN;
+        }
+
+        /** @var TeamPluginList $list */
+        $list = $this->InstanceClass('PluginList');
+
+        $modules = Abricos::$modules->RegisterAllModule();
+
+        foreach ($modules as $name => $module){
+            if (!method_exists($module, 'Team_IsPlugin')){
+                continue;
+            }
+            if (!$module->Team_IsPlugin()){
+                continue;
+            }
+            $man = $module->GetManager();
+
+            if (!method_exists($man, 'Team_PluginData')){
+                continue;
+            }
+            $d = $man->Team_PluginData();
+            if (empty($d)){
+                continue;
+            }
+            $d['id'] = $name;
+
+            /** @var TeamPlugin $plugin */
+            $plugin = $this->InstanceClass('Plugin', $d);
+            $list->Add($plugin);
+        }
+        return $list;
     }
 
     /**

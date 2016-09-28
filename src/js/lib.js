@@ -19,7 +19,7 @@ Component.entryPoint = function(NS){
         initializer: function(){
             this._teamCache = {};
             NS.roles.load(function(){
-                this.appStructure(function(){
+                this.pluginList(function(){
                     this.initCallbackFire();
                 }, this);
             }, this);
@@ -69,7 +69,9 @@ Component.entryPoint = function(NS){
             uprofile: {}
         },
         ATTRS: {
-            isLoadAppStructure: {value: false},
+            isLoadAppStructure: {value: true},
+            Plugin: {value: NS.Plugin},
+            PluginList: {value: NS.PluginList},
             TeamUserRole: {value: NS.TeamUserRole},
             Team: {value: NS.Team},
             TeamList: {value: NS.TeamList},
@@ -80,6 +82,10 @@ Component.entryPoint = function(NS){
             Config: {value: NS.Config}
         },
         REQS: {
+            pluginList: {
+                type: 'modelList:PluginList',
+                attribute: true
+            },
             teamSave: {
                 args: ['data']
             },

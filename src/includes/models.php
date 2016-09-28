@@ -8,9 +8,29 @@
  */
 
 /**
+ * Class TeamPlugin
+ *
+ * @property string $id App Module Name
+ * @property string $title
+ */
+class TeamPlugin extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'Plugin';
+}
+
+/**
+ * Class TeamList
+ *
+ * @method TeamPlugin Get(int $name)
+ * @method TeamPlugin GetByIndex(int $i)
+ */
+class TeamPluginList extends AbricosModelList {
+}
+
+/**
  * Class TeamUserRole
  *
- * @property TeamApp $app
+ * @property TeamPlugin $app
  * @property int $id Team ID
  * @property int $memberid
  * @property string $module
@@ -96,9 +116,6 @@ class TeamSave extends AbricosResponse {
  * @property string $module Owner module name
  * @property int $userid
  * @property string $title
- * @property string $email
- * @property string $descript
- * @property string $site
  * @property string $logo
  * @property int $memberCount
  * @property TeamUserRole $userRole
