@@ -22,14 +22,7 @@ Component.entryPoint = function(NS){
     };
     NS.TeamListRowWidgetExt = TeamListRowWidgetExt;
 
-    var TeamListWidgetExt = function(){
-    };
-    TeamListWidgetExt.ATTRS = {
-        teamApp: NS.ATTRIBUTE.teamApp,
-        teamList: {value: null},
-        teamListFilter: NS.ATTRIBUTE.teamListFilter,
-    };
-    TeamListWidgetExt.prototype = {
+    NS.TeamListWidget = Y.Base.create('teamListWidget', SYS.AppWidget, [], {
         onInitAppWidget: function(err, appInstance){
             this._wsList = [];
             this.reloadTeamList();
@@ -38,17 +31,10 @@ Component.entryPoint = function(NS){
             this._cleanTeamList();
         },
         reloadTeamList: function(){
-            var appInstance = this.get('appInstance'),
-                teamApp = this.get('teamApp'),
-                ownerModule = appInstance.get('moduleName'),
-                filter = this.get('teamListFilter');
-
-            if (ownerModule !== 'team'){
-                filter.module = ownerModule;
-            }
+            var filter = this.get('teamListFilter');
 
             this.set('waiting', true);
-            teamApp.teamList(filter, function(err, result){
+            this.get('appInstance').teamList(filter, function(err, result){
                 if (err){
                     return this._onLoadTeamList(null);
                 }
@@ -66,7 +52,7 @@ Component.entryPoint = function(NS){
             this.set('teamList', teamList);
 
             if (!teamList){
-                return this.onLoadTeamList(null);
+                return;
             }
 
             var tp = this.template,
@@ -74,18 +60,18 @@ Component.entryPoint = function(NS){
 
             teamList.each(function(team){
                 var ownerModule = team.get('module'),
-                    TeamListRowWidget = Brick.mod[ownerModule].TeamListRowWidget;
+                    RowWidget = Brick.mod[ownerModule].TeamListRowWidget;
 
-                var w = new TeamListRowWidget({
+                if (!RowWidget){
+                    return;
+                }
+
+                var w = new RowWidget({
                     boundingBox: tp.append('list', tp.replace('itemWrap')),
                     team: team
                 });
                 wsList[wsList.length] = w;
             }, this);
-
-            return this.onLoadTeamList(teamList);
-        },
-        onLoadTeamList: function(teamList){
         },
         _cleanTeamList: function(){
             var list = this._wsList;
@@ -94,7 +80,14 @@ Component.entryPoint = function(NS){
             }
             return this._wsList = [];
         },
+    }, {
+        ATTRS: {
+            component: {value: COMPONENT},
+            templateBlockName: {value: 'widget,itemWrap'},
+            teamList: {value: null},
+            teamListFilter: NS.ATTRIBUTE.teamListFilter,
+        },
+        CLICKS: {}
+    });
 
-    };
-    NS.TeamListWidgetExt = TeamListWidgetExt;
 };

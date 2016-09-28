@@ -77,9 +77,13 @@ class TeamQuery {
         $sql = "
 			SELECT t.*
             FROM ".$db->prefix."team t
-            WHERE t.ownerModule='".bkstr($r->vars->module)."'
-                AND t.deldate=0
+            WHERE t.deldate=0
 		";
+
+        if (!empty($r->vars->module)){
+            $sql .= " AND t.ownerModule='".bkstr($r->vars->module)."'";
+        }
+
         return $db->query_read($sql);
     }
 

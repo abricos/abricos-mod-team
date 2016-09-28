@@ -1,0 +1,50 @@
+<!--{create}-->
+<div class="teamCreate panel panel-default">
+    <div class="panel-heading text-center">
+        <h3 class="panel-title pull-left">
+            Создание сообщества
+        </h3>
+
+        <img data-wait="show" src="/images/loading.gif"/>
+        <div class="clearfix"></div>
+    </div>
+    <div class="panel-body">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">
+                    Тип сообщества
+                </label>
+                <div id="{i#select}" class="col-sm-10">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer text-right">
+        <div class="btn-toolbar pull-right">
+            <button data-click="this:save" class="btn btn-default">
+                Создать
+            </button>
+            <a href="#" data-url="ws" class="btn btn-default">
+                Отмена
+            </a>
+        </div>
+
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+<!--{select}-->
+<select id="{i#id}" class="form-control">{v#rows}</select>
+
+<!--{option}-->
+<option value="{v#id}">{v#title}</option>
+
+<!--{editor}-->
+<div class="teamEditor">
+    <div class="text-center" data-wait="show" >
+        <img src="/images/loading.gif"/>
+    </div>
+
+    <div id="{i#editor}"></div>
+</div>

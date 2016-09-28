@@ -162,6 +162,21 @@ Component.entryPoint = function(NS){
         },
         URLS: {
             ws: "#app={C#MODNAMEURI}/wspace/ws/",
+            teamws: function(teamid){
+                return "#app={C#MODNAMEURI}/wspace/team/" + (teamid | 0) + '/';
+            },
+            team: {
+                create: function(){
+                    return this.getURL('ws') + 'teamEditor/TeamCreateWidget/';
+                },
+                edit: function(teamid, ownerModule){
+                    var ret = this.getURL('ws') + 'teamEditor/TeamEditorWidget/' + (teamid | 0) + '/';
+                    if (ownerModule){
+                        ret += ownerModule + '/';
+                    }
+                    return ret;
+                },
+            }
         }
     });
 };

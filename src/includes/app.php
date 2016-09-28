@@ -109,17 +109,23 @@ class TeamApp extends AbricosApplication {
             }
             $man = $module->GetManager();
 
-            if (!method_exists($man, 'Team_PluginData')){
+            if (!method_exists($man, 'Team_Plugin')){
                 continue;
             }
-            $d = $man->Team_PluginData();
-            if (empty($d)){
-                continue;
-            }
-            $d['id'] = $name;
 
             /** @var TeamPlugin $plugin */
-            $plugin = $this->InstanceClass('Plugin', $d);
+            $plugin = $man->Team_Plugin();
+
+            if (empty($plugin)){
+                continue;
+            }
+
+            if (!($plugin instanceof TeamPlugin)){
+                $plugin = $this->InstanceClass('Plugin', $plugin);
+            }
+
+            $plugin->id = $name;
+
             $list->Add($plugin);
         }
         return $list;

@@ -1,0 +1,51 @@
+<!--{widget}-->
+<div class="teamList panel panel-default">
+    <div class="panel-heading text-center">
+
+        <h3 class="panel-title pull-left">Список сообществ</h3>
+
+        <div class="btn-group pull-right">
+            <a data-url="team.create" href="#"
+               data-trigger="company:roles"
+               data-code="isTeamAppend"
+               data-action="show"
+               data-wait="disable"
+               class="btn btn-default btn-xs hide">
+                Создать
+            </a>
+        </div>
+
+        <span data-wait="show">
+            <img src="/images/loading.gif"/> Загрузка...
+        </span>
+
+        <div class="clearfix"></div>
+    </div>
+    <div class="panel-body">
+        <div id="{i#list}"></div>
+    </div>
+</div>
+
+<!--{itemWrap}-->
+<div class="teamItemRow"></div>
+
+<!--{item}-->
+<div class="panel panel-default">
+    <div class="panel-body">
+        <a href="#" data-url="team.view({v#id})">
+            {v#title}&nbsp;
+        </a>
+
+        <div class="btn-group pull-right hide"
+             data-trigger="this:team.userRole"
+             data-code="isAdmin">
+
+            <a data-url="team.edit({v#id})" href="#"
+               data-wait="disable"
+               class="btn btn-default btn-xs">
+                Править
+            </a>
+        </div>
+
+    </div>
+</div>

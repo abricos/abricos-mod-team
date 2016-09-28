@@ -1,0 +1,89 @@
+<!--{widget}-->
+<div class="app-workspace aw-team aw-company">
+    <div class="app-nav">
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" data-url="ws" href="#">
+                        Сообщества
+                    </a>
+                </div>
+                <ul class="nav navbar-nav hide">
+                    <li>
+                        <a href="#" data-url="config">Настройки</a>
+                    </li>
+                </ul>
+
+                <ul class="nav navbar-nav pull-right">
+                    <li data-wait="show">
+                        <a href="#" data-url="ws">
+                            <img src="/images/loading.gif"/>
+                        </a>
+                    </li>
+                    <li>
+                        <a data-url="team.create" href="#"
+                           data-trigger="company:roles"
+                           data-code="isTeamAppend"
+                           data-action="show"
+                           title="Добавить сообщество">
+                            + Добавить
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div data-wait="show" class="text-center">
+        <img src="/images/loading.gif"/>
+
+        <p>Идет загрузка данных</p>
+
+        <p>Пожалуйста, подождите...</p>
+    </div>
+
+    <div class="app-workspace-page" data-wait="hide"></div>
+</div>
+
+<!--{team}-->
+<div class="app-workspace aw-team aw-company">
+
+    <div id="{i#headerWidget}"></div>
+
+    <div data-wait="show" class="text-center">
+        <img src="/images/loading.gif"/>
+
+        <p>Идет загрузка данных</p>
+
+        <p>Пожалуйста, подождите...</p>
+    </div>
+
+    <div class="row">
+        <div id="{i#menuWidget}" class="col-sm-3"></div>
+        <div class="col-sm-9">
+            <div class="app-workspace-page" data-wait="hide"></div>
+        </div>
+    </div>
+</div>
+
+<!--{header}-->
+<div class="app-nav">
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a data-url="team.view({v#id})"
+                   class="navbar-brand" href="#">
+                    {v#title}
+                </a>
+            </div>
+
+            <ul class="nav navbar-nav pull-right">
+                <li data-wait="show">
+                    <a href="#" data-url="ws">
+                        <img src="/images/loading.gif"/>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>

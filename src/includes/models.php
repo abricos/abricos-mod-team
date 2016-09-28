@@ -12,6 +12,7 @@
  *
  * @property string $id App Module Name
  * @property string $title
+ * @property bool $isCommunity
  */
 class TeamPlugin extends AbricosModel {
     protected $_structModule = 'team';

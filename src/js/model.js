@@ -32,9 +32,7 @@ Component.entryPoint = function(NS){
         teamListFilter: {
             value: {},
             setter: function(val){
-                return Y.merge({
-                    module: ''
-                }, val || {});
+                return val || {};
             }
         },
         memberid: {
@@ -83,14 +81,6 @@ Component.entryPoint = function(NS){
         }
     };
 
-    NS.Plugin = Y.Base.create('plugin', SYS.AppModel, [], {
-        structureName: 'Plugin',
-    });
-
-    NS.PluginList = Y.Base.create('pluginList', SYS.AppModelList, [], {
-        appItem: NS.Plugin,
-    });
-
     NS.TeamUserRole = Y.Base.create('teamUserRole', SYS.AppModel, [], {
         structureName: 'TeamUserRole',
         isJoined: function(){
@@ -104,7 +94,6 @@ Component.entryPoint = function(NS){
                 (this.get('role') === 'admin' && this.isJoined());
         },
     });
-
 
     NS.Team = Y.Base.create('team', SYS.AppModel, [], {
         structureName: 'Team',
@@ -174,6 +163,25 @@ Component.entryPoint = function(NS){
     NS.MemberListFilter = Y.Base.create('MemberListFilter', SYS.AppResponse, [], {
         structureName: 'MemberListFilter'
     });
+
+    NS.Plugin = Y.Base.create('plugin', SYS.AppModel, [], {
+        structureName: 'Plugin',
+    });
+
+    NS.PluginList = Y.Base.create('pluginList', SYS.AppModelList, [], {
+        appItem: NS.Plugin,
+        getModules: function(team){
+            var mods = [team.get('module')];
+            this.each(function(plugin){
+                if (plugin.get('isCommunity')){
+                    return;
+                }
+                mods[mods.length] = plugin.get('id');
+            }, this);
+            return mods;
+        },
+    });
+
 
     NS.Config = Y.Base.create('config', SYS.AppModel, [], {
         structureName: 'Config'

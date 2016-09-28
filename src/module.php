@@ -30,6 +30,10 @@ class TeamModule extends Ab_Module {
 
         return "teamapp";
     }
+
+    public function Bos_IsMenu(){
+        return true;
+    }
 }
 
 

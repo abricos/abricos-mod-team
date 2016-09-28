@@ -7,44 +7,117 @@ Component.requires = {
 };
 Component.entryPoint = function(NS){
 
-    var TeamEditorWidgetExt = function(){
-    };
-    TeamEditorWidgetExt.ATTRS = {
-        teamid: NS.ATTRIBUTE.teamid,
-        team: NS.ATTRIBUTE.team,
-    };
-    TeamEditorWidgetExt.prototype = {
+    var Y = Brick.YUI,
+        COMPONENT = this,
+        SYS = Brick.mod.sys;
+
+    NS.TeamCreateWidget = Y.Base.create('TeamCreateWidget', SYS.AppWidget, [], {
         onInitAppWidget: function(err, appInstance){
-            var teamApp = appInstance.getApp('team'),
-                teamid = this.get('teamid') | 0,
-                team;
+            var tp = this.template,
+                lst = "";
+
+            appInstance.get('pluginList').each(function(plugin){
+                if (!plugin.get('isCommunity')){
+                    return;
+                }
+                lst += tp.replace('option', {
+                    id: plugin.get('id'),
+                    title: plugin.get('title')
+                });
+
+                tp.setHTML('select', tp.replace('select', {
+                    rows: lst
+                }));
+            }, this);
+        },
+        save: function(){
+            var tp = this.template,
+                ownerModule = tp.getValue('select.id'),
+                plugin = this.get('appInstance').get('pluginList').getById(ownerModule);
+
+            if (!plugin || !plugin.get('isCommunity')){
+                return;
+            }
+            this.go('team.edit', 0, ownerModule);
+        }
+    }, {
+        ATTRS: {
+            component: {value: COMPONENT},
+            templateBlockName: {value: 'create,select,option'},
+        }
+    });
+
+    NS.TeamEditorWidget = Y.Base.create('TeamEditorWidget', SYS.AppWidget, [
+        SYS.ContainerWidgetExt,
+    ], {
+        onInitAppWidget: function(err, appInstance){
+            var teamid = this.get('teamid'),
+                ownerModule = this.get('ownerModule');
 
             this.set('waiting', true);
             if (teamid === 0){
-                team = new (teamApp.get('Team'))({
-                    appInstance: teamApp,
-                    module: appInstance.get('moduleName')
+                var team = new (appInstance.get('Team'))({
+                    appInstance: appInstance,
+                    module: ownerModule
                 });
                 this._onLoadTeam(team);
             } else {
-                teamApp.team(teamid, function(err, result){
-                    team = err ? null : result.team;
+                appInstance.team(teamid, function(err, result){
+                    if (err){
+                        this.set('waiting', false);
+                        return;
+                    }
                     this._onLoadTeam(result.team);
                 }, this);
             }
         },
         _onLoadTeam: function(team){
-            this.set('waiting', false);
-            this.set('team', team);
+            var tp = this.template,
+                ownerModule = team.get('module');
 
-            var tp = this.template;
+            NS.uses([ownerModule], 'teamEditor', function(){
+                this.set('waiting', false);
 
-            if (team){
-                tp.setValue({
-                    title: team.get('title')
-                });
-            }
+                var EditorWidget = Brick.mod[ownerModule].TeamEditorWidget;
+                if (!EditorWidget){
+                    return;
+                }
+                this.addWidget('editor', new EditorWidget({
+                    srcNode: tp.one('editor'),
+                    team: team
+                }));
 
+            }, this);
+        },
+    }, {
+        ATTRS: {
+            component: {value: COMPONENT},
+            templateBlockName: {value: 'editor'},
+            teamid: NS.ATTRIBUTE.teamid,
+            ownerModule: {value: ''}
+        },
+        parseURLParam: function(args){
+            return {
+                teamid: args[0] | 0,
+                ownerModule: args[1] || ''
+            };
+        }
+    });
+
+    var TeamEditorWidgetExt = function(){
+    };
+    TeamEditorWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
+        team: NS.ATTRIBUTE.team,
+    };
+    TeamEditorWidgetExt.prototype = {
+        onInitAppWidget: function(err, appInstance){
+            var tp = this.template,
+                team = this.get('team');
+
+            tp.setValue({
+                title: tp.get('title')
+            });
             this.onLoadTeam(team);
         },
         onLoadTeam: function(team){
@@ -56,14 +129,14 @@ Component.entryPoint = function(NS){
             var tp = this.template,
                 team = this.get('team'),
                 data = {
-                    teamid: this.get('teamid'),
+                    teamid: this.get('team').get('id'),
                     module: team.get('module'),
                     title: tp.getValue('title')
                 };
             return this.onFillToJSON(data);
         },
         save: function(){
-            var teamApp = this.get('appInstance').getApp('team'),
+            var teamApp = this.get('teamApp'),
                 data = this.toJSON();
 
             this.set('waiting', true);

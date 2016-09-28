@@ -40,10 +40,9 @@ class TeamManager extends Ab_ModuleManager {
         return array(
             array(
                 "name" => "team",
-                "group" => "personal",
                 "title" => $i18n->Translate('title'),
-                "icon" => "/modules/team/images/icon.png",
-                "url" => "team/wspace/ws"
+                "icon" => "/modules/team/images/icon.gif",
+                "url" => "team/wspace/ws",
             )
         );
     }
