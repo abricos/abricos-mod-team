@@ -75,14 +75,14 @@ Component.entryPoint = function(NS){
         SYS.AppWorkspace,
         SYS.ContainerWidgetExt,
     ], {
-        getDefaultPage: function(){
+        getDefaultPage: function(module){
             var AppWorkspacePage = this.get('AppWorkspacePage'),
                 page = new AppWorkspacePage(),
                 team = this.get('team');
 
-            page.module = team.get('module');
-            page.component = 'teamViewer';
-            page.widget = 'TeamViewerWidget';
+            page.module = module || team.get('module');
+            page.component = 'teamPlugin';
+            page.widget = 'TeamPluginWidget';
 
             return page;
         },
@@ -95,7 +95,7 @@ Component.entryPoint = function(NS){
                 this._reloadTeam(page);
             } else {
                 if (page.isEmpty()){
-                    page = this.getDefaultPage();
+                    page = this.getDefaultPage(page.module);
                 }
                 this._showWorkspacePage(page);
             }
@@ -127,7 +127,7 @@ Component.entryPoint = function(NS){
             var pluginList = this.get('appInstance').get('pluginList'),
                 mods = pluginList.getModules(team);
 
-            NS.uses(mods, 'teamWSpace', function(){
+            NS.uses(mods, 'teamPlugin', function(){
                 this.set('waiting', false);
                 this._onLoadPluginComponents(page);
             }, this);
@@ -151,7 +151,7 @@ Component.entryPoint = function(NS){
             }
 
             if (page.isEmpty()){
-                page = this.getDefaultPage();
+                page = this.getDefaultPage(page.module);
             }
 
             this._showWorkspacePage(page);

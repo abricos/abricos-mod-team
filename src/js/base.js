@@ -39,4 +39,19 @@ Component.entryPoint = function(NS){
         });
     };
 
+    var PluginWidgetExt = function(){
+    };
+    PluginWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
+        team: NS.ATTRIBUTE.team,
+    };
+    PluginWidgetExt.prototype = {
+        buildTData: function(){
+            return {
+                teamid: this.get('team').get('id')
+            };
+        },
+    };
+    NS.PluginWidgetExt = PluginWidgetExt;
+
 };
