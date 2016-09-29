@@ -162,10 +162,10 @@ Component.entryPoint = function(NS){
         },
         URLS: {
             ws: "#app={C#MODNAMEURI}/wspace/ws/",
-            teamws: function(teamid){
-                return "#app={C#MODNAMEURI}/wspace/team/" + (teamid | 0) + '/';
-            },
             team: {
+                ws: function(teamid){
+                    return "#app={C#MODNAMEURI}/wspace/item/" + (teamid | 0) + '/';
+                },
                 create: function(){
                     return this.getURL('ws') + 'teamEditor/TeamCreateWidget/';
                 },

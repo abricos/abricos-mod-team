@@ -50,17 +50,18 @@
 
     <div id="{i#headerWidget}"></div>
 
-    <div data-wait="show" class="text-center">
-        <img src="/images/loading.gif"/>
-
-        <p>Идет загрузка данных</p>
-
-        <p>Пожалуйста, подождите...</p>
-    </div>
-
     <div class="row">
         <div id="{i#menuWidget}" class="col-sm-3"></div>
         <div class="col-sm-9">
+
+            <div data-wait="show" class="text-center">
+                <img src="/images/loading.gif"/>
+
+                <p>Идет загрузка данных</p>
+
+                <p>Пожалуйста, подождите...</p>
+            </div>
+
             <div class="app-workspace-page" data-wait="hide"></div>
         </div>
     </div>
@@ -71,7 +72,7 @@
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
-                <a data-url="team.view({v#id})"
+                <a data-url="team.ws({v#id})"
                    class="navbar-brand" href="#">
                     {v#title}
                 </a>

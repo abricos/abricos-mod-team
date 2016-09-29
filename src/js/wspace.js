@@ -46,23 +46,25 @@ Component.entryPoint = function(NS){
 
     var TeamAppWorkspacePage = function(p){
         this._isTeamPage = true;
-        this.teamid = 0;
         TeamAppWorkspacePage.superclass.constructor.apply(this, arguments);
     };
     Y.extend(TeamAppWorkspacePage, SYS.AppWorkspacePage, {
         init: function(p){
             if (!p._isTeamPage){
                 this.teamid = p.component | 0;
-                p.component = p.widget;
+                p.module = p.widget;
+                p.component = p.args[0] || '';
+                p.widget = p.args[1] || '';
 
                 var args = [];
-                if (p.args.length > 0){ // clone
-                    p.widget = p.args[0];
-                    for (var i = 1; i < p.args.length; i++){
+                if (p.args.length > 2){ // clone
+                    for (var i = 2; i < p.args.length; i++){
                         args[args.length] = p.args[i];
                     }
                 }
                 p.args = args;
+            } else {
+                this.teamid = p.teamid;
             }
             TeamAppWorkspacePage.superclass.init.call(this, p);
         },
@@ -73,6 +75,17 @@ Component.entryPoint = function(NS){
         SYS.AppWorkspace,
         SYS.ContainerWidgetExt,
     ], {
+        getDefaultPage: function(){
+            var AppWorkspacePage = this.get('AppWorkspacePage'),
+                page = new AppWorkspacePage(),
+                team = this.get('team');
+
+            page.module = team.get('module');
+            page.component = 'teamViewer';
+            page.widget = 'TeamViewerWidget';
+
+            return page;
+        },
         showWorkspacePage: function(page){
             var AppWorkspacePage = this.get('AppWorkspacePage'),
                 page = new AppWorkspacePage(page),
@@ -81,6 +94,9 @@ Component.entryPoint = function(NS){
             if (!team || team.get('id') !== page.teamid){
                 this._reloadTeam(page);
             } else {
+                if (page.isEmpty()){
+                    page = this.getDefaultPage();
+                }
                 this._showWorkspacePage(page);
             }
         },
@@ -134,11 +150,8 @@ Component.entryPoint = function(NS){
                 }));
             }
 
-            return;
-
             if (page.isEmpty()){
-                page.component = 'teamViewer';
-                page.widget = 'TeamViewerWidget';
+                page = this.getDefaultPage();
             }
 
             this._showWorkspacePage(page);
@@ -156,16 +169,6 @@ Component.entryPoint = function(NS){
                 value: NS.TeamAppWorkspacePage
             },
             team: NS.ATTRIBUTE.team,
-            defaultPage: {
-                getter: function(){
-                    var team = this.get('team');
-
-                    return {
-                        component: 'teamViewer',
-                        widget: 'TeamViewerWidget'
-                    };
-                }
-            }
         }
     });
 
