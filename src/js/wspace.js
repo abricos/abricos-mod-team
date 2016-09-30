@@ -80,6 +80,7 @@ Component.entryPoint = function(NS){
                 page = new AppWorkspacePage(),
                 team = this.get('team');
 
+            page.teamid = team.get('id');
             page.module = module || team.get('module');
             page.component = 'teamPlugin';
             page.widget = 'TeamPluginWidget';
@@ -97,6 +98,7 @@ Component.entryPoint = function(NS){
                 if (page.isEmpty()){
                     page = this.getDefaultPage(page.module);
                 }
+                this._renderTeamMenu(page);
                 this._showWorkspacePage(page);
             }
         },
@@ -132,10 +134,24 @@ Component.entryPoint = function(NS){
                 this._onLoadPluginComponents(page);
             }, this);
         },
-        _onLoadPluginComponents: function(page){
+        _renderTeamMenu: function(page){
             var tp = this.template,
                 team = this.get('team'),
                 mods = this.get('appInstance').get('pluginList').getModules(team);
+
+            this.removeWidget(function(n){
+                return n.split('-')[0] === 'menu';
+            });
+
+            mods = mods.sort(function(m1, m2){
+                if (m1 === page.module){
+                    return -1;
+                }
+                if (m2 === page.module){
+                    return 1;
+                }
+                return 0;
+            });
 
             for (var i = 0, name, MenuWidget; i < mods.length; i++){
                 name = mods[i];
@@ -146,13 +162,19 @@ Component.entryPoint = function(NS){
 
                 this.addWidget('menu-' + name, new MenuWidget({
                     srcNode: tp.append('menuWidget', '<div></div>'),
-                    team: team
+                    team: team,
+                    page: page
                 }));
             }
+        },
+        _onLoadPluginComponents: function(page){
+            var team = this.get('team');
 
             if (page.isEmpty()){
                 page = this.getDefaultPage(page.module);
             }
+
+            this._renderTeamMenu(page);
 
             this._showWorkspacePage(page);
         },

@@ -45,6 +45,33 @@
     <div class="app-workspace-page" data-wait="hide"></div>
 </div>
 
+<!--{header}-->
+<div class="app-nav">
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a data-url="team.ws({v#id})"
+                   class="navbar-brand" href="#">
+                    {v#title}
+                </a>
+            </div>
+
+            <ul class="nav navbar-nav pull-right">
+                <li data-wait="show">
+                    <a href="#" data-url="team.ws({v#id})">
+                        <img src="/images/loading.gif"/>
+                    </a>
+                </li>
+                <li data-wait="hide">
+                    <a href="#" data-url="team.config({v#id})">
+                        Настройка
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
+
 <!--{team}-->
 <div class="app-workspace aw-team aw-company">
 
@@ -67,24 +94,3 @@
     </div>
 </div>
 
-<!--{header}-->
-<div class="app-nav">
-    <nav class="navbar navbar-default" role="navigation">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <a data-url="team.ws({v#id})"
-                   class="navbar-brand" href="#">
-                    {v#title}
-                </a>
-            </div>
-
-            <ul class="nav navbar-nav pull-right">
-                <li data-wait="show">
-                    <a href="#" data-url="ws">
-                        <img src="/images/loading.gif"/>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-</div>

@@ -7,6 +7,7 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
+require_once 'roles.php';
 require_once 'interfaces.php';
 
 /**

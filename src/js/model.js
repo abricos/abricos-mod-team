@@ -171,7 +171,7 @@ Component.entryPoint = function(NS){
     NS.PluginList = Y.Base.create('pluginList', SYS.AppModelList, [], {
         appItem: NS.Plugin,
         getModules: function(team){
-            var mods = [team.get('module')];
+            var mods = ['team', team.get('module')];
             this.each(function(plugin){
                 if (plugin.get('isCommunity')){
                     return;

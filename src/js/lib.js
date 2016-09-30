@@ -163,11 +163,14 @@ Component.entryPoint = function(NS){
         URLS: {
             ws: "#app={C#MODNAMEURI}/wspace/ws/",
             team: {
+                create: function(){
+                    return this.getURL('ws') + 'teamEditor/TeamCreateWidget/';
+                },
                 ws: function(teamid){
                     return "#app={C#MODNAMEURI}/wspace/item/" + (teamid | 0) + '/';
                 },
-                create: function(){
-                    return this.getURL('ws') + 'teamEditor/TeamCreateWidget/';
+                config: function(teamid){
+                    return this.getURL('team.ws', teamid) + 'team/';
                 },
                 edit: function(teamid, ownerModule){
                     var ret = this.getURL('ws') + 'teamEditor/TeamEditorWidget/' + (teamid | 0) + '/';

@@ -54,4 +54,37 @@ Component.entryPoint = function(NS){
     };
     NS.PluginWidgetExt = PluginWidgetExt;
 
+    var PluginWSMenuWidgetExt = function(){
+    };
+    PluginWSMenuWidgetExt.ATTRS = {
+        teamApp: NS.ATTRIBUTE.teamApp,
+        team: NS.ATTRIBUTE.team,
+        page: {}
+    };
+    PluginWSMenuWidgetExt.prototype = {
+        buildTData: function(){
+            return {
+                teamid: this.get('team').get('id')
+            };
+        },
+        onInitAppWidget: function(err, appInstance){
+            this.menuItemUpdate();
+        },
+        menuItemUpdate: function(){
+            var page = this.get('page'),
+                bbox = this.get('boundingBox');
+
+            bbox.all('[data-menuItem]').each(function(node){
+                var name = node.getData('menuItem');
+
+                if (page.widget === name){
+                    node.addClass('active');
+                } else {
+                    node.removeClass('active');
+                }
+            }, this);
+        }
+
+    };
+    NS.PluginWSMenuWidgetExt = PluginWSMenuWidgetExt;
 };
