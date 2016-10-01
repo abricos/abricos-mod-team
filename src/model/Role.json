@@ -4,24 +4,20 @@
   "fields": {
     "id": {
       "type": "int",
-      "dbField": "actionid"
+      "dbField": "roleid"
     },
-    "teamid": {
+    "policyid": {
       "type": "int"
     },
-    "module": {
+    "policy": {
       "type": "string",
-      "dbField": "ownerModule"
+      "dbField": "policyName"
     },
     "group": {
       "type": "string",
       "dbField": "actionGroup"
     },
-    "name": {
-      "type": "string",
-      "dbField": "actionName"
-    },
-    "code": {
+    "mask": {
       "type": "int"
     }
   }

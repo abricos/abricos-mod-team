@@ -24,6 +24,8 @@ class TeamApp extends AbricosApplication {
             "ActionList" => "TeamActionList",
             "Policy" => "TeamPolicyItem",
             "PolicyList" => "TeamPolicyList",
+            "Role" => "TeamRole",
+            "RoleList" => "TeamRoleList",
             "Plugin" => "TeamPlugin",
             "PluginList" => "TeamPluginList",
             "TeamUserRole" => "TeamUserRole",
@@ -40,7 +42,7 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Action,Policy,Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
+        return 'Action,Policy,Role,Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
         ',Member,MemberSave,MemberListFilter';
     }
 

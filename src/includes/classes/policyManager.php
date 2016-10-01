@@ -63,7 +63,7 @@ class TeamPolicyItemManager {
                 $group = $a[0];
                 $name = $a[1];
 
-                if (!$actionList->IsExistsByPath($ownerModule, $group, $name)){
+                if ($actionList->IsExistsByPath($ownerModule, $group, $name)){
                     continue;
                 }
 
@@ -75,14 +75,16 @@ class TeamPolicyItemManager {
             }
         }
 
-        if ($policyList->isNewPolicy){
+        if ($policyList->isNewItem){
             TeamQuery::PolicyAppendByList($this->app->db, $policyList);
             $this->_cachePolicyList = null;
         }
-        if ($actionList->isNewAction){
+        if ($actionList->isNewItem){
             TeamQuery::ActionAppendByList($this->app->db, $actionList);
             TeamPolicyItemManager::$_cacheActionList = null;
         }
+
+        return $policyList->isNewItem || $actionList->isNewItem;
     }
 
     private function GetDefaultPolicies(){
@@ -94,8 +96,52 @@ class TeamPolicyItemManager {
         $defPolicies = $ownerApp->Team_GetDefaultPolicy();
         $this->CheckTeamPolicies($defPolicies);
 
+        $policyList = $this->PolicyList();
+        $actionList = $this->ActionList();
+        $roleList = $this->RoleList();
 
+        foreach ($defPolicies as $policy => $actions){
+            $policy = $policyList->GetByName($policy);
+
+            $count = count($actions);
+            for ($i = 0; $i < $count; $i++){
+                $a = explode(".", $actions[$i]);
+                $group = $a[0];
+                $name = $a[1];
+
+                $role = $roleList->GetByPath($policy->id, $group);
+
+                if (empty($role)){
+                    /** @var TeamRole $role */
+                    $role = $this->app->InstanceClass('Role', array(
+                        'policyid' => $policy->id,
+                        'group' => $group
+                    ));
+                    $roleList->Add($role);
+                }
+
+                $action = $actionList->GetByPath($ownerModule, $group, $name);
+                $role->AddCode($action->code);
+            }
+        }
+        if ($roleList->isNewItem){
+            TeamQuery::RoleAppendByList($this->app->db, $roleList);
+        }
     }
+
+    /**
+     * @return TeamRoleList
+     */
+    public function RoleList(){
+        /** @var TeamRoleList $list */
+        $list = $this->app->InstanceClass('RoleList');
+        $rows = TeamQuery::RoleList($this->app->db, $this->teamid);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('Role', $d));
+        }
+        return $list;
+    }
+
 
     /**
      * @return TeamPolicyList

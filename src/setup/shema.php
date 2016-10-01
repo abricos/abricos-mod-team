@@ -92,20 +92,20 @@ if ($updateManager->isInstall()){
     );
 
     $db->query_write("
-        CREATE TABLE IF NOT EXISTS ".$pfx."team_policyAction (
-            polactid INT(10) UNSIGNED NOT NULL auto_increment,
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_role (
+            roleid INT(10) UNSIGNED NOT NULL auto_increment,
             
             policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
-            actionid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            actionGroup VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
             mask INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
         
-            PRIMARY KEY (polactid),
-            UNIQUE KEY mempol (policyid, actionid)
+            PRIMARY KEY (roleid),
+            UNIQUE KEY role (policyid, actionGroup)
         )".$charset
     );
 
     $db->query_write("
-        CREATE TABLE IF NOT EXISTS ".$pfx."team_memberPolicy (
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_memberRole (
             mempolid INT(10) UNSIGNED NOT NULL auto_increment,
             
             memberid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',

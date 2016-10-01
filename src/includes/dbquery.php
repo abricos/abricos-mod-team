@@ -42,7 +42,7 @@ class TeamQuery {
         $count = $list->Count();
         for ($i = 0; $i < $count; $i++){
             $item = $list->GetByIndex($i);
-            if (!$item->isNewPolicy){
+            if (!$item->isNewItem){
                 continue;
             }
             $insa[] = "(
@@ -73,7 +73,7 @@ class TeamQuery {
         $count = $list->Count();
         for ($i = 0; $i < $count; $i++){
             $item = $list->GetByIndex($i);
-            if (!$item->isNewAction){
+            if (!$item->isNewItem){
                 continue;
             }
             $insa[] = "(
@@ -86,6 +86,40 @@ class TeamQuery {
         $sql = "
 			INSERT INTO ".$db->prefix."team_action
             (ownerModule, actionGroup, actionName, code) 
+            VALUES ".implode(',', $insa)."
+		";
+        $db->query_write($sql);
+    }
+
+    public static function RoleList(Ab_Database $db, $teamid){
+        $sql = "
+			SELECT 
+                r.*,
+                p.policyName
+            FROM ".$db->prefix."team_policy p
+            INNER JOIN ".$db->prefix."team_role r ON r.policyid=p.policyid
+            WHERE p.teamid=".intval($teamid)."
+		";
+        return $db->query_read($sql);
+    }
+
+    public static function RoleAppendByList(Ab_Database $db, TeamRoleList $list){
+        $insa = array();
+        $count = $list->Count();
+        for ($i = 0; $i < $count; $i++){
+            $item = $list->GetByIndex($i);
+            if (!$item->isNewItem){
+                continue;
+            }
+            $insa[] = "(
+                ".intval($item->policyid).",
+                '".bkstr($item->group)."',
+                ".intval($item->mask)."
+            )";
+        }
+        $sql = "
+			INSERT INTO ".$db->prefix."team_role
+            (policyid, actionGroup, mask) 
             VALUES ".implode(',', $insa)."
 		";
         $db->query_write($sql);

@@ -20,7 +20,7 @@ class TeamActionItem extends AbricosModel {
     protected $_structModule = 'team';
     protected $_structName = 'Action';
 
-    public $isNewAction = false;
+    public $isNewItem = false;
 }
 
 /**
@@ -35,7 +35,7 @@ class TeamActionList extends AbricosModelList {
 
     private $_maxid = 0;
 
-    public $isNewAction = false;
+    public $isNewItem = false;
 
     /**
      * @param TeamActionItem $item
@@ -46,12 +46,12 @@ class TeamActionList extends AbricosModelList {
                 return;
             }
 
-            $item->isNewAction = true;
+            $item->isNewItem = true;
             $item->id = $this->_maxid + 1;
 
             $count = $this->CountInGroup($item->module, $item->group);
             $item->code = 1 << $count;
-            $this->isNewAction = true;
+            $this->isNewItem = true;
         }
 
         $this->_maxid = max($this->_maxid, $item->id);
@@ -82,6 +82,12 @@ class TeamActionList extends AbricosModelList {
         return isset($this->_actionList[$module][$group][$name]);
     }
 
+    /**
+     * @param $module
+     * @param $group
+     * @param $name
+     * @return TeamActionItem
+     */
     public function GetByPath($module, $group, $name){
         if (!isset($this->_actionList[$module][$group][$name])){
             return null;
@@ -102,7 +108,7 @@ class TeamPolicyItem extends AbricosModel {
     protected $_structModule = 'team';
     protected $_structName = 'Policy';
 
-    public $isNewPolicy = false;
+    public $isNewItem = false;
 }
 
 /**
@@ -117,7 +123,7 @@ class TeamPolicyList extends AbricosModelList {
 
     private $_maxid = 0;
 
-    public $isNewPolicy = false;
+    public $isNewItem = false;
 
     /**
      * @param TeamPolicyItem $item
@@ -126,8 +132,8 @@ class TeamPolicyList extends AbricosModelList {
         if ($item->id === 0){
             $item->id = $this->_maxid + 1;
 
-            $item->isNewPolicy = true;
-            $this->isNewPolicy = true;
+            $item->isNewItem = true;
+            $this->isNewItem = true;
         }
 
         $this->_maxid = max($this->_maxid, $item->id);
@@ -141,10 +147,83 @@ class TeamPolicyList extends AbricosModelList {
         return !empty($this->_policyList[$name]);
     }
 
+    /**
+     * @param $name
+     * @return TeamPolicyItem
+     */
     public function GetByName($name){
         return $this->_policyList[$name];
     }
 }
+
+/**
+ * Class TeamRole
+ *
+ * @property int $id Role ID
+ * @property int $policyid
+ * @property string $group
+ * @property int $mask
+ */
+class TeamRole extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'Role';
+
+    public $isNewItem;
+
+    public function AddCode($code){
+        $this->mask |= $code;
+    }
+}
+
+/**
+ * Class TeamRoleList
+ *
+ * @method TeamRole Get(int $id)
+ * @method TeamRole GetByIndex(int $i)
+ */
+class TeamRoleList extends AbricosModelList {
+
+    private $_roles = array();
+
+    private $_maxid = 0;
+
+    public $isNewItem = false;
+
+    /**
+     * @param TeamRole $item
+     */
+    public function Add($item){
+
+        if ($item->id === 0){
+            $item->id = $this->_maxid + 1;
+
+            $item->isNewItem = true;
+            $this->isNewItem = true;
+        }
+
+        $this->_maxid = max($this->_maxid, $item->id);
+
+        parent::Add($item);
+
+        if (!isset($this->_roles[$item->policyid])){
+            $this->_roles[$item->policyid] = array();
+        }
+        $this->_roles[$item->policyid][$item->group] = $item;
+    }
+
+    /**
+     * @param $policyid
+     * @param $group
+     * @return TeamRole
+     */
+    public function GetByPath($policyid, $group){
+        if (!isset($this->_roles[$policyid][$group])){
+            return null;
+        }
+        return $this->_roles[$policyid][$group];
+    }
+}
+
 
 /**
  * Class TeamPlugin
