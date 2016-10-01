@@ -19,6 +19,8 @@ interface ITeamOwnerApp {
 
     public function IsViewRole();
 
+    public function Team_GetDefaultPolicy();
+
     public function Team_OnTeamSave(TeamSave $r);
 
     public function Team_OnTeam(Team $team);

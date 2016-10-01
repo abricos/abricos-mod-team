@@ -37,7 +37,7 @@ class TeamModule extends Ab_Module {
 }
 
 
-class TeamAction {
+class TeamModuleAction {
     const VIEW = 10;
     const WRITE = 20;
     const TEAM_APPEND = 30;
@@ -48,27 +48,27 @@ class TeamPermission extends Ab_UserPermission {
 
     public function __construct(TeamModule $module){
         $defRoles = array(
-            new Ab_UserRole(TeamAction::VIEW, Ab_UserGroup::GUEST),
-            new Ab_UserRole(TeamAction::VIEW, Ab_UserGroup::REGISTERED),
-            new Ab_UserRole(TeamAction::VIEW, Ab_UserGroup::ADMIN),
+            new Ab_UserRole(TeamModuleAction::VIEW, Ab_UserGroup::GUEST),
+            new Ab_UserRole(TeamModuleAction::VIEW, Ab_UserGroup::REGISTERED),
+            new Ab_UserRole(TeamModuleAction::VIEW, Ab_UserGroup::ADMIN),
 
-            new Ab_UserRole(TeamAction::WRITE, Ab_UserGroup::REGISTERED),
-            new Ab_UserRole(TeamAction::WRITE, Ab_UserGroup::ADMIN),
+            new Ab_UserRole(TeamModuleAction::WRITE, Ab_UserGroup::REGISTERED),
+            new Ab_UserRole(TeamModuleAction::WRITE, Ab_UserGroup::ADMIN),
 
-            new Ab_UserRole(TeamAction::TEAM_APPEND, Ab_UserGroup::REGISTERED),
-            new Ab_UserRole(TeamAction::TEAM_APPEND, Ab_UserGroup::ADMIN),
+            new Ab_UserRole(TeamModuleAction::TEAM_APPEND, Ab_UserGroup::REGISTERED),
+            new Ab_UserRole(TeamModuleAction::TEAM_APPEND, Ab_UserGroup::ADMIN),
 
-            new Ab_UserRole(TeamAction::ADMIN, Ab_UserGroup::ADMIN),
+            new Ab_UserRole(TeamModuleAction::ADMIN, Ab_UserGroup::ADMIN),
         );
         parent::__construct($module, $defRoles);
     }
 
     public function GetRoles(){
         return array(
-            TeamAction::VIEW => $this->CheckAction(TeamAction::VIEW),
-            TeamAction::WRITE => $this->CheckAction(TeamAction::WRITE),
-            TeamAction::TEAM_APPEND => $this->CheckAction(TeamAction::TEAM_APPEND),
-            TeamAction::ADMIN => $this->CheckAction(TeamAction::ADMIN)
+            TeamModuleAction::VIEW => $this->CheckAction(TeamModuleAction::VIEW),
+            TeamModuleAction::WRITE => $this->CheckAction(TeamModuleAction::WRITE),
+            TeamModuleAction::TEAM_APPEND => $this->CheckAction(TeamModuleAction::TEAM_APPEND),
+            TeamModuleAction::ADMIN => $this->CheckAction(TeamModuleAction::ADMIN)
         );
     }
 }

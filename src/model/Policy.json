@@ -1,0 +1,23 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "policyid"
+    },
+    "teamid": {
+      "type": "int"
+    },
+    "name": {
+      "type": "string",
+      "dbField": "policyName"
+    },
+    "descript": {
+      "type": "string"
+    },
+    "isSys": {
+      "type": "bool"
+    }
+  }
+}

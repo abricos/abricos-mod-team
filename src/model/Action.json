@@ -1,0 +1,25 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "actionid"
+    },
+    "teamid": {
+      "type": "int"
+    },
+    "module": {
+      "type": "string",
+      "dbField": "ownerModule"
+    },
+    "group": {
+      "type": "string",
+      "dbField": "actionGroup"
+    },
+    "name": {
+      "type": "string",
+      "dbField": "actionName"
+    }
+  }
+}

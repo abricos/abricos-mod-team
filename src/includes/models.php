@@ -8,6 +8,145 @@
  */
 
 /**
+ * Class TeamActionItem
+ *
+ * @property int $id Action ID
+ * @property string $module
+ * @property string $group
+ * @property string $name
+ * @property int $code
+ */
+class TeamActionItem extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'Action';
+
+    public $isNewAction = false;
+}
+
+/**
+ * Class TeamActionList
+ *
+ * @method TeamActionItem Get(int $id)
+ * @method TeamActionItem GetByIndex(int $index)
+ */
+class TeamActionList extends AbricosModelList {
+
+    private $_actionList = array();
+
+    private $_maxid = 0;
+
+    public $isNewAction = false;
+
+    /**
+     * @param TeamActionItem $item
+     */
+    public function Add($item){
+        if ($item->id === 0){
+            if ($this->IsExistsByPath($item->module, $item->group, $item->name)){
+                return;
+            }
+
+            $item->isNewAction = true;
+            $item->id = $this->_maxid + 1;
+
+            $count = $this->CountInGroup($item->module, $item->group);
+            $item->code = 1 << $count;
+            $this->isNewAction = true;
+        }
+
+        $this->_maxid = max($this->_maxid, $item->id);
+
+        parent::Add($item);
+
+        $module = $item->module;
+        $group = $item->group;
+        $name = $item->name;
+
+        if (!isset($this->_actionList[$module])){
+            $this->_actionList[$module] = array();
+        }
+        if (!isset($this->_actionList[$module][$group])){
+            $this->_actionList[$module][$group] = array();
+        }
+        $this->_actionList[$module][$group][$name] = $item;
+    }
+
+    public function CountInGroup($module, $group){
+        if (!isset($this->_actionList[$module][$group])){
+            return 0;
+        }
+        return count($this->_actionList[$module][$group]);
+    }
+
+    public function IsExistsByPath($module, $group, $name){
+        return isset($this->_actionList[$module][$group][$name]);
+    }
+
+    public function GetByPath($module, $group, $name){
+        if (!isset($this->_actionList[$module][$group][$name])){
+            return null;
+        }
+        return $this->_actionList[$module][$group][$name];
+    }
+}
+
+/**
+ * Class TeamPolicyItem
+ *
+ * @property int $teamid
+ * @property string $name
+ * @property string $descript
+ * @property bool $isSys
+ */
+class TeamPolicyItem extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'Policy';
+
+    public $isNewPolicy = false;
+}
+
+/**
+ * Class TeamPolicyList
+ *
+ * @method TeamPolicyItem Get(int $id)
+ * @method TeamPolicyItem GetByIndex(int $index)
+ */
+class TeamPolicyList extends AbricosModelList {
+
+    private $_policyList = array();
+
+    private $_maxid = 0;
+
+    public $isNewPolicy = false;
+
+    /**
+     * @param TeamPolicyItem $item
+     */
+    public function Add($item){
+        if ($item->id === 0){
+            $item->id = $this->_maxid + 1;
+
+            $item->isNewPolicy = true;
+            $this->isNewPolicy = true;
+        }
+
+        $this->_maxid = max($this->_maxid, $item->id);
+
+        parent::Add($item);
+
+        $this->_policyList[$item->name] = $item;
+    }
+
+    public function IsExists($name){
+        return !empty($this->_policyList[$name]);
+    }
+
+    public function GetByName($name){
+        return $this->_policyList[$name];
+    }
+}
+
+/**
  * Class TeamPlugin
  *
  * @property string $id App Module Name

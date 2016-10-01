@@ -13,19 +13,19 @@
 class TeamManager extends Ab_ModuleManager {
 
     public function IsAdminRole(){
-        return $this->IsRoleEnable(TeamAction::ADMIN);
+        return $this->IsRoleEnable(TeamModuleAction::ADMIN);
     }
 
     public function IsTeamAppendRole(){
-        return $this->IsRoleEnable(TeamAction::TEAM_APPEND);
+        return $this->IsRoleEnable(TeamModuleAction::TEAM_APPEND);
     }
 
     public function IsWriteRole(){
-        return $this->IsRoleEnable(TeamAction::WRITE);
+        return $this->IsRoleEnable(TeamModuleAction::WRITE);
     }
 
     public function IsViewRole(){
-        return $this->IsRoleEnable(TeamAction::VIEW);
+        return $this->IsRoleEnable(TeamModuleAction::VIEW);
     }
 
     public function AJAX($d){

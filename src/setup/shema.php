@@ -17,19 +17,19 @@ if ($updateManager->isInstall()){
 
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team (
-			teamid int(10) UNSIGNED NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
-			ownerModule varchar(25) NOT NULL DEFAULT '' COMMENT 'Модуль основатель',
+			teamid INT(10) UNSIGNED NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
+			ownerModule VARCHAR(25) NOT NULL DEFAULT '' COMMENT 'Модуль основатель',
 			
-			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Основатель',
+			userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Основатель',
 			
-			title varchar(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
-			logo varchar(8) NOT NULL DEFAULT '' COMMENT '',
+			title VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
+			logo VARCHAR(8) NOT NULL DEFAULT '' COMMENT '',
 			
-			memberCount int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
+			memberCount INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
 			
-			dateline int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			upddate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
-			deldate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
+			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
+			upddate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
+			deldate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
 
 			PRIMARY KEY (teamid),
 			KEY ownerModule (ownerModule),
@@ -39,17 +39,17 @@ if ($updateManager->isInstall()){
 
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team_member (
-			memberid int(10) UNSIGNED NOT NULL auto_increment,
-			teamid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Сообщество',
-			userid int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
+			memberid INT(10) UNSIGNED NOT NULL auto_increment,
+			teamid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Сообщество',
+			userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
 
 			status ENUM('waiting', 'joined', 'removed') DEFAULT 'joined' COMMENT 'Статус',
 			role ENUM('user', 'editor', 'moderator', 'admin') DEFAULT 'user' COMMENT 'Роль',
 
-			isPrivate tinyint(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Скрывать свое участие не членам группы',
+			isPrivate tinyINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Скрывать свое участие не членам группы',
 			
-			dateline int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			upddate int(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
+			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
+			upddate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
 			
 			PRIMARY KEY (memberid),
 			UNIQUE KEY member (teamid, userid),
@@ -60,17 +60,60 @@ if ($updateManager->isInstall()){
 		)".$charset
     );
 
-    // файлы
     $db->query_write("
-		CREATE TABLE IF NOT EXISTS ".$pfx."team_filebuffer (
-			fileid int(10) UNSIGNED NOT NULL auto_increment,
-			userid int(10) UNSIGNED NOT NULL COMMENT 'Пользователь',
-			filehash varchar(8) NOT NULL COMMENT 'Идентификатор файла',
-			filename varchar(250) NOT NULL COMMENT 'Имя файла',
-			ord int(4) UNSIGNED NOT NULL default '0' COMMENT 'Сортировка',
-			dateline int(10) UNSIGNED NOT NULL default '0' COMMENT 'Дата добавления',
-			PRIMARY KEY (fileid),
-			KEY dateline (dateline)
-		)".$charset
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_policy (
+            policyid INT(10) UNSIGNED NOT NULL auto_increment,
+            teamid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            
+            policyName VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
+            descript TEXT NOT NULL COMMENT '',
+            
+            isSys tinyINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+        
+            PRIMARY KEY (policyid),
+            UNIQUE KEY policy (teamid, policyName),
+            KEY teamid (teamid)
+        )".$charset
     );
+
+    $db->query_write("
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_action (
+            actionid INT(10) UNSIGNED NOT NULL auto_increment,
+            
+            ownerModule VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
+            actionGroup VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
+            actionName VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
+            
+            code INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+        
+            PRIMARY KEY (actionid),
+            UNIQUE KEY pAction (ownerModule, actionGroup, actionName)
+        )".$charset
+    );
+
+    $db->query_write("
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_policyAction (
+            polactid INT(10) UNSIGNED NOT NULL auto_increment,
+            
+            policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            actionid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            mask INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+        
+            PRIMARY KEY (polactid),
+            UNIQUE KEY mempol (policyid, actionid)
+        )".$charset
+    );
+
+    $db->query_write("
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_memberPolicy (
+            mempolid INT(10) UNSIGNED NOT NULL auto_increment,
+            
+            memberid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+        
+            PRIMARY KEY (mempolid),
+            UNIQUE KEY mempol (memberid, policyid)
+        )".$charset
+    );
+
 }

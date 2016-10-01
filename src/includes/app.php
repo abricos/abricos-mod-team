@@ -7,8 +7,9 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
-require_once 'roles.php';
 require_once 'interfaces.php';
+require_once 'policies.php';
+require_once 'classes/policyManager.php';
 
 /**
  * Class TeamApp
@@ -19,6 +20,10 @@ class TeamApp extends AbricosApplication {
 
     protected function GetClasses(){
         return array(
+            "Action" => "TeamActionItem",
+            "ActionList" => "TeamActionList",
+            "Policy" => "TeamPolicyItem",
+            "PolicyList" => "TeamPolicyList",
             "Plugin" => "TeamPlugin",
             "PluginList" => "TeamPluginList",
             "TeamUserRole" => "TeamUserRole",
@@ -35,7 +40,7 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
+        return 'Action,Policy,Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
         ',Member,MemberSave,MemberListFilter';
     }
 
@@ -73,6 +78,42 @@ class TeamApp extends AbricosApplication {
 
     public function IsViewRole(){
         return $this->manager->IsViewRole();
+    }
+
+    /**
+     * @param $teamid
+     * @return string
+     */
+    public function TeamOwnerModule($teamid){
+        if (isset($this->_cache['TeamOwnMod'][$teamid])){
+            return $this->_cache['TeamOwnMod'][$teamid];
+        }
+        if (!isset($this->_cache['TeamOwnMod'])){
+            $this->_cache['TeamOwnMod'] = array();
+        }
+        $moduleName = TeamQuery::TeamOwnerModule($this->db, $teamid);
+        return $this->_cache['TeamOwnMod'][$teamid] = $moduleName;
+    }
+
+    public function IsTeamExists($teamid){
+        $module = $this->TeamOwnerModule($teamid);
+        return !empty($module);
+    }
+
+    public function IsTeamActionItem($teamid, $action){
+        if (!$this->IsTeamExists($teamid)){
+            return false;
+        }
+        if (isset($this->_cache['TPM'][$teamid])){
+            $tpm = $this->_cache['TPM'][$teamid];
+        } else {
+            if (!isset($this->_cache['TPM'])){
+                $this->_cache['TPM'] = array();
+            }
+            $tpm = new TeamPolicyItemManager($teamid);
+            $this->_cache['TPM'][$teamid] = $tpm;
+        }
+        return $tpm->IsAction($action);
     }
 
     private function OwnerAppFunctionExist($module, $fn){
@@ -237,6 +278,8 @@ class TeamApp extends AbricosApplication {
         if (isset($this->_cache['Team'][$teamid])){
             return $this->_cache['Team'][$teamid];
         }
+
+        $this->IsTeamActionItem($teamid, TeamAction::TEAM_VIEW);
 
         $userRole = $this->TeamUserRole($teamid);
 

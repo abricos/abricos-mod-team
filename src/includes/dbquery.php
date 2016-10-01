@@ -12,6 +12,85 @@
  */
 class TeamQuery {
 
+    public static function TeamOwnerModule(Ab_Database $db, $teamid){
+        $sql = "
+			SELECT ownerModule
+            FROM ".$db->prefix."team
+            WHERE teamid=".intval($teamid)."
+            LIMIT 1
+		";
+
+
+        $d = $db->query_first($sql);
+        if (empty($d)){
+            return '';
+        }
+        return $d['ownerModule'];
+    }
+
+    public static function PolicyList(Ab_Database $db, $teamid){
+        $sql = "
+			SELECT *
+            FROM ".$db->prefix."team_policy
+            WHERE teamid=".intval($teamid)." 
+		";
+        return $db->query_read($sql);
+    }
+
+    public static function PolicyAppendByList(Ab_Database $db, TeamPolicyList $list){
+        $insa = array();
+        $count = $list->Count();
+        for ($i = 0; $i < $count; $i++){
+            $item = $list->GetByIndex($i);
+            if (!$item->isNewPolicy){
+                continue;
+            }
+            $insa[] = "(
+                ".intval($item->teamid).",
+                '".bkstr($item->name)."',
+                1
+            )";
+        }
+        $sql = "
+			INSERT INTO ".$db->prefix."team_policy
+            (teamid, policyName, isSys) 
+            VALUES ".implode(',', $insa)."
+		";
+        $db->query_write($sql);
+    }
+
+
+    public static function ActionList(Ab_Database $db){
+        $sql = "
+			SELECT *
+            FROM ".$db->prefix."team_action
+		";
+        return $db->query_read($sql);
+    }
+
+    public static function ActionAppendByList(Ab_Database $db, TeamActionList $list){
+        $insa = array();
+        $count = $list->Count();
+        for ($i = 0; $i < $count; $i++){
+            $item = $list->GetByIndex($i);
+            if (!$item->isNewAction){
+                continue;
+            }
+            $insa[] = "(
+                '".bkstr($item->module)."',
+                '".bkstr($item->group)."',
+                '".bkstr($item->name)."',
+                ".intval($item->code)."
+            )";
+        }
+        $sql = "
+			INSERT INTO ".$db->prefix."team_action
+            (ownerModule, actionGroup, actionName, code) 
+            VALUES ".implode(',', $insa)."
+		";
+        $db->query_write($sql);
+    }
+
     public static function TeamUserRole(Ab_Database $db, $teamid){
         $sql = "
 			SELECT
