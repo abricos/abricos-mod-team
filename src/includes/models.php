@@ -101,6 +101,7 @@ class TeamActionList extends AbricosModelList {
  *
  * @property int $teamid
  * @property string $name
+ * @property string $title
  * @property string $descript
  * @property bool $isSys
  */

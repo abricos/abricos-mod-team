@@ -70,6 +70,10 @@ Component.entryPoint = function(NS){
         },
         ATTRS: {
             isLoadAppStructure: {value: true},
+            Policy: {value: NS.Policy},
+            PolicyList: {value: NS.PolicyList},
+            Action: {value: NS.Action},
+            ActionList: {value: NS.ActionList},
             Plugin: {value: NS.Plugin},
             PluginList: {value: NS.PluginList},
             TeamUserRole: {value: NS.TeamUserRole},
@@ -96,7 +100,7 @@ Component.entryPoint = function(NS){
                     return this.getTeamCache(teamid, 'Team');
                 },
                 onResponse: function(team, data){
-                    this.setTeamCache(team.get('teamid'), 'Team', team);
+                    this.setTeamCache(team.get('id'), 'Team', team);
 
                     return function(callback, context){
                         var ownerModule = team.get('module');
@@ -135,6 +139,40 @@ Component.entryPoint = function(NS){
                         }, this);
                     };
                 }
+            },
+            policies: {
+                args: ['teamid'],
+            },
+            policyList: {
+                args: ['teamid'],
+                type: 'modelList:PolicyList',
+                onResponse: function(policyList){
+                    var i18n = this.language,
+                        ownerI18n;
+
+                    policyList.each(function(policy){
+                        if (!policy.get('isSys')){
+                            return;
+                        }
+                        if (!ownerI18n){
+                            var team = this.getTeamCache(policy.get('teamid'), 'Team');
+                            ownerI18n = Brick.mod[team.get('module')].appInstance.language;
+                        }
+                        var name = policy.get('name'),
+                            title = ownerI18n.get('policies.policy.' + name)
+                                || i18n.get('policies.policy.' + name);
+
+                        if (title){
+                            policy.set('title', title);
+                        } else {
+                            policy.set('title', name);
+                        }
+                    }, this);
+                }
+            },
+            actionList: {
+                args: ['teamid'],
+                type: 'modelList:ActionList',
             },
             memberList: {
                 args: ['filter'],

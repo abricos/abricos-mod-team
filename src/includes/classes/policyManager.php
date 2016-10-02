@@ -156,7 +156,6 @@ class TeamPolicyManager {
         return $this->_cacheRoleList = $list;
     }
 
-
     /**
      * @return TeamPolicyList
      */

@@ -42,7 +42,7 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Action,Policy,Role,Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
+        return 'Policy,Action,Role,Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
         ',Member,MemberSave,MemberListFilter';
     }
 
@@ -62,6 +62,12 @@ class TeamApp extends AbricosApplication {
                 return $this->MemberToJSON($d->teamid, $d->memberid);
             case 'memberList':
                 return $this->MemberListToJSON($d->filter);
+            case 'policies':
+                return $this->PoliciesToJSON($d->teamid);
+            case 'actionList':
+                return $this->ActionListToJSON($d->teamid);
+            case 'policyList':
+                return $this->PolicyListToJSON($d->teamid);
         }
         return null;
     }
@@ -97,6 +103,17 @@ class TeamApp extends AbricosApplication {
         return $this->_cache['TeamOwnMod'][$teamid] = $moduleName;
     }
 
+    private function OwnerAppFunctionExist($module, $fn){
+        $ownerApp = Abricos::GetApp($module);
+        if (empty($ownerApp)){
+            return false;
+        }
+        if (!method_exists($ownerApp, $fn)){
+            return false;
+        }
+        return true;
+    }
+
     public function IsTeamExists($teamid){
         $module = $this->TeamOwnerModule($teamid);
         return !empty($module);
@@ -107,6 +124,9 @@ class TeamApp extends AbricosApplication {
      * @return TeamPolicyManager
      */
     public function TeamPolicyManager($teamid){
+        if (!$this->IsTeamExists($teamid)){
+            return null;
+        }
         if (isset($this->_cache['TPM'][$teamid])){
             $tpm = $this->_cache['TPM'][$teamid];
         } else {
@@ -120,22 +140,42 @@ class TeamApp extends AbricosApplication {
     }
 
     public function IsTeamAction($teamid, $action){
-        if (!$this->IsTeamExists($teamid)){
+        $tpm = $this->TeamPolicyManager($teamid);
+        if (empty($tpm)){
             return false;
         }
-        $tpm = $this->TeamPolicyManager($teamid);
         return $tpm->IsAction($action);
     }
 
-    private function OwnerAppFunctionExist($module, $fn){
-        $ownerApp = Abricos::GetApp($module);
-        if (empty($ownerApp)){
-            return false;
+    public function PoliciesToJSON($teamid){
+        return $this->ImplodeJSON(array(
+           $this->PolicyListToJSON($teamid),
+           $this->ActionListToJSON($teamid)
+        ));
+    }
+
+    public function PolicyListToJSON($teamid){
+        // TODO: check user roles
+
+        $tpm = $this->TeamPolicyManager($teamid);
+        if (empty($tpm)){
+            return AbricosResponse::ERR_NOT_FOUND;
         }
-        if (!method_exists($ownerApp, $fn)){
-            return false;
+
+        $list = $tpm->PolicyList();
+
+        return $this->ResultToJSON('policyList', $list);
+    }
+
+    public function ActionListToJSON($teamid){
+        $tpm = $this->TeamPolicyManager($teamid);
+        if (empty($tpm)){
+            return AbricosResponse::ERR_NOT_FOUND;
         }
-        return true;
+
+        $list = $tpm->ActionList();
+
+        return $this->ResultToJSON('actionList', $list);
     }
 
     public function PluginListToJSON(){

@@ -107,6 +107,23 @@ Component.entryPoint = function(NS){
         appItem: NS.Team,
     });
 
+    NS.Policy = Y.Base.create('policy', SYS.AppModel, [], {
+        structureName: 'Policy',
+    });
+
+    NS.PolicyList = Y.Base.create('policyList', SYS.AppModelList, [], {
+        appItem: NS.Policy,
+    });
+
+    NS.Action = Y.Base.create('action', SYS.AppModel, [], {
+        structureName: 'Action',
+    });
+
+    NS.ActionList = Y.Base.create('actionList', SYS.AppModelList, [], {
+        appItem: NS.Action,
+    });
+
+
     NS.Group = Y.Base.create('group', SYS.AppModel, [], {
         structureName: 'Group',
     }, {

@@ -13,6 +13,9 @@
       "type": "string",
       "dbField": "policyName"
     },
+    "title": {
+      "type": "string"
+    },
     "descript": {
       "type": "string"
     },
