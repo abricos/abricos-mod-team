@@ -2,7 +2,7 @@
 <div class="teamConfig panel panel-default">
     <div class="panel-heading text-center">
         <h3 class="panel-title pull-left">
-            Настройка прав пользователей
+            Настройка
         </h3>
 
         <img data-wait="show" src="/images/loading.gif"/>
@@ -16,9 +16,15 @@
 <!--{menu}-->
 <div class="teamWSMenu">
     <div id="{i#list}" class="list-group">
-        <a data-url="team.config({v#teamid})" href="#"
+        <a data-url="team.config.roles({v#teamid})" href="#"
+           data-menuItem="TeamRolesWidget"
            class="list-group-item active">
             Права пользователей
+        </a>
+        <a data-url="team.config.policies({v#teamid})" href="#"
+           data-menuItem="TeamPoliciesWidget"
+           class="list-group-item">
+            Роли пользователей
         </a>
     </div>
 </div>

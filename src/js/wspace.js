@@ -31,7 +31,7 @@ Component.entryPoint = function(NS){
         buildTData: function(){
             var team = this.get('team');
             return {
-                id: team.get('id'),
+                teamid: team.get('id'),
                 title: team.get('title'),
             }
         }

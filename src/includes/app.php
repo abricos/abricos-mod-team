@@ -102,19 +102,28 @@ class TeamApp extends AbricosApplication {
         return !empty($module);
     }
 
-    public function IsTeamActionItem($teamid, $action){
-        if (!$this->IsTeamExists($teamid)){
-            return false;
-        }
+    /**
+     * @param $teamid
+     * @return TeamPolicyManager
+     */
+    public function TeamPolicyManager($teamid){
         if (isset($this->_cache['TPM'][$teamid])){
             $tpm = $this->_cache['TPM'][$teamid];
         } else {
             if (!isset($this->_cache['TPM'])){
                 $this->_cache['TPM'] = array();
             }
-            $tpm = new TeamPolicyItemManager($teamid);
+            $tpm = new TeamPolicyManager($teamid);
             $this->_cache['TPM'][$teamid] = $tpm;
         }
+        return $tpm;
+    }
+
+    public function IsTeamAction($teamid, $action){
+        if (!$this->IsTeamExists($teamid)){
+            return false;
+        }
+        $tpm = $this->TeamPolicyManager($teamid);
         return $tpm->IsAction($action);
     }
 
@@ -244,7 +253,10 @@ class TeamApp extends AbricosApplication {
                 return $r->SetError(AbricosResponse::ERR_SERVER_ERROR);
             }
 
-            TeamQuery::MemberAppendByNewTeam($this->db, $r);
+            $memberid = TeamQuery::MemberAppendByNewTeam($this->db, $r);
+
+            $tmp = $this->TeamPolicyManager($r->teamid);
+            $tmp->AddMemberToPolicy($memberid, TeamPolicy::ADMIN);
         } else {
             $team = $this->Team($vars->teamid);
             if (AbricosResponse::IsError($team)){
@@ -281,7 +293,7 @@ class TeamApp extends AbricosApplication {
             return $this->_cache['Team'][$teamid];
         }
 
-        $this->IsTeamActionItem($teamid, TeamAction::TEAM_VIEW);
+        $this->IsTeamAction($teamid, TeamAction::TEAM_VIEW);
 
         $userRole = $this->TeamUserRole($teamid);
 

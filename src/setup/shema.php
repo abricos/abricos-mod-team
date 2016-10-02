@@ -105,12 +105,15 @@ if ($updateManager->isInstall()){
     );
 
     $db->query_write("
-        CREATE TABLE IF NOT EXISTS ".$pfx."team_memberRole (
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_memberPolicy (
             mempolid INT(10) UNSIGNED NOT NULL auto_increment,
             
             memberid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
             policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
-        
+
+            authorid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+
             PRIMARY KEY (mempolid),
             UNIQUE KEY mempol (memberid, policyid)
         )".$charset

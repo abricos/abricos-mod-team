@@ -9,11 +9,10 @@ Component.entryPoint = function(NS){
 
     var Y = Brick.YUI,
         COMPONENT = this,
-        SYS = Brick.mod.sys,
-        TEAM = Brick.mod.team;
+        SYS = Brick.mod.sys;
 
     NS.TeamPluginWidget = Y.Base.create('TeamPluginWidget', SYS.AppWidget, [
-        TEAM.PluginWidgetExt
+        NS.PluginWidgetExt
     ], {}, {
         ATTRS: {
             component: {value: COMPONENT},
@@ -22,16 +21,8 @@ Component.entryPoint = function(NS){
     });
 
     NS.TeamWSMenuWidget = Y.Base.create('TeamWSMenuWidget', SYS.AppWidget, [
-        TEAM.PluginWSMenuWidgetExt
-    ], {
-        onInitAppWidget: function(err, appInstance){
-            var tp = this.template,
-                team = this.get('team'),
-                page = this.get('page');
-
-            tp.toggleView(page.module === 'team', 'list');
-        }
-    }, {
+        NS.PluginWSMenuWidgetExt
+    ], {}, {
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'menu'},

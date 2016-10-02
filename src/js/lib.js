@@ -169,15 +169,24 @@ Component.entryPoint = function(NS){
                 ws: function(teamid){
                     return "#app={C#MODNAMEURI}/wspace/item/" + (teamid | 0) + '/';
                 },
-                config: function(teamid){
-                    return this.getURL('team.ws', teamid) + 'team/';
-                },
                 edit: function(teamid, ownerModule){
                     var ret = this.getURL('ws') + 'teamEditor/TeamEditorWidget/' + (teamid | 0) + '/';
                     if (ownerModule){
                         ret += ownerModule + '/';
                     }
                     return ret;
+                },
+                config: {
+                    view: function(teamid){
+                        return this.getURL('team.ws', teamid) + 'team/';
+                    },
+                    policies: function(teamid){
+                        return this.getURL('team.ws', teamid) + 'team/teamPolicies/TeamPoliciesWidget/';
+                    },
+                    roles: function(teamid){
+                        return this.getURL('team.ws', teamid) + 'team/teamRoles/TeamRolesWidget/';
+
+                    },
                 },
             }
         }

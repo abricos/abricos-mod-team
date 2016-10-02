@@ -50,7 +50,7 @@
     <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
             <div class="navbar-header">
-                <a data-url="team.ws({v#id})"
+                <a data-url="team.ws({v#teamid})"
                    class="navbar-brand" href="#">
                     {v#title}
                 </a>
@@ -58,12 +58,12 @@
 
             <ul class="nav navbar-nav pull-right">
                 <li data-wait="show">
-                    <a href="#" data-url="team.ws({v#id})">
+                    <a href="#" data-url="team.ws({v#teamid})">
                         <img src="/images/loading.gif"/>
                     </a>
                 </li>
                 <li data-wait="hide">
-                    <a href="#" data-url="team.config({v#id})">
+                    <a href="#" data-url="team.config.view({v#teamid})">
                         Настройка
                     </a>
                 </li>

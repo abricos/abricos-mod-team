@@ -14,6 +14,9 @@ class TeamAction {
     const TEAM_VIEW = 'team.view';
     const TEAM_UPDATE = 'team.update';
 
+    const ROLE_VIEW = 'role.view';
+    const ROLE_UPDATE = 'role.update';
+
     const MEMBER_APPEND = 'member.append';
     const MEMBER_UPDATE = 'member.update';
     const MEMBER_VIEW = 'member.view';
@@ -33,6 +36,9 @@ class TeamPolicy {
             TeamPolicy::ADMIN => array(
                 TeamAction::TEAM_VIEW,
                 TeamAction::TEAM_UPDATE,
+
+                TeamAction::ROLE_VIEW,
+                TeamAction::ROLE_UPDATE,
 
                 TeamAction::MEMBER_APPEND,
                 TeamAction::MEMBER_VIEW,

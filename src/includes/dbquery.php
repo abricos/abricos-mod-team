@@ -213,6 +213,20 @@ class TeamQuery {
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
 
+    public static function MemberAddPolicy(Ab_Database $db, $memberid, $policyid){
+        $sql = "
+			INSERT INTO ".$db->prefix."team_memberPolicy
+				(memberid, policyid, authorid, dateline) VALUES (
+				".bkint($memberid).",
+				".bkint($policyid).",
+				".bkint(Abricos::$user->id).",
+				".TIMENOW."
+			)
+		";
+        $db->query_write($sql);
+        return $db->insert_id();
+    }
+
     public static function MemberAppendByNewTeam(Ab_Database $db, TeamSave $r){
         $sql = "
 			INSERT INTO ".$db->prefix."team_member

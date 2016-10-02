@@ -8,13 +8,14 @@
  */
 
 /**
- * Class TeamPolicyItemManager
+ * Class TeamPolicyManager
  */
-class TeamPolicyItemManager {
+class TeamPolicyManager {
 
     private static $_cacheActionList = null;
 
     private $_cachePolicyList = null;
+    private $_cacheRoleList = null;
 
     /**
      * @var TeamApp
@@ -36,6 +37,14 @@ class TeamPolicyItemManager {
         if (count($a) !== 2){
             return false;
         }
+    }
+
+    public function AddMemberToPolicy($memberid, $policyName){
+        $policy = $this->PolicyList()->GetByName($policyName);
+        if (empty($policy)){
+            return;
+        }
+        TeamQuery::MemberAddPolicy($this->app->db, $memberid, $policy->id);
     }
 
     private function CheckTeamPolicies($defPolicies){
@@ -81,7 +90,7 @@ class TeamPolicyItemManager {
         }
         if ($actionList->isNewItem){
             TeamQuery::ActionAppendByList($this->app->db, $actionList);
-            TeamPolicyItemManager::$_cacheActionList = null;
+            TeamPolicyManager::$_cacheActionList = null;
         }
 
         return $policyList->isNewItem || $actionList->isNewItem;
@@ -126,6 +135,7 @@ class TeamPolicyItemManager {
         }
         if ($roleList->isNewItem){
             TeamQuery::RoleAppendByList($this->app->db, $roleList);
+            $this->_cacheRoleList = null;
         }
     }
 
@@ -133,13 +143,17 @@ class TeamPolicyItemManager {
      * @return TeamRoleList
      */
     public function RoleList(){
+        if (!empty($this->_cacheRoleList)){
+            return $this->_cacheRoleList;
+        }
+
         /** @var TeamRoleList $list */
         $list = $this->app->InstanceClass('RoleList');
         $rows = TeamQuery::RoleList($this->app->db, $this->teamid);
         while (($d = $this->app->db->fetch_array($rows))){
             $list->Add($this->app->InstanceClass('Role', $d));
         }
-        return $list;
+        return $this->_cacheRoleList = $list;
     }
 
 
@@ -164,8 +178,8 @@ class TeamPolicyItemManager {
      * @return TeamActionList
      */
     public function ActionList(){
-        if (!empty(TeamPolicyItemManager::$_cacheActionList)){
-            return TeamPolicyItemManager::$_cacheActionList;
+        if (!empty(TeamPolicyManager::$_cacheActionList)){
+            return TeamPolicyManager::$_cacheActionList;
         }
         /** @var TeamActionList $list */
         $list = $this->app->InstanceClass('ActionList');
@@ -173,6 +187,6 @@ class TeamPolicyItemManager {
         while (($d = $this->app->db->fetch_array($rows))){
             $list->Add($this->app->InstanceClass('Action', $d));
         }
-        return TeamPolicyItemManager::$_cacheActionList = $list;
+        return TeamPolicyManager::$_cacheActionList = $list;
     }
 }
