@@ -25,15 +25,26 @@ Component.entryPoint = function(NS){
                 this.set('waiting', false);
                 this.set('policyList', result.policyList);
                 this.set('actionList', result.actionList);
+                this.set('roleList', result.roleList);
                 this.renderPolicyList();
             }, this);
+        },
+        _isSetAction: function(policyid, action){
+            var mask = 0;
+            this.get('roleList').some(function(role){
+                if (role.get('policyid') === policyid
+                    && action.get('group') === role.get('group')){
+                    mask = role.get('mask');
+                    return true;
+                }
+            }, this);
+            return mask & action.get('code');
         },
         renderPolicyList: function(){
             var tp = this.template,
                 ownerApp = this.get('ownerApp'),
                 lst = "",
                 activePolicyId = this.get('activePolicyId');
-
 
 
             this.get('policyList').each(function(policy){
@@ -55,7 +66,8 @@ Component.entryPoint = function(NS){
             this.get('actionList').each(function(action){
                 lstAction += tp.replace('actionRow', {
                     id: action.get('id'),
-                    title: action.get('group') + '.' + action.get('name')
+                    title: action.get('title'),
+                    checked: this._isSetAction(activePolicyId, action) ? 'checked' : ''
                 });
             }, this);
 
@@ -86,6 +98,7 @@ Component.entryPoint = function(NS){
             activePolicyId: {value: 0},
             policyList: {},
             actionList: {},
+            roleList: {},
         }
     });
 };

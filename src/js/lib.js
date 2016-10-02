@@ -74,6 +74,8 @@ Component.entryPoint = function(NS){
             PolicyList: {value: NS.PolicyList},
             Action: {value: NS.Action},
             ActionList: {value: NS.ActionList},
+            Role: {value: NS.Role},
+            RoleList: {value: NS.RoleList},
             Plugin: {value: NS.Plugin},
             PluginList: {value: NS.PluginList},
             TeamUserRole: {value: NS.TeamUserRole},
@@ -159,20 +161,33 @@ Component.entryPoint = function(NS){
                             ownerI18n = Brick.mod[team.get('module')].appInstance.language;
                         }
                         var name = policy.get('name'),
-                            title = ownerI18n.get('policies.policy.' + name)
-                                || i18n.get('policies.policy.' + name);
+                            key = 'policies.policy.' + name,
+                            title = ownerI18n.get(key) || i18n.get(key);
 
-                        if (title){
-                            policy.set('title', title);
-                        } else {
-                            policy.set('title', name);
-                        }
+                        policy.set('title', title ? title : name);
                     }, this);
                 }
             },
             actionList: {
                 args: ['teamid'],
                 type: 'modelList:ActionList',
+                onResponse: function(actionList){
+                    var i18n = this.language;
+
+                    actionList.each(function(action){
+                        var ownerApp = Brick.mod[action.get('module')],
+                            ownerI18n = ownerApp.appInstance.language,
+                            name = action.get('group') + '.' + action.get('name'),
+                            key = 'policies.action.item.' + name,
+                            title = ownerI18n.get(key) || i18n.get(key);
+
+                        action.set('title', title ? title : name);
+                    }, this);
+                }
+            },
+            roleList: {
+                args: ['teamid'],
+                type: 'modelList:RoleList',
             },
             memberList: {
                 args: ['filter'],

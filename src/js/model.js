@@ -117,12 +117,23 @@ Component.entryPoint = function(NS){
 
     NS.Action = Y.Base.create('action', SYS.AppModel, [], {
         structureName: 'Action',
+    }, {
+        ATTRS: {
+            title: {value: ''}
+        }
     });
 
     NS.ActionList = Y.Base.create('actionList', SYS.AppModelList, [], {
         appItem: NS.Action,
     });
 
+    NS.Role = Y.Base.create('role', SYS.AppModel, [], {
+        structureName: 'Role',
+    });
+
+    NS.RoleList = Y.Base.create('roleList', SYS.AppModelList, [], {
+        appItem: NS.Role,
+    });
 
     NS.Group = Y.Base.create('group', SYS.AppModel, [], {
         structureName: 'Group',

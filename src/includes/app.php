@@ -68,6 +68,8 @@ class TeamApp extends AbricosApplication {
                 return $this->ActionListToJSON($d->teamid);
             case 'policyList':
                 return $this->PolicyListToJSON($d->teamid);
+            case 'roleList':
+                return $this->RoleListToJSON($d->teamid);
         }
         return null;
     }
@@ -148,9 +150,11 @@ class TeamApp extends AbricosApplication {
     }
 
     public function PoliciesToJSON($teamid){
+        // TODO: check user roles
         return $this->ImplodeJSON(array(
            $this->PolicyListToJSON($teamid),
-           $this->ActionListToJSON($teamid)
+           $this->ActionListToJSON($teamid),
+           $this->RoleListToJSON($teamid)
         ));
     }
 
@@ -168,6 +172,7 @@ class TeamApp extends AbricosApplication {
     }
 
     public function ActionListToJSON($teamid){
+        // TODO: check user roles
         $tpm = $this->TeamPolicyManager($teamid);
         if (empty($tpm)){
             return AbricosResponse::ERR_NOT_FOUND;
@@ -176,6 +181,18 @@ class TeamApp extends AbricosApplication {
         $list = $tpm->ActionList();
 
         return $this->ResultToJSON('actionList', $list);
+    }
+
+    public function RoleListToJSON($teamid){
+        // TODO: check user roles
+        $tpm = $this->TeamPolicyManager($teamid);
+        if (empty($tpm)){
+            return AbricosResponse::ERR_NOT_FOUND;
+        }
+
+        $list = $tpm->RoleList();
+
+        return $this->ResultToJSON('roleList', $list);
     }
 
     public function PluginListToJSON(){

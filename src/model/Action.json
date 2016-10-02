@@ -6,9 +6,6 @@
       "type": "int",
       "dbField": "actionid"
     },
-    "teamid": {
-      "type": "int"
-    },
     "module": {
       "type": "string",
       "dbField": "ownerModule"
