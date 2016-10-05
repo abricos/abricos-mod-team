@@ -81,8 +81,8 @@ Component.entryPoint = function(NS){
         }
     };
 
-    NS.TeamUserRole = Y.Base.create('teamUserRole', SYS.AppModel, [], {
-        structureName: 'TeamUserRole',
+    NS.TeamMemberRole = Y.Base.create('teamUserRole', SYS.AppModel, [], {
+        structureName: 'TeamMemberRole',
         isJoined: function(){
             return this.get('status') === 'joined';
         },

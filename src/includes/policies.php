@@ -27,6 +27,10 @@ class TeamAction {
 class TeamPolicy {
     const ADMIN = 'admin';
     const MEMBER = 'member';
+    /**
+     * Ожидающие вступления в участники
+     */
+    const WAITING = 'waiting';
     const GUEST = 'guest';
     const BANNED = 'banned';
 

@@ -78,7 +78,7 @@ Component.entryPoint = function(NS){
             RoleList: {value: NS.RoleList},
             Plugin: {value: NS.Plugin},
             PluginList: {value: NS.PluginList},
-            TeamUserRole: {value: NS.TeamUserRole},
+            TeamMemberRole: {value: NS.TeamMemberRole},
             Team: {value: NS.Team},
             TeamList: {value: NS.TeamList},
             TeamListFilter: {value: NS.TeamListFilter},

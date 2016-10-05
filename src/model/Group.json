@@ -22,7 +22,7 @@
       "type": "string"
     },
     "userRole": {
-      "type": "model:TeamUserRole"
+      "type": "model:TeamMemberRole"
     }
   }
 }

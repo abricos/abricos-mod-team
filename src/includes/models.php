@@ -254,7 +254,7 @@ class TeamPluginList extends AbricosModelList {
 }
 
 /**
- * Class TeamUserRole
+ * Class TeamMemberRole
  *
  * @property TeamPlugin $app
  * @property int $id Team ID
@@ -264,9 +264,9 @@ class TeamPluginList extends AbricosModelList {
  * @property string $role
  * @property bool $isPrivate
  */
-class TeamUserRole extends AbricosModel {
+class TeamMemberRole extends AbricosModel {
     protected $_structModule = 'team';
-    protected $_structName = 'TeamUserRole';
+    protected $_structName = 'TeamMemberRole';
 
     public function TeamIsExist(){
         return $this->id > 0;
@@ -302,12 +302,12 @@ class TeamUserRole extends AbricosModel {
 }
 
 /**
- * Class TeamUserRoleList
+ * Class TeamMemberRoleList
  *
- * @method TeamUserRole Get($teamid)
- * @method TeamUserRole GetByIndex($i)
+ * @method TeamMemberRole Get($teamid)
+ * @method TeamMemberRole GetByIndex($i)
  */
-class TeamUserRoleList extends AbricosModelList {
+class TeamMemberRoleList extends AbricosModelList {
 }
 
 /**
@@ -346,7 +346,7 @@ class TeamSave extends AbricosResponse {
  * @property string $logo
  * @property string $visibility
  * @property int $memberCount
- * @property TeamUserRole $userRole
+ * @property TeamMemberRole $userRole
  */
 class Team extends AbricosModel {
     protected $_structModule = 'team';

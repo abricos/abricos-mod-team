@@ -28,8 +28,8 @@ class TeamApp extends AbricosApplication {
             "RoleList" => "TeamRoleList",
             "Plugin" => "TeamPlugin",
             "PluginList" => "TeamPluginList",
-            "TeamUserRole" => "TeamUserRole",
-            "TeamUserRoleList" => "TeamUserRoleList",
+            "TeamMemberRole" => "TeamMemberRole",
+            "TeamMemberRoleList" => "TeamMemberRoleList",
             "Team" => "Team",
             "TeamList" => "TeamList",
             "TeamListFilter" => "TeamListFilter",
@@ -42,7 +42,7 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Policy,Action,Role,Plugin,TeamUserRole,Team,TeamSave,TeamListFilter'.
+        return 'Policy,Action,Role,Plugin,TeamMemberRole,Team,TeamSave,TeamListFilter'.
         ',Member,MemberSave,MemberListFilter';
     }
 
@@ -243,34 +243,34 @@ class TeamApp extends AbricosApplication {
 
     /**
      * @param int $teamid
-     * @return TeamUserRole
+     * @return TeamMemberRole
      */
-    public function TeamUserRole($teamid){
-        if (isset($this->_cache['TeamUserRole'][$teamid])){
-            return $this->_cache['TeamUserRole'][$teamid];
+    public function TeamMemberRole($teamid){
+        if (isset($this->_cache['TeamMemberRole'][$teamid])){
+            return $this->_cache['TeamMemberRole'][$teamid];
         }
-        if (!isset($this->_cache['TeamUserRole'])){
-            $this->_cache['TeamUserRole'] = array();
+        if (!isset($this->_cache['TeamMemberRole'])){
+            $this->_cache['TeamMemberRole'] = array();
         }
 
-        $d = TeamQuery::TeamUserRole($this->db, $teamid);
-        /** @var TeamUserRole $userRole */
-        $userRole = $this->InstanceClass('TeamUserRole', $d);
+        $d = TeamQuery::TeamMemberRole($this->db, $teamid);
+        /** @var TeamMemberRole $userRole */
+        $userRole = $this->InstanceClass('TeamMemberRole', $d);
 
-        return $this->_cache['TeamUserRole'][$teamid] = $userRole;
+        return $this->_cache['TeamMemberRole'][$teamid] = $userRole;
     }
 
     /**
      * @param $teamids
-     * @return TeamUserRoleList
+     * @return TeamMemberRoleList
      */
-    public function TeamUserRoleList($teamids){
-        /** @var TeamUserRoleList $list */
-        $list = $this->InstanceClass('TeamUserRoleList');
+    public function TeamMemberRoleList($teamids){
+        /** @var TeamMemberRoleList $list */
+        $list = $this->InstanceClass('TeamMemberRoleList');
 
-        $rows = TeamQuery::TeamUserRole($this->db, $teamids);
+        $rows = TeamQuery::TeamMemberRole($this->db, $teamids);
         while (($d = $this->db->fetch_array($rows))){
-            $list->Add($this->InstanceClass('TeamUserRole', $d));
+            $list->Add($this->InstanceClass('TeamMemberRole', $d));
         }
         return $list;
     }
@@ -313,7 +313,7 @@ class TeamApp extends AbricosApplication {
             $memberid = TeamQuery::MemberAppendByNewTeam($this->db, $r);
 
             $tpm = $this->TeamPolicyManager($r->teamid);
-            $tpm->AddMemberToPolicy($memberid, TeamPolicy::ADMIN);
+            $tpm->UserAddToPolicy(Abricos::$user->id, TeamPolicy::ADMIN);
         } else {
             $team = $this->Team($vars->teamid);
             if (AbricosResponse::IsError($team)){
@@ -352,7 +352,7 @@ class TeamApp extends AbricosApplication {
 
         $this->IsTeamAction($teamid, TeamAction::TEAM_VIEW);
 
-        $userRole = $this->TeamUserRole($teamid);
+        $userRole = $this->TeamMemberRole($teamid);
 
         if (!$userRole->TeamIsExist()){
             return AbricosResponse::ERR_NOT_FOUND;
@@ -399,7 +399,7 @@ class TeamApp extends AbricosApplication {
             $r->items->Add($this->InstanceClass('Team', $d));
         }
 
-        $userRoleList = $this->TeamUserRoleList($r->items->ToArray('id'));
+        $userRoleList = $this->TeamMemberRoleList($r->items->ToArray('id'));
 
         $count = $userRoleList->Count();
         for ($i = 0; $i < $count; $i++){
@@ -427,7 +427,7 @@ class TeamApp extends AbricosApplication {
         }
 
         $vars = $ret->vars;
-        $userRole = $this->TeamUserRole($vars->teamid);
+        $userRole = $this->TeamMemberRole($vars->teamid);
 
         if (!$userRole->IsAdmin()){
             return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
@@ -485,7 +485,7 @@ class TeamApp extends AbricosApplication {
     }
 
     public function Member($teamid, $memberid){
-        $userRole = $this->TeamUserRole($teamid);
+        $userRole = $this->TeamMemberRole($teamid);
         if (!$userRole->TeamIsExist()){
             return AbricosResponse::ERR_NOT_FOUND;
         }
@@ -567,7 +567,7 @@ class TeamApp extends AbricosApplication {
      */
     public function Invite_IsUserSearch($rUSVars){
         $owner = $rUSVars->owner;
-        $userRole = $this->TeamUserRole($owner->ownerid);
+        $userRole = $this->TeamMemberRole($owner->ownerid);
         return $userRole->IsAdmin();
     }
 

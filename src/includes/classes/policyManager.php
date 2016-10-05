@@ -39,12 +39,12 @@ class TeamPolicyManager {
         }
     }
 
-    public function AddMemberToPolicy($memberid, $policyName){
+    public function UserAddToPolicy($userid, $policyName){
         $policy = $this->PolicyList()->GetByName($policyName);
         if (empty($policy)){
             return;
         }
-        TeamQuery::MemberAddPolicy($this->app->db, $memberid, $policy->id);
+        TeamQuery::UserPolicyAppend($this->app->db, $userid, $policy);
     }
 
     /**
@@ -157,11 +157,14 @@ class TeamPolicyManager {
         }
 
         TeamQuery::ActionAppendByList($this->app->db, $actionList);
-        TeamPolicyManager::$_cacheActionList = null;
 
         if ($roleList->isNewItem){
             TeamQuery::RoleAppendByList($this->app->db, $roleList);
         }
+
+        TeamPolicyManager::$_cacheActionList = null;
+        $this->_cacheRoleList = null;
+
     }
 
     private function GetDefaultPolicies(){
