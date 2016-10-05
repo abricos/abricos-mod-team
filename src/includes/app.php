@@ -26,6 +26,8 @@ class TeamApp extends AbricosApplication {
             "PolicyList" => "TeamPolicyList",
             "Role" => "TeamRole",
             "RoleList" => "TeamRoleList",
+            "UserPolicy" => "TeamUserPolicy",
+            "UserPolicyList" => "TeamUserPolicyList",
             "Plugin" => "TeamPlugin",
             "PluginList" => "TeamPluginList",
             "TeamMemberRole" => "TeamMemberRole",
@@ -143,7 +145,7 @@ class TeamApp extends AbricosApplication {
 
     public function IsTeamAction($teamid, $action){
         $tpm = $this->TeamPolicyManager($teamid);
-        if (empty($tpm)){
+        if (empty($tpm) || !$tpm->IsAction(TeamAction::TEAM_VIEW)){
             return false;
         }
         return $tpm->IsAction($action);

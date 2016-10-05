@@ -215,6 +215,15 @@ class TeamQuery {
         return $db->insert_id();
     }
 
+    public static function UserPolicyList(Ab_Database $db, $teamid, $userid){
+        $sql = "
+			SELECT p.*
+            FROM ".$db->prefix."team_userPolicy p
+            WHERE p.teamid=".intval($teamid)."
+                AND p.userid=".intval($userid)."
+		";
+        return $db->query_read($sql);
+    }
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
 
@@ -252,20 +261,6 @@ class TeamQuery {
             ";
             return $db->query_first($sql);
         }
-    }
-
-    public static function MemberAddPolicy(Ab_Database $db, $memberid, $policyid){
-        $sql = "
-			INSERT INTO ".$db->prefix."team_memberPolicy
-				(memberid, policyid, authorid, dateline) VALUES (
-				".bkint($memberid).",
-				".bkint($policyid).",
-				".bkint(Abricos::$user->id).",
-				".TIMENOW."
-			)
-		";
-        $db->query_write($sql);
-        return $db->insert_id();
     }
 
     public static function MemberAppendByNewTeam(Ab_Database $db, TeamSave $r){

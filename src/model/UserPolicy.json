@@ -1,0 +1,19 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "userpolid"
+    },
+    "teamid": {
+      "type": "int"
+    },
+    "userid": {
+      "type": "int"
+    },
+    "policyid": {
+      "type": "int"
+    }
+  }
+}

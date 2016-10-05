@@ -175,6 +175,10 @@ class TeamRole extends AbricosModel {
     public function AddCode($code){
         $this->mask |= $code;
     }
+
+    public function IsSetCode($code){
+        return $this->mask & $code;
+    }
 }
 
 /**
@@ -231,6 +235,26 @@ class TeamRoleList extends AbricosModelList {
     }
 }
 
+/**
+ * Class TeamUserPolicy
+ *
+ * @property int $userid
+ * @property int $policyid
+ */
+class TeamUserPolicy extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'UserPolicy';
+}
+
+/**
+ * Class TeamUserPolicyList
+ *
+ * @method TeamUserPolicy Get(int $id)
+ * @method TeamUserPolicy GetByIndex(int $i)
+ */
+class TeamUserPolicyList extends AbricosModelList {
+}
+
 
 /**
  * Class TeamPlugin
@@ -245,9 +269,9 @@ class TeamPlugin extends AbricosModel {
 }
 
 /**
- * Class TeamList
+ * Class TeamPluginList
  *
- * @method TeamPlugin Get(int $name)
+ * @method TeamPlugin Get(string $name)
  * @method TeamPlugin GetByIndex(int $i)
  */
 class TeamPluginList extends AbricosModelList {
