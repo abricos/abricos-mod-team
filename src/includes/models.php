@@ -153,7 +153,7 @@ class TeamPolicyList extends AbricosModelList {
      * @return TeamPolicyItem
      */
     public function GetByName($name){
-        return $this->_policyList[$name];
+        return isset($this->_policyList[$name]) ? $this->_policyList[$name] : null;
     }
 }
 

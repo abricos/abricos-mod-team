@@ -39,6 +39,111 @@ class TeamPolicyManager {
         $this->CheckTeamPolicies($defPolicies);
     }
 
+    public function ResponseToJSON($d){
+        if (!$this->IsAction(TeamAction::ROLE_UPDATE)){
+            return AbricosResponse::ERR_FORBIDDEN;
+        }
+
+        switch ($d->do){
+            case 'policies':
+                return $this->PoliciesToJSON();
+            case 'actionList':
+                return $this->ActionListToJSON();
+            case 'policyList':
+                return $this->PolicyListToJSON();
+            case 'roleList':
+                return $this->RoleListToJSON();
+        }
+        return null;
+    }
+
+    private function PoliciesToJSON(){
+        return $this->app->ImplodeJSON(array(
+            $this->PolicyListToJSON(),
+            $this->ActionListToJSON(),
+            $this->RoleListToJSON()
+        ));
+    }
+
+    private function RoleListToJSON(){
+        $list = $this->RoleList();
+        return $this->app->ResultToJSON('roleList', $list);
+    }
+
+    /**
+     * @return TeamRoleList
+     */
+    public function RoleList(){
+        if (!empty($this->_cacheRoleList)){
+            return $this->_cacheRoleList;
+        }
+
+        /** @var TeamRoleList $list */
+        $list = $this->app->InstanceClass('RoleList');
+        $rows = TeamQuery::RoleList($this->app->db, $this->teamid);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('Role', $d));
+        }
+        return $this->_cacheRoleList = $list;
+    }
+
+    private function PolicyListToJSON(){
+        $list = $this->PolicyList();
+        return $this->app->ResultToJSON('policyList', $list);
+    }
+
+    /**
+     * @return TeamPolicyList
+     */
+    public function PolicyList(){
+        if (!empty($this->_cachePolicyList)){
+            return $this->_cachePolicyList;
+        }
+
+        /** @var TeamPolicyList $list */
+        $list = $this->app->InstanceClass('PolicyList');
+        $rows = TeamQuery::PolicyList($this->app->db, $this->teamid);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('Policy', $d));
+        }
+        return $this->_cachePolicyList = $list;
+    }
+
+    private function ActionListToJSON(){
+        $list = $this->ActionList();
+        return $this->app->ResultToJSON('actionList', $list);
+    }
+
+    /**
+     * @return TeamActionList
+     */
+    public function ActionList(){
+        if (!empty(TeamPolicyManager::$_cacheActionList)){
+            return TeamPolicyManager::$_cacheActionList;
+        }
+        /** @var TeamActionList $list */
+        $list = $this->app->InstanceClass('ActionList');
+        $rows = TeamQuery::ActionList($this->app->db);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('Action', $d));
+        }
+        return TeamPolicyManager::$_cacheActionList = $list;
+    }
+
+    public function UserPolicyList(){
+        if (!empty($this->_cacheUserPolicyList)){
+            return $this->_cacheUserPolicyList;
+        }
+        /** @var TeamUserPolicyList $list */
+        $list = $this->app->InstanceClass('UserPolicyList');
+        $rows = TeamQuery::UserPolicyList($this->app->db, $this->teamid, Abricos::$user->id);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('UserPolicy', $d));
+        }
+        return $this->_cacheUserPolicyList = $list;
+    }
+
+
     public function IsAction($action){
         $a = explode(".", $action);
         if (count($a) !== 2){
@@ -192,68 +297,4 @@ class TeamPolicyManager {
         $this->_cacheRoleList = null;
 
     }
-
-    /**
-     * @return TeamRoleList
-     */
-    public function RoleList(){
-        if (!empty($this->_cacheRoleList)){
-            return $this->_cacheRoleList;
-        }
-
-        /** @var TeamRoleList $list */
-        $list = $this->app->InstanceClass('RoleList');
-        $rows = TeamQuery::RoleList($this->app->db, $this->teamid);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('Role', $d));
-        }
-        return $this->_cacheRoleList = $list;
-    }
-
-    /**
-     * @return TeamPolicyList
-     */
-    public function PolicyList(){
-        if (!empty($this->_cachePolicyList)){
-            return $this->_cachePolicyList;
-        }
-
-        /** @var TeamPolicyList $list */
-        $list = $this->app->InstanceClass('PolicyList');
-        $rows = TeamQuery::PolicyList($this->app->db, $this->teamid);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('Policy', $d));
-        }
-        return $this->_cachePolicyList = $list;
-    }
-
-    /**
-     * @return TeamActionList
-     */
-    public function ActionList(){
-        if (!empty(TeamPolicyManager::$_cacheActionList)){
-            return TeamPolicyManager::$_cacheActionList;
-        }
-        /** @var TeamActionList $list */
-        $list = $this->app->InstanceClass('ActionList');
-        $rows = TeamQuery::ActionList($this->app->db);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('Action', $d));
-        }
-        return TeamPolicyManager::$_cacheActionList = $list;
-    }
-
-    public function UserPolicyList(){
-        if (!empty($this->_cacheUserPolicyList)){
-            return $this->_cacheUserPolicyList;
-        }
-        /** @var TeamUserPolicyList $list */
-        $list = $this->app->InstanceClass('UserPolicyList');
-        $rows = TeamQuery::UserPolicyList($this->app->db, $this->teamid, Abricos::$user->id);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('UserPolicy', $d));
-        }
-        return $this->_cacheUserPolicyList = $list;
-    }
-
 }

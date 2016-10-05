@@ -51,6 +51,7 @@ class TeamPolicy {
 
                 TeamAction::MEMBER_VIEW,
             ),
+            TeamPolicy::WAITING => array(),
             TeamPolicy::GUEST => array(),
         );
     }

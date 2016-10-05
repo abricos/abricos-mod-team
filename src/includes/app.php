@@ -64,14 +64,16 @@ class TeamApp extends AbricosApplication {
                 return $this->MemberToJSON($d->teamid, $d->memberid);
             case 'memberList':
                 return $this->MemberListToJSON($d->filter);
+
             case 'policies':
-                return $this->PoliciesToJSON($d->teamid);
             case 'actionList':
-                return $this->ActionListToJSON($d->teamid);
             case 'policyList':
-                return $this->PolicyListToJSON($d->teamid);
             case 'roleList':
-                return $this->RoleListToJSON($d->teamid);
+                $pm = $this->PolicyManager($d->teamid);
+                if (empty($pm)){
+                    return AbricosResponse::ERR_NOT_FOUND;
+                }
+                return $pm->ResponseToJSON($d);
         }
         return null;
     }
@@ -127,7 +129,7 @@ class TeamApp extends AbricosApplication {
      * @param $teamid
      * @return TeamPolicyManager
      */
-    public function TeamPolicyManager($teamid){
+    public function PolicyManager($teamid){
         if (!$this->IsTeamExists($teamid)){
             return null;
         }
@@ -144,57 +146,11 @@ class TeamApp extends AbricosApplication {
     }
 
     public function IsTeamAction($teamid, $action){
-        $tpm = $this->TeamPolicyManager($teamid);
+        $tpm = $this->PolicyManager($teamid);
         if (empty($tpm) || !$tpm->IsAction(TeamAction::TEAM_VIEW)){
             return false;
         }
         return $tpm->IsAction($action);
-    }
-
-    public function PoliciesToJSON($teamid){
-        // TODO: check user roles
-        return $this->ImplodeJSON(array(
-           $this->PolicyListToJSON($teamid),
-           $this->ActionListToJSON($teamid),
-           $this->RoleListToJSON($teamid)
-        ));
-    }
-
-    public function PolicyListToJSON($teamid){
-        // TODO: check user roles
-
-        $tpm = $this->TeamPolicyManager($teamid);
-        if (empty($tpm)){
-            return AbricosResponse::ERR_NOT_FOUND;
-        }
-
-        $list = $tpm->PolicyList();
-
-        return $this->ResultToJSON('policyList', $list);
-    }
-
-    public function ActionListToJSON($teamid){
-        // TODO: check user roles
-        $tpm = $this->TeamPolicyManager($teamid);
-        if (empty($tpm)){
-            return AbricosResponse::ERR_NOT_FOUND;
-        }
-
-        $list = $tpm->ActionList();
-
-        return $this->ResultToJSON('actionList', $list);
-    }
-
-    public function RoleListToJSON($teamid){
-        // TODO: check user roles
-        $tpm = $this->TeamPolicyManager($teamid);
-        if (empty($tpm)){
-            return AbricosResponse::ERR_NOT_FOUND;
-        }
-
-        $list = $tpm->RoleList();
-
-        return $this->ResultToJSON('roleList', $list);
     }
 
     public function PluginListToJSON(){
@@ -314,7 +270,7 @@ class TeamApp extends AbricosApplication {
 
             $memberid = TeamQuery::MemberAppendByNewTeam($this->db, $r);
 
-            $tpm = $this->TeamPolicyManager($r->teamid);
+            $tpm = $this->PolicyManager($r->teamid);
             $tpm->UserAddToPolicy(Abricos::$user->id, TeamPolicy::ADMIN);
         } else {
             $team = $this->Team($vars->teamid);
@@ -461,6 +417,8 @@ class TeamApp extends AbricosApplication {
 
                 $ret->userid = $rCreate->userid;
                 $ret->memberid = TeamQuery::MemberInviteNewUser($this->db, $ret);
+
+                $this->PolicyManager($ret->teamid)->UserAddToPolicy($ret->userid, TeamPolicy::WAITING);
 
                 $ownerApp->Team_OnMemberInvite($ret, $rCreate);
             } else {
