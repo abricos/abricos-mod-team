@@ -1,0 +1,25 @@
+{
+  "version": "0.1.0",
+  "type": "model",
+  "fields": {
+    "id": {
+      "type": "int",
+      "dbField": "userroleid"
+    },
+    "teamid": {
+      "type": "int"
+    },
+    "userid": {
+      "type": "int"
+    },
+    "module": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string"
+    },
+    "mask": {
+      "type": "int"
+    }
+  }
+}

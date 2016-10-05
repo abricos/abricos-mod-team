@@ -28,6 +28,8 @@ class TeamApp extends AbricosApplication {
             "RoleList" => "TeamRoleList",
             "UserPolicy" => "TeamUserPolicy",
             "UserPolicyList" => "TeamUserPolicyList",
+            "UserRole" => "TeamUserRole",
+            "UserRoleList" => "TeamUserRoleList",
             "Plugin" => "TeamPlugin",
             "PluginList" => "TeamPluginList",
             "TeamMemberRole" => "TeamMemberRole",
@@ -272,6 +274,7 @@ class TeamApp extends AbricosApplication {
 
             $tpm = $this->PolicyManager($r->teamid);
             $tpm->UserAddToPolicy(Abricos::$user->id, TeamPolicy::ADMIN);
+            $tpm->UserAddToPolicy(Abricos::$user->id, TeamPolicy::MEMBER);
         } else {
             $team = $this->Team($vars->teamid);
             if (AbricosResponse::IsError($team)){
@@ -352,7 +355,7 @@ class TeamApp extends AbricosApplication {
             return $r->SetError(AbricosResponse::ERR_FORBIDDEN);
         }
 
-        $rows = TeamQuery::TeamList($this->db, $r);
+        $rows = TeamQuery::TeamList($this, $r);
         while (($d = $this->db->fetch_array($rows))){
             $r->items->Add($this->InstanceClass('Team', $d));
         }

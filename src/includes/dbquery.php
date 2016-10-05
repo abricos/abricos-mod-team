@@ -38,7 +38,7 @@ class TeamQuery {
         $db->query_write($sql);
     }
 
-    public static function TeamList(Ab_Database $db, TeamListFilter $r){
+    public static function TeamList(TeamApp $app, TeamListFilter $r){
         /*
         SELECT *
         FROM cms_team t
@@ -48,12 +48,12 @@ class TeamQuery {
         WHERE t.deldate=0
         /**/
 
+        $db = $app->db;
         $sql = "
 			SELECT t.*
             FROM ".$db->prefix."team t
             WHERE t.deldate=0
 		";
-
         if (!empty($r->vars->module)){
             $sql .= " AND t.ownerModule='".bkstr($r->vars->module)."'";
         }
@@ -112,6 +112,9 @@ class TeamQuery {
                 1
             )";
         }
+        if (count($insa) === 0){
+            return;
+        }
         $sql = "
 			INSERT INTO ".$db->prefix."team_policy
             (teamid, policyName, isSys) 
@@ -119,7 +122,6 @@ class TeamQuery {
 		";
         $db->query_write($sql);
     }
-
 
     public static function ActionList(Ab_Database $db){
         $sql = "
@@ -143,6 +145,9 @@ class TeamQuery {
                 '".bkstr($item->name)."',
                 ".intval($item->code)."
             )";
+        }
+        if (count($insa) === 0){
+            return;
         }
         $sql = "
 			INSERT INTO ".$db->prefix."team_action
@@ -179,6 +184,9 @@ class TeamQuery {
                 ".intval($item->mask).",
                 ".intval(TIMENOW)."
             )";
+        }
+        if (count($insa) === 0){
+            return;
         }
         $sql = "
 			INSERT INTO ".$db->prefix."team_role
@@ -224,6 +232,44 @@ class TeamQuery {
 		";
         return $db->query_read($sql);
     }
+
+    public static function UserRoleList(Ab_Database $db, $teamid, $userid){
+        $sql = "
+			SELECT *
+            FROM ".$db->prefix."team_userRole
+            WHERE teamid=".intval($teamid)."
+                AND userid=".intval($userid)."
+		";
+        return $db->query_read($sql);
+    }
+
+    public static function UserRoleAppendByList(Ab_Database $db, TeamUserRoleList $list){
+        $insa = array();
+        $count = $list->Count();
+        for ($i = 0; $i < $count; $i++){
+            $item = $list->GetByIndex($i);
+            if (!$item->isNewItem){
+                continue;
+            }
+            $insa[] = "(
+                ".intval($item->teamid).",
+                ".intval($item->userid).",
+                '".bkstr($item->module)."',
+                '".bkstr($item->group)."',
+                ".intval($item->mask)."
+            )";
+        }
+        if (count($insa) === 0){
+            return;
+        }
+        $sql = "
+			INSERT INTO ".$db->prefix."team_userRole
+            (teamid, userid, ownerModule, actionGroup, mask) 
+            VALUES ".implode(',', $insa)."
+		";
+        $db->query_write($sql);
+    }
+
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
 

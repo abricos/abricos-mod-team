@@ -127,4 +127,24 @@ if ($updateManager->isInstall()){
         )".$charset
     );
 
+    // кэш ролей пользователя в сообществе (чистить при любых изменениях ролей!)
+    $db->query_write("
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_userRole (
+            userroleid INT(10) UNSIGNED NOT NULL auto_increment,
+            
+            teamid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            ownerModule VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
+            actionGroup VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
+            mask INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+
+            PRIMARY KEY (userroleid),
+            KEY userTeam (teamid, userid),
+            UNIQUE KEY userrole (teamid, userid, ownerModule, actionGroup)
+        )".$charset
+    );
 }
+
+// При последующем обновлении обязательно зачисти весь кэш ролей пользователей
+// чтобы инициировать процедуру проверку основных ролей
+// $db->query_write("TRUNCATE TABLE ".$pfx."team_userRole");

@@ -199,7 +199,6 @@ class TeamRoleList extends AbricosModelList {
      * @param TeamRole $item
      */
     public function Add($item){
-
         if ($item->id === 0){
             $item->id = $this->_maxid + 1;
 
@@ -255,6 +254,68 @@ class TeamUserPolicy extends AbricosModel {
 class TeamUserPolicyList extends AbricosModelList {
 }
 
+/**
+ * Class TeamUserRole
+ *
+ * @property int $teamid
+ * @property int $userid
+ * @property string $module
+ * @property string $group
+ * @property int $mask
+ */
+class TeamUserRole extends AbricosModel {
+    protected $_structModule = 'team';
+    protected $_structName = 'UserRole';
+
+    public $isNewItem = false;
+}
+
+/**
+ * Class TeamUserRoleList
+ *
+ * @method TeamUserRole Get(int $id)
+ * @method TeamUserRole GetByIndex(int $index)
+ */
+class TeamUserRoleList extends AbricosModelList {
+
+    private $_userRoleList = array();
+
+    private $_maxid = 0;
+
+    public $isNewItem = false;
+
+    /**
+     * @param TeamUserRole $item
+     */
+    public function Add($item){
+        if ($item->id === 0){
+            $item->id = $this->_maxid + 1;
+
+            $item->isNewItem = true;
+            $this->isNewItem = true;
+        }
+
+        $this->_maxid = max($this->_maxid, $item->id);
+
+        parent::Add($item);
+
+        if (!isset($this->_userRoleList[$item->module])){
+            $this->_userRoleList[$item->module] = array();
+        }
+
+        $this->_userRoleList[$item->module][$item->group] = $item;
+    }
+
+    /**
+     * @param $module
+     * @param $group
+     * @return TeamUserRole
+     */
+    public function GetByPath($module, $group){
+        return isset($this->_userRoleList[$module][$group]) ?
+            $this->_userRoleList[$module][$group] : null;
+    }
+}
 
 /**
  * Class TeamPlugin
