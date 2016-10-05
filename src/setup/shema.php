@@ -17,23 +17,25 @@ if ($updateManager->isInstall()){
 
     $db->query_write("
 		CREATE TABLE IF NOT EXISTS ".$pfx."team (
-			teamid INT(10) UNSIGNED NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
-			ownerModule VARCHAR(25) NOT NULL DEFAULT '' COMMENT 'Модуль основатель',
-			
-			userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Основатель',
-			
-			title VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
-			logo VARCHAR(8) NOT NULL DEFAULT '' COMMENT '',
-			
-			memberCount INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
-			
-			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			upddate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
-			deldate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
-
-			PRIMARY KEY (teamid),
-			KEY ownerModule (ownerModule),
-			KEY deldate (deldate)
+            teamid INT(10) UNSIGNED NOT NULL auto_increment COMMENT 'Идентификатор сообщества',
+            ownerModule VARCHAR(25) NOT NULL DEFAULT '' COMMENT 'Модуль основатель',
+            
+            userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Основатель',
+            
+            title VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
+            logo VARCHAR(8) NOT NULL DEFAULT '' COMMENT '',
+            
+            visibility ENUM('private', 'public') DEFAULT 'private' COMMENT '',
+            
+            memberCount INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
+            
+            dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
+            upddate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
+            deldate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата удаления',
+            
+            PRIMARY KEY (teamid),
+            KEY ownerModule (ownerModule),
+            KEY deldate (deldate)
 		)".$charset
     );
 
@@ -69,6 +71,7 @@ if ($updateManager->isInstall()){
             descript TEXT NOT NULL COMMENT '',
             
             isSys tinyINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            isPlugin tinyINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
         
             PRIMARY KEY (policyid),
             UNIQUE KEY policy (teamid, policyName),
@@ -96,11 +99,14 @@ if ($updateManager->isInstall()){
             roleid INT(10) UNSIGNED NOT NULL auto_increment,
             
             policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            ownerModule VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
             actionGroup VARCHAR(25) NOT NULL DEFAULT '' COMMENT '',
             mask INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
-        
+
+            upddate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+
             PRIMARY KEY (roleid),
-            UNIQUE KEY role (policyid, actionGroup)
+            UNIQUE KEY role (policyid, ownerModule, actionGroup)
         )".$charset
     );
 

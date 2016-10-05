@@ -20,6 +20,13 @@
     "logo": {
       "type": "string"
     },
+    "visibility": {
+      "type": "string",
+      "valid": "private,public",
+      "default": "public",
+      "notNULL": true,
+      "rolefn": "IsAdminRole"
+    },
     "memberCount": {
       "type": "int"
     },

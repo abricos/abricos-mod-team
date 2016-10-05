@@ -219,11 +219,15 @@ Component.entryPoint = function(NS){
                 create: function(){
                     return this.getURL('ws') + 'teamEditor/TeamCreateWidget/';
                 },
-                ws: function(teamid){
-                    return "#app={C#MODNAMEURI}/wspace/item/" + (teamid | 0) + '/';
+                ws: function(teamid, ownerModule){
+                    var ret = "#app={C#MODNAMEURI}/wspace/item/" + (teamid | 0) + '/';
+                    if (ownerModule){
+                        ret += ownerModule + '/';
+                    }
+                    return ret;
                 },
                 edit: function(teamid, ownerModule){
-                    var ret = this.getURL('ws') + 'teamEditor/TeamEditorWidget/' + (teamid | 0) + '/';
+                    var ret = this.getURL('ws') + 'teamEditor/TeamWrapEditorWidget/' + (teamid | 0) + '/';
                     if (ownerModule){
                         ret += ownerModule + '/';
                     }

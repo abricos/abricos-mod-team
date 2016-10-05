@@ -30,9 +30,9 @@ class TeamQuery {
 
     public static function PolicyList(Ab_Database $db, $teamid){
         $sql = "
-			SELECT *
-            FROM ".$db->prefix."team_policy
-            WHERE teamid=".intval($teamid)." 
+			SELECT p.*
+            FROM ".$db->prefix."team_policy p
+            WHERE p.teamid=".intval($teamid)." 
 		";
         return $db->query_read($sql);
     }
@@ -113,14 +113,26 @@ class TeamQuery {
             }
             $insa[] = "(
                 ".intval($item->policyid).",
+                '".bkstr($item->module)."',
                 '".bkstr($item->group)."',
-                ".intval($item->mask)."
+                ".intval($item->mask).",
+                ".intval(TIMENOW)."
             )";
         }
         $sql = "
 			INSERT INTO ".$db->prefix."team_role
-            (policyid, actionGroup, mask) 
+            (policyid, ownerModule, actionGroup, mask, upddate) 
             VALUES ".implode(',', $insa)."
+		";
+        $db->query_write($sql);
+    }
+
+    public static function RoleUpdate(Ab_Database $db, TeamRole $role){
+        $sql = "
+			UPDATE ".$db->prefix."team_role
+			SET mask=".intval($role->mask).",
+                upddate=".intval(TIMENOW)."
+            WHERE roleid=".intval($role->id)."
 		";
         $db->query_write($sql);
     }
@@ -164,10 +176,11 @@ class TeamQuery {
     public static function TeamAppend(Ab_Database $db, TeamSave $r){
         $sql = "
 			INSERT INTO ".$db->prefix."team
-				(ownerModule, userid, title, dateline, upddate) VALUES (
+				(ownerModule, userid, title, visibility, dateline, upddate) VALUES (
 				'".bkstr($r->vars->module)."',
 				".bkint(Abricos::$user->id).",
 				'".bkstr($r->vars->title)."',
+				'".bkstr($r->vars->visibility)."',
 				".TIMENOW.",
 				".TIMENOW."
 			)
@@ -187,6 +200,15 @@ class TeamQuery {
     }
 
     public static function TeamList(Ab_Database $db, TeamListFilter $r){
+/*
+SELECT *
+FROM cms_team t
+INNER JOIN cms_team_policy p ON t.teamid=p.teamid AND p.policyName='guest'
+INNER JOIN cms_team_action a ON t.ownerModule=a.ownerModule AND a.actionGroup='team' AND a.actionName='view'
+INNER JOIN cms_team_role r ON p.policyid=r.policyid AND r.actionGroup='team'
+WHERE t.deldate=0
+/**/
+
         $sql = "
 			SELECT t.*
             FROM ".$db->prefix."team t

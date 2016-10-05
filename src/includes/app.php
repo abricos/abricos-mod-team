@@ -312,8 +312,8 @@ class TeamApp extends AbricosApplication {
 
             $memberid = TeamQuery::MemberAppendByNewTeam($this->db, $r);
 
-            $tmp = $this->TeamPolicyManager($r->teamid);
-            $tmp->AddMemberToPolicy($memberid, TeamPolicy::ADMIN);
+            $tpm = $this->TeamPolicyManager($r->teamid);
+            $tpm->AddMemberToPolicy($memberid, TeamPolicy::ADMIN);
         } else {
             $team = $this->Team($vars->teamid);
             if (AbricosResponse::IsError($team)){

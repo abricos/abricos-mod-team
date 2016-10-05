@@ -162,6 +162,7 @@ class TeamPolicyList extends AbricosModelList {
  *
  * @property int $id Role ID
  * @property int $policyid
+ * @property string $module
  * @property string $group
  * @property int $mask
  */
@@ -209,19 +210,24 @@ class TeamRoleList extends AbricosModelList {
         if (!isset($this->_roles[$item->policyid])){
             $this->_roles[$item->policyid] = array();
         }
-        $this->_roles[$item->policyid][$item->group] = $item;
+        if (!isset($this->_roles[$item->policyid][$item->module])){
+            $this->_roles[$item->policyid][$item->module] = array();
+        }
+
+        $this->_roles[$item->policyid][$item->module] [$item->group] = $item;
     }
 
     /**
      * @param $policyid
+     * @param $ownerModule
      * @param $group
      * @return TeamRole
      */
-    public function GetByPath($policyid, $group){
-        if (!isset($this->_roles[$policyid][$group])){
+    public function GetByPath($policyid, $ownerModule, $group){
+        if (!isset($this->_roles[$policyid][$ownerModule][$group])){
             return null;
         }
-        return $this->_roles[$policyid][$group];
+        return $this->_roles[$policyid][$ownerModule][$group];
     }
 }
 
@@ -310,6 +316,7 @@ class TeamUserRoleList extends AbricosModelList {
  * @property int $teamid
  * @property string $module
  * @property string $title
+ * @property string $visibility
  */
 interface TeamSaveVars {
 }
@@ -337,6 +344,7 @@ class TeamSave extends AbricosResponse {
  * @property int $userid
  * @property string $title
  * @property string $logo
+ * @property string $visibility
  * @property int $memberCount
  * @property TeamUserRole $userRole
  */

@@ -47,7 +47,7 @@ Component.entryPoint = function(NS){
         }
     });
 
-    NS.TeamEditorWidget = Y.Base.create('TeamEditorWidget', SYS.AppWidget, [
+    NS.TeamWrapEditorWidget = Y.Base.create('TeamWrapEditorWidget', SYS.AppWidget, [
         SYS.ContainerWidgetExt,
     ], {
         onInitAppWidget: function(err, appInstance){
@@ -58,7 +58,8 @@ Component.entryPoint = function(NS){
             if (teamid === 0){
                 var team = new (appInstance.get('Team'))({
                     appInstance: appInstance,
-                    module: ownerModule
+                    module: ownerModule,
+                    visibility: 'public'
                 });
                 this._onLoadTeam(team);
             } else {
@@ -92,7 +93,7 @@ Component.entryPoint = function(NS){
     }, {
         ATTRS: {
             component: {value: COMPONENT},
-            templateBlockName: {value: 'editor'},
+            templateBlockName: {value: 'editorWrap'},
             teamid: NS.ATTRIBUTE.teamid,
             ownerModule: {value: ''}
         },
@@ -116,8 +117,12 @@ Component.entryPoint = function(NS){
                 team = this.get('team');
 
             tp.setValue({
-                title: tp.get('title')
+                title: team.get('title')
             });
+
+            if (tp.one('visibility-' + team.get('visibility'))){
+                tp.one('visibility-' + team.get('visibility')).set('checked', true);
+            }
             this.onLoadTeam(team);
         },
         onLoadTeam: function(team){
@@ -128,11 +133,21 @@ Component.entryPoint = function(NS){
         toJSON: function(){
             var tp = this.template,
                 team = this.get('team'),
+                vs = ['private', 'public'],
                 data = {
                     teamid: this.get('team').get('id'),
                     module: team.get('module'),
                     title: tp.getValue('title')
                 };
+
+            for (var i = 0; i < vs.length; i++){
+                if (tp.one('visibility-' + vs[i])
+                    && tp.one('visibility-' + vs[i]).get('checked')){
+                    data['visibility'] = vs[i];
+                    break;
+                }
+            }
+
             return this.onFillToJSON(data);
         },
         save: function(){

@@ -47,6 +47,16 @@ class TeamPolicyManager {
         TeamQuery::MemberAddPolicy($this->app->db, $memberid, $policy->id);
     }
 
+    /**
+     * Идеология:
+     * 1. со всех модулей собирается политики по умолчанию
+     * 2. поиск новых политик (policy) и их действий (action)
+     * 3. если таковые имеются, то добавляются в базу
+     * 4. просмотр наличия новых ролей (смотрит на наличие новых действий)
+     * 5. если есть новые роли или новые действия, то установка ролям разрешенных действий по умолчанию
+     *
+     * @param $defPolicies
+     */
     private function CheckTeamPolicies($defPolicies){
         if (!is_array($defPolicies)){
             return;
@@ -88,12 +98,70 @@ class TeamPolicyManager {
             TeamQuery::PolicyAppendByList($this->app->db, $policyList);
             $this->_cachePolicyList = null;
         }
-        if ($actionList->isNewItem){
-            TeamQuery::ActionAppendByList($this->app->db, $actionList);
-            TeamPolicyManager::$_cacheActionList = null;
+
+        if (!$policyList->isNewItem && !$actionList->isNewItem){
+            return;
         }
 
-        return $policyList->isNewItem || $actionList->isNewItem;
+        $policyList = $this->PolicyList();
+        $roleList = $this->RoleList();
+
+        for ($i = 0; $i < $policyList->Count(); $i++){
+            $policy = $policyList->GetByIndex($i);
+
+            for ($ii = 0; $ii < $actionList->Count(); $ii++){
+                $action = $actionList->GetByIndex($ii);
+
+                $role = $roleList->GetByPath($policy->id, $action->module, $action->group);
+
+                if (empty($role)){
+                    /** @var TeamRole $role */
+                    $role = $this->app->InstanceClass('Role', array(
+                        'policyid' => $policy->id,
+                        'module' => $ownerModule,
+                        'group' => $action->group
+                    ));
+                    $roleList->Add($role);
+
+                    $defActions = $defPolicies[$policy->name];
+
+                    $count = count($defActions);
+                    for ($ai = 0; $ai < $count; $ai++){
+                        $a = explode(".", $defActions[$ai]);
+                        $group = $a[0];
+                        $name = $a[1];
+
+                        if ($role->group !== $group){
+                            continue;
+                        }
+
+                        $defAction = $actionList->GetByPath($ownerModule, $group, $name);
+                        $role->AddCode($defAction->code);
+                    }
+                } else if ($action->isNewItem && !$role->isNewItem){
+                    $defActions = $defPolicies[$policy->name];
+                    $count = count($defActions);
+                    for ($ai = 0; $ai < $count; $ai++){
+                        $a = explode(".", $defActions[$ai]);
+                        $group = $a[0];
+                        $name = $a[1];
+
+                        if ($role->group === $group && $action->name === $name){
+                            $role->AddCode($action->code);
+                            TeamQuery::RoleUpdate($this->app->db, $role);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        TeamQuery::ActionAppendByList($this->app->db, $actionList);
+        TeamPolicyManager::$_cacheActionList = null;
+
+        if ($roleList->isNewItem){
+            TeamQuery::RoleAppendByList($this->app->db, $roleList);
+        }
     }
 
     private function GetDefaultPolicies(){
@@ -104,39 +172,6 @@ class TeamPolicyManager {
 
         $defPolicies = $ownerApp->Team_GetDefaultPolicy();
         $this->CheckTeamPolicies($defPolicies);
-
-        $policyList = $this->PolicyList();
-        $actionList = $this->ActionList();
-        $roleList = $this->RoleList();
-
-        foreach ($defPolicies as $policy => $actions){
-            $policy = $policyList->GetByName($policy);
-
-            $count = count($actions);
-            for ($i = 0; $i < $count; $i++){
-                $a = explode(".", $actions[$i]);
-                $group = $a[0];
-                $name = $a[1];
-
-                $role = $roleList->GetByPath($policy->id, $group);
-
-                if (empty($role)){
-                    /** @var TeamRole $role */
-                    $role = $this->app->InstanceClass('Role', array(
-                        'policyid' => $policy->id,
-                        'group' => $group
-                    ));
-                    $roleList->Add($role);
-                }
-
-                $action = $actionList->GetByPath($ownerModule, $group, $name);
-                $role->AddCode($action->code);
-            }
-        }
-        if ($roleList->isNewItem){
-            TeamQuery::RoleAppendByList($this->app->db, $roleList);
-            $this->_cacheRoleList = null;
-        }
     }
 
     /**
