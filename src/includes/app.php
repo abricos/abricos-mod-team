@@ -149,7 +149,7 @@ class TeamApp extends AbricosApplication {
 
     public function IsTeamAction($teamid, $action){
         $tpm = $this->PolicyManager($teamid);
-        if (empty($tpm) || !$tpm->IsAction(TeamAction::TEAM_VIEW)){
+        if (empty($tpm)){
             return false;
         }
         return $tpm->IsAction($action);
@@ -313,16 +313,8 @@ class TeamApp extends AbricosApplication {
         if (isset($this->_cache['Team'][$teamid])){
             return $this->_cache['Team'][$teamid];
         }
-
-        $this->IsTeamAction($teamid, TeamAction::TEAM_VIEW);
-
-        $userRole = $this->TeamMemberRole($teamid);
-
-        if (!$userRole->TeamIsExist()){
+        if (!$this->IsTeamAction($teamid, TeamAction::TEAM_VIEW)){
             return AbricosResponse::ERR_NOT_FOUND;
-        }
-        if (!$userRole->IsView()){
-            return AbricosResponse::ERR_FORBIDDEN;
         }
 
         if (!isset($this->_cache['Team'])){
@@ -333,7 +325,6 @@ class TeamApp extends AbricosApplication {
 
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
-        $team->userRole = $userRole;
 
         $this->_cache['Team'][$teamid] = $team;
 

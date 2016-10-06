@@ -19,6 +19,15 @@ class TeamAction {
     const MEMBER_APPEND = 'member.append';
     const MEMBER_UPDATE = 'member.update';
     const MEMBER_VIEW = 'member.view';
+
+    public $group;
+    public $name;
+
+    public function __construct($action){
+        $a = explode('.', $action);
+        $this->group = $a[0];
+        $this->name = $a[1];
+    }
 }
 
 /**
@@ -57,7 +66,9 @@ class TeamPolicy {
                 TeamAction::MEMBER_VIEW,
             ),
             TeamPolicy::GUEST => array(
-                
+                TeamAction::TEAM_VIEW,
+
+                TeamAction::MEMBER_VIEW,
             ),
         );
     }

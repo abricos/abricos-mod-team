@@ -140,6 +140,7 @@ if ($updateManager->isInstall()){
 
             PRIMARY KEY (userroleid),
             KEY userTeam (teamid, userid),
+            KEY ownerModule (ownerModule),
             UNIQUE KEY userrole (teamid, userid, ownerModule, actionGroup)
         )".$charset
     );

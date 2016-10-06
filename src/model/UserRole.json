@@ -13,10 +13,12 @@
       "type": "int"
     },
     "module": {
-      "type": "string"
+      "type": "string",
+      "dbField": "ownerModule"
     },
     "group": {
-      "type": "string"
+      "type": "string",
+      "dbField": "actionGroup"
     },
     "mask": {
       "type": "int"

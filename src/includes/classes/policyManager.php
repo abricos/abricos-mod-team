@@ -34,8 +34,24 @@ class TeamPolicyManager {
     }
 
     public function IsAction($action, $userid = -1){
+        if ($userid === -1){
+            $userid = Abricos::$user->id;
+        }
+
         $um = $this->UserManager($userid);
-        return $um->IsAction($action);
+        $ret = $um->IsAction($action);
+
+        if ($ret){
+            return true;
+        }
+
+        // этот пользователь не вхож в сообщество, проверка роли гостя
+        if ($userid > 0){
+            $umGuest = $this->UserManager(0);
+            return $umGuest->IsAction($action);
+        }
+
+        return false;
     }
 
     /**
@@ -315,7 +331,6 @@ class TeamUserPolicyManager {
         if (empty($userRole)){
             return false; // what !?!
         }
-
         return $userRole->IsSetCode($action->code);
     }
 

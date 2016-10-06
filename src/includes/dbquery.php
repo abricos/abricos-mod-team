@@ -39,20 +39,31 @@ class TeamQuery {
     }
 
     public static function TeamList(TeamApp $app, TeamListFilter $r){
-        /*
-        SELECT *
-        FROM cms_team t
-        INNER JOIN cms_team_policy p ON t.teamid=p.teamid AND p.policyName='guest'
-        INNER JOIN cms_team_action a ON t.ownerModule=a.ownerModule AND a.actionGroup='team' AND a.actionName='view'
-        INNER JOIN cms_team_role r ON p.policyid=r.policyid AND r.actionGroup='team'
-        WHERE t.deldate=0
-        /**/
+        $actView = new TeamAction(TeamAction::TEAM_VIEW);
 
         $db = $app->db;
         $sql = "
 			SELECT t.*
             FROM ".$db->prefix."team t
-            WHERE t.deldate=0
+            INNER JOIN ".$db->prefix."team_action a
+                ON t.ownerModule=a.ownerModule
+                    AND a.actionGroup='".$actView->group."'
+                    AND actionName='".$actView->name."'
+            INNER JOIN ".$db->prefix."team_userRole urGuest
+                ON urGuest.teamid=t.teamid
+                    AND urGuest.ownerModule=t.ownerModule
+                    AND urGuest.actionGroup='".$actView->group."'
+                    AND urGuest.userid=0
+            LEFT JOIN ".$db->prefix."team_userRole urUser
+                ON urUser.teamid=t.teamid
+                    AND urUser.ownerModule=t.ownerModule
+                    AND urUser.actionGroup='".$actView->group."'
+                    AND urUser.userid=".intval(Abricos::$user->id)."
+            WHERE t.deldate=0 AND (
+                (t.visibility='public' AND urGuest.mask & a.code > 0)
+                OR
+                (urUser.userid > 0 AND urUser.mask & a.code > 0)
+            )
 		";
         if (!empty($r->vars->module)){
             $sql .= " AND t.ownerModule='".bkstr($r->vars->module)."'";
