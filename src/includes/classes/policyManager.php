@@ -16,8 +16,7 @@ class TeamPolicyManager {
 
     private $_cachePolicyList = null;
     private $_cacheRoleList = null;
-    private $_cacheUserPolicyList = null;
-    private $_cacheUserRoleList = null;
+    private $_cacheUserManager = array();
 
     /**
      * @var TeamApp
@@ -32,46 +31,29 @@ class TeamPolicyManager {
         $this->app = Abricos::GetApp('team');
 
         $this->ownerModule = $this->app->TeamOwnerModule($this->teamid);
-
-        $this->CheckUserRoles();
     }
 
-    public function IsAction($action){
-        $this->CheckUserRoles();
-
-        $a = explode(".", $action);
-        if (count($a) !== 2){
-            return false;
-        }
-
-        $group = $a[0];
-        $name = $a[1];
-
-        $action = $this->ActionList()->GetByPath($this->ownerModule, $group, $name);
-        if (empty($action)){
-            throw new Exception('Team action `'.$action.'` not found');
-        }
-
-        $userPolicyList = $this->UserPolicyList();
-        for ($i = 0; $i < $userPolicyList->Count(); $i++){
-            $userPolicy = $userPolicyList->GetByIndex($i);
-
-            $role = $this->RoleList()->GetByPath($userPolicy->policyid, $this->ownerModule, $group);
-            if ($role->IsSetCode($action->code)){
-                return true;
-            }
-        }
-        return false;
+    public function IsAction($action, $userid = -1){
+        $um = $this->UserManager($userid);
+        return $um->IsAction($action);
     }
 
-    public function UserAddToPolicy($userid, $policyName){
-        $policy = $this->PolicyList()->GetByName($policyName);
-        if (empty($policy)){
-            return;
+    /**
+     * @param int $userid
+     * @return TeamUserPolicyManager
+     */
+    public function UserManager($userid = -1){
+        if ($userid === -1){
+            $userid = Abricos::$user->id;
         }
-        TeamQuery::UserPolicyAppend($this->app->db, $userid, $policy);
-    }
 
+        if (isset($this->_cacheUserManager[$userid])){
+            return $this->_cacheUserManager[$userid];
+        }
+
+        $um = new TeamUserPolicyManager($this, $userid);
+        return $this->_cacheUserManager[$userid] = $um;
+    }
 
     public function ResponseToJSON($d){
         if (!$this->IsAction(TeamAction::ROLE_UPDATE)){
@@ -164,32 +146,6 @@ class TeamPolicyManager {
         return TeamPolicyManager::$_cacheActionList = $list;
     }
 
-    public function UserPolicyList(){
-        if (!empty($this->_cacheUserPolicyList)){
-            return $this->_cacheUserPolicyList;
-        }
-        /** @var TeamUserPolicyList $list */
-        $list = $this->app->InstanceClass('UserPolicyList');
-        $rows = TeamQuery::UserPolicyList($this->app->db, $this->teamid, Abricos::$user->id);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('UserPolicy', $d));
-        }
-        return $this->_cacheUserPolicyList = $list;
-    }
-
-    public function UserRoleList(){
-        if (!empty($this->_cacheUserRoleList)){
-            return $this->_cacheUserRoleList;
-        }
-        /** @var TeamUserRoleList $list */
-        $list = $this->app->InstanceClass('UserRoleList');
-        $rows = TeamQuery::UserRoleList($this->app->db, $this->teamid, Abricos::$user->id);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('UserRole', $d));
-        }
-        return $this->_cacheUserRoleList = $list;
-    }
-
     /**
      * Идеология:
      * 1. со всех модулей собирается политики по умолчанию
@@ -197,10 +153,12 @@ class TeamPolicyManager {
      * 3. если таковые имеются, то добавляются в базу
      * 4. просмотр наличия новых ролей (смотрит на наличие новых действий)
      * 5. если есть новые роли или новые действия, то установка ролям разрешенных действий по умолчанию
-     *
-     * @param $defPolicies
      */
-    private function CheckTeamPolicies($defPolicies){
+    public function CheckTeamPolicies(){
+        /** @var ITeamOwnerApp $ownerApp */
+        $ownerApp = Abricos::GetApp($this->ownerModule);
+        $defPolicies = $ownerApp->Team_GetDefaultPolicy();
+
         if (!is_array($defPolicies)){
             return;
         }
@@ -237,13 +195,13 @@ class TeamPolicyManager {
             }
         }
 
+        if (!$policyList->isNewItem && !$actionList->isNewItem){
+            return;
+        }
+
         if ($policyList->isNewItem){
             TeamQuery::PolicyAppendByList($this->app->db, $policyList);
             $this->_cachePolicyList = null;
-        }
-
-        if (!$policyList->isNewItem && !$actionList->isNewItem){
-            return;
         }
 
         $policyList = $this->PolicyList();
@@ -307,6 +265,81 @@ class TeamPolicyManager {
 
         TeamPolicyManager::$_cacheActionList = null;
         $this->_cacheRoleList = null;
+
+        // remove all cache user roles in team
+        TeamQuery::UserRoleClean($this->app->db, $this->teamid);
+
+        $um = $this->UserManager(0);
+        $um->AddToPolicy(TeamPolicy::GUEST);
+    }
+
+}
+
+class TeamUserPolicyManager {
+
+    private $_cacheUserPolicyList = null;
+    private $_cacheUserRoleList = null;
+
+    /**
+     * @var TeamPolicyManager
+     */
+    public $tpm;
+    public $app;
+    public $teamid;
+    public $userid;
+
+    public function __construct(TeamPolicyManager $tpm, $userid){
+        $this->tpm = $tpm;
+        $this->teamid = $tpm->teamid;
+        $this->app = $tpm->app;
+        $this->userid = $userid;
+    }
+
+    public function IsAction($action){
+        $a = explode(".", $action);
+        if (count($a) !== 2){
+            return false;
+        }
+        $group = $a[0];
+        $name = $a[1];
+
+        $ownerModule = $this->tpm->ownerModule;
+
+        $action = $this->tpm->ActionList()->GetByPath($ownerModule, $group, $name);
+        if (empty($action)){
+            throw new Exception('Team action `'.$action.'` not found');
+        }
+
+        $this->CheckUserRoles();
+        $userRole = $this->UserRoleList()->GetByPath($ownerModule, $group);
+        if (empty($userRole)){
+            return false; // what !?!
+        }
+
+        return $userRole->IsSetCode($action->code);
+    }
+
+    public function AddToPolicy($policyNames){
+        if (!is_array($policyNames)){
+            $policyNames = array($policyNames);
+        }
+
+        $policyList = $this->tpm->PolicyList();
+
+        for ($i = 0; $i < count($policyNames); $i++){
+            $policy = $policyList->GetByName($policyNames[$i]);
+            if (empty($policy)){
+                continue;
+            }
+            TeamQuery::UserPolicyAppend($this->app->db, $this->userid, $policy);
+        }
+
+        TeamQuery::UserRoleClean($this->app->db, $this->teamid, $this->userid);
+
+        $this->_cacheUserPolicyList = null;
+        $this->_cacheUserRoleList = null;
+
+        $this->CheckUserRoles();
     }
 
     private function CheckUserRoles(){
@@ -315,15 +348,9 @@ class TeamPolicyManager {
             return;
         }
 
-        /** @var ITeamOwnerApp $ownerApp */
-        $ownerApp = Abricos::GetApp($this->ownerModule);
-        $defPolicies = $ownerApp->Team_GetDefaultPolicy();
-        $this->CheckTeamPolicies($defPolicies);
-
+        $userRoleList = $this->UserRoleList();
         $userPolicyList = $this->UserPolicyList();
-        $roleList = $this->RoleList();
-
-        // TODO: if current user is guest then check TeamPolicy::GUEST
+        $roleList = $this->tpm->RoleList();
 
         for ($i = 0; $i < $userPolicyList->Count(); $i++){
             $userPolicy = $userPolicyList->GetByIndex($i);
@@ -338,8 +365,8 @@ class TeamPolicyManager {
                 if (empty($userRole)){
                     $userRoleList->Add($this->app->InstanceClass('UserRole', array(
                         'teamid' => $this->teamid,
-                        'userid' => Abricos::$user->id,
-                        'module' => $this->ownerModule,
+                        'userid' => $this->userid,
+                        'module' => $this->tpm->ownerModule,
                         'group' => $role->group,
                         'mask' => $role->mask
                     )));
@@ -349,7 +376,44 @@ class TeamPolicyManager {
             }
         }
 
-        $this->_cacheUserRoleList = null;
         TeamQuery::UserRoleAppendByList($this->app->db, $userRoleList);
+
+        $this->_cacheUserRoleList = null;
     }
+
+    /**
+     * @return TeamUserPolicyList
+     */
+    public function UserPolicyList(){
+        if (!empty($this->_cacheUserPolicyList)){
+            return $this->_cacheUserPolicyList;
+        }
+
+        /** @var TeamUserPolicyList $list */
+        $list = $this->app->InstanceClass('UserPolicyList');
+        $rows = TeamQuery::UserPolicyList($this->app->db, $this->teamid, $this->userid);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('UserPolicy', $d));
+        }
+        return $this->_cacheUserPolicyList = $list;
+    }
+
+    /**
+     * @return TeamUserRoleList
+     */
+    public function UserRoleList(){
+        if (!empty($this->_cacheUserRoleList)){
+            return $this->_cacheUserRoleList;
+        }
+        /** @var TeamUserRoleList $list */
+        $list = $this->app->InstanceClass('UserRoleList');
+        $rows = TeamQuery::UserRoleList($this->app->db, $this->teamid, $this->userid);
+        while (($d = $this->app->db->fetch_array($rows))){
+            $list->Add($this->app->InstanceClass('UserRole', $d));
+        }
+
+        return $this->_cacheUserRoleList = $list;
+    }
+
+
 }

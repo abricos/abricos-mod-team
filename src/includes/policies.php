@@ -56,7 +56,9 @@ class TeamPolicy {
 
                 TeamAction::MEMBER_VIEW,
             ),
-            TeamPolicy::GUEST => array(),
+            TeamPolicy::GUEST => array(
+                
+            ),
         );
     }
 }

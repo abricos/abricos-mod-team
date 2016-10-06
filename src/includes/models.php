@@ -268,6 +268,10 @@ class TeamUserRole extends AbricosModel {
     protected $_structName = 'UserRole';
 
     public $isNewItem = false;
+
+    public function IsSetCode($code){
+        return $this->mask & $code;
+    }
 }
 
 /**

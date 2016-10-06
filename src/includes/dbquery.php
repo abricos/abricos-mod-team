@@ -270,6 +270,16 @@ class TeamQuery {
         $db->query_write($sql);
     }
 
+    public static function UserRoleClean(Ab_Database $db, $teamid, $userid = -1){
+        $sql = "
+			DELETE FROM ".$db->prefix."team_userRole
+            WHERE teamid=".intval($teamid)."
+		";
+        if ($userid > -1){
+            $sql .= " AND userid=".intval($userid)." ";
+        }
+        return $db->query_write($sql);
+    }
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
 

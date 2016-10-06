@@ -270,11 +270,14 @@ class TeamApp extends AbricosApplication {
                 return $r->SetError(AbricosResponse::ERR_SERVER_ERROR);
             }
 
-            $memberid = TeamQuery::MemberAppendByNewTeam($this->db, $r);
+            TeamQuery::MemberAppendByNewTeam($this->db, $r);
 
             $tpm = $this->PolicyManager($r->teamid);
-            $tpm->UserAddToPolicy(Abricos::$user->id, TeamPolicy::ADMIN);
-            $tpm->UserAddToPolicy(Abricos::$user->id, TeamPolicy::MEMBER);
+            $tpm->CheckTeamPolicies();
+            $tpm->UserManager()->AddToPolicy(array(
+                TeamPolicy::ADMIN,
+                TeamPolicy::MEMBER
+            ));
         } else {
             $team = $this->Team($vars->teamid);
             if (AbricosResponse::IsError($team)){
@@ -421,7 +424,8 @@ class TeamApp extends AbricosApplication {
                 $ret->userid = $rCreate->userid;
                 $ret->memberid = TeamQuery::MemberInviteNewUser($this->db, $ret);
 
-                $this->PolicyManager($ret->teamid)->UserAddToPolicy($ret->userid, TeamPolicy::WAITING);
+                $um = $this->PolicyManager($ret->teamid)->UserManager($ret->userid);
+                $um->AddToPolicy(TeamPolicy::WAITING);
 
                 $ownerApp->Team_OnMemberInvite($ret, $rCreate);
             } else {
