@@ -16,9 +16,10 @@ class TeamAction {
 
     const ROLE_UPDATE = 'role.update';
 
-    const MEMBER_APPEND = 'member.append';
-    const MEMBER_UPDATE = 'member.update';
-    const MEMBER_VIEW = 'member.view';
+    const ADMIN_VIEW = 'admin.view';
+    const ADMIN_APPEND = 'admin.append';
+    const ADMIN_UPDATE = 'admin.update';
+    const ADMIN_REMOVE = 'admin.remove';
 
     public $group;
     public $name;
@@ -35,13 +36,26 @@ class TeamAction {
  */
 class TeamPolicy {
     const ADMIN = 'admin';
-    const MEMBER = 'member';
+
     /**
-     * Ожидающие вступления в участники
+     * Приглашенные на вступлени в партию
      */
-    const WAITING = 'waiting';
+    const INVITE = 'invite';
+
+    /**
+     * Запросившие вступление в партию
+     */
+    const REQUEST = 'request';
+
+    /**
+     * Желающие скрыть свою принадлежность к сообществу для гостей
+     */
+    const HIDDEN = 'hidden';
+
     const GUEST = 'guest';
     const BANNED = 'banned';
+
+
 
     public static function GetDefaultPolicies(){
         return array(
@@ -51,24 +65,22 @@ class TeamPolicy {
 
                 TeamAction::ROLE_UPDATE,
 
-                TeamAction::MEMBER_APPEND,
-                TeamAction::MEMBER_UPDATE,
-                TeamAction::MEMBER_VIEW,
+                TeamAction::ADMIN_VIEW,
+                TeamAction::ADMIN_APPEND,
+                TeamAction::ADMIN_UPDATE,
+                TeamAction::ADMIN_REMOVE,
             ),
-            TeamPolicy::MEMBER => array(
+            TeamPolicy::INVITE => array(
                 TeamAction::TEAM_VIEW,
-
-                TeamAction::MEMBER_VIEW,
             ),
-            TeamPolicy::WAITING => array(
+            TeamPolicy::REQUEST => array(
                 TeamAction::TEAM_VIEW,
-
-                TeamAction::MEMBER_VIEW,
+            ),
+            TeamPolicy::HIDDEN => array(
+                TeamAction::TEAM_VIEW,
             ),
             TeamPolicy::GUEST => array(
                 TeamAction::TEAM_VIEW,
-
-                TeamAction::MEMBER_VIEW,
             ),
         );
     }

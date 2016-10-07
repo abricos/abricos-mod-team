@@ -35,6 +35,7 @@ Component.entryPoint = function(NS){
                 return val || {};
             }
         },
+        policy: {},
         memberid: {
             value: 0,
             setter: function(val){
@@ -44,21 +45,11 @@ Component.entryPoint = function(NS){
         member: {value: null},
         memberList: {value: null},
         memberListFilter: {
-            setter: function(val){
-                val = Y.merge({
-                    teamid: 0
-                }, val || {});
-                return val;
-            },
             getter: function(val){
-                var team = this.get('team');
-                if (!team){
-                    return val;
-                }
-                return {
-                    method: 'team',
-                    teamid: team.get('id')
-                };
+                return Y.merge(val || {}, {
+                    teamid: this.get('team').get('id'),
+                    policy: this.get('policy')
+                });
             }
         },
         inviteApp: {
@@ -73,10 +64,13 @@ Component.entryPoint = function(NS){
         user: {
             readOnly: true,
             getter: function(){
-                var userid = this.get('userid'),
+                if (this._cacheUser){
+                    return this._cacheUser;
+                }
+                var userid =  this.attrAdded('userid') ? this.get('userid') : this.get('id'),
                     userList = this.appInstance.getApp('uprofile').get('userList');
 
-                return userList.getById(userid);
+                return this._cacheUser = userList.getById(userid);
             }
         }
     };
@@ -109,6 +103,9 @@ Component.entryPoint = function(NS){
 
     NS.Policy = Y.Base.create('policy', SYS.AppModel, [], {
         structureName: 'Policy',
+    }, {
+        ADMIN: 'admin',
+        GUEST: 'guest'
     });
 
     NS.PolicyList = Y.Base.create('policyList', SYS.AppModelList, [], {
@@ -173,9 +170,6 @@ Component.entryPoint = function(NS){
                 exts = this.get('extends');
 
             return ret;
-        },
-        myIsAdmin: function(){
-            return this.get('myStatus') === 'joined' && this.get('myRole') === 'admin';
         },
     }, {
         ATTRS: {

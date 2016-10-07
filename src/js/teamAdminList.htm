@@ -1,0 +1,44 @@
+<!--{widget}-->
+<div class="teamAdminList panel panel-default">
+    <div class="panel-heading text-center">
+        <h3 class="panel-title pull-left">
+            Администраторы
+        </h3>
+        <img data-wait="show" src="/images/loading.gif"/>
+        <div class="clearfix"></div>
+    </div>
+    <div class="panel-body">
+        <div id="{i#list}"></div>
+    </div>
+</div>
+
+<!--{itemWrap}-->
+<div class="memberItemRow"></div>
+
+<!--{item}-->
+<div class="panel panel-default">
+    <div class="panel-body">
+        <a data-url="team.member.view({v#teamid},{v#id})" href="#" class="pull-left">
+            <img class="img-rounded"
+                 data-src="this:member.user.avatarSrc90"/>
+        </a>
+        <div class="pull-left">
+            <h4>
+                <a data-url="team.member.view({v#teamid},{v#id})"
+                   data-src="this:member.user.viewName"
+                   href="#">
+                </a>
+            </h4>
+        </div>
+
+        <div class="btn-group pull-right">
+            <a data-url="team.member.edit({v#teamid},{v#id})" href="#"
+               data-trigger="this:member"
+               data-code="myIsAdmin"
+               data-wait="disable"
+               class="btn btn-default btn-xs hide">
+                Редактировать
+            </a>
+        </div>
+    </div>
+</div>

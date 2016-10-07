@@ -311,8 +311,8 @@ class TeamUserPolicyManager {
         $this->userid = $userid;
     }
 
-    public function IsAction($action){
-        $a = explode(".", $action);
+    public function IsAction($actionKey){
+        $a = explode(".", $actionKey);
         if (count($a) !== 2){
             return false;
         }
@@ -323,7 +323,7 @@ class TeamUserPolicyManager {
 
         $action = $this->tpm->ActionList()->GetByPath($ownerModule, $group, $name);
         if (empty($action)){
-            throw new Exception('Team action `'.$action.'` not found');
+            throw new Exception('Team action `'.$actionKey.'` not found');
         }
 
         $this->CheckUserRoles();

@@ -27,11 +27,11 @@
     "teamid": {
       "type": "int"
     },
-    "memberid": {
-      "type": "int"
-    },
     "userid": {
       "type": "int"
+    },
+    "policy": {
+      "type": "string"
     }
   }
 }

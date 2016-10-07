@@ -31,6 +31,7 @@ Component.entryPoint = function(NS){
     MemberListWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
         team: NS.ATTRIBUTE.team,
+        policy: NS.ATTRIBUTE.policy,
         memberList: {value: null},
         memberListFilter: NS.ATTRIBUTE.memberListFilter,
     };

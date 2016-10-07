@@ -194,8 +194,15 @@ Component.entryPoint = function(NS){
                 type: 'response:MemberListFilter',
                 onResponse: function(filter){
                     return function(callback, context){
-                        var memberList = filter.get('items'),
-                            ownerModules = memberList.toArray('module', {distinct: true});
+                        var memberList = filter.get('items');
+
+                        var userIds = memberList.toArray('id', {distinct: true});
+                        this.getApp('uprofile').userListByIds(userIds, function(err, result){
+                            callback.call(context || null);
+                        }, context);
+
+                        /*
+                        var ownerModules = memberList.toArray('module', {distinct: true});
 
                         NS.initApps(ownerModules, function(){
                             memberList.each(this._memberExtends, this);
@@ -206,6 +213,7 @@ Component.entryPoint = function(NS){
                             }, context);
 
                         }, this);
+                        /**/
                     };
                 }
             },
@@ -237,15 +245,17 @@ Component.entryPoint = function(NS){
                     view: function(teamid){
                         return this.getURL('team.ws', teamid) + 'team/';
                     },
+                    admins: function(teamid){
+                        return this.getURL('team.ws', teamid) + 'team/teamAdminList/TeamAdminListWidget/';
+                    },
                     policies: function(teamid){
                         return this.getURL('team.ws', teamid) + 'team/teamPolicies/TeamPoliciesWidget/';
                     },
                     roles: function(teamid){
                         return this.getURL('team.ws', teamid) + 'team/teamRoles/TeamRolesWidget/';
-
                     },
                 },
-            }
+            },
         }
     });
 };

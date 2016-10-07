@@ -15,11 +15,10 @@ class TeamQuery {
     public static function TeamAppend(Ab_Database $db, TeamSave $r){
         $sql = "
 			INSERT INTO ".$db->prefix."team
-				(ownerModule, userid, title, visibility, dateline, upddate) VALUES (
+				(ownerModule, userid, title, dateline, upddate) VALUES (
 				'".bkstr($r->vars->module)."',
 				".bkint(Abricos::$user->id).",
 				'".bkstr($r->vars->title)."',
-				'".bkstr($r->vars->visibility)."',
 				".TIMENOW.",
 				".TIMENOW."
 			)
@@ -60,7 +59,7 @@ class TeamQuery {
                     AND urUser.actionGroup='".$actView->group."'
                     AND urUser.userid=".intval(Abricos::$user->id)."
             WHERE t.deldate=0 AND (
-                (t.visibility='public' AND urGuest.mask & a.code > 0)
+                (urGuest.mask & a.code > 0)
                 OR
                 (urUser.userid > 0 AND urUser.mask & a.code > 0)
             )
@@ -294,136 +293,34 @@ class TeamQuery {
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
 
-    public static function TeamMemberRole(Ab_Database $db, $teamid){
-        $sql = "
-			SELECT
-                m.memberid,
-                t.teamid,
-			    t.ownerModule as module,
-                m.status,
-                m.role,
-                m.isPrivate as isPrivate
-            FROM ".$db->prefix."team t
-            LEFT JOIN ".$db->prefix."team_member m ON m.teamid=t.teamid
-            WHERE m.userid=".intval(Abricos::$user->id)."
-                AND t.deldate=0
-		";
-        if (is_array($teamid)){
-            $count = count($teamid);
-            if ($count === 0){
-                return;
-            }
-            $wha = array();
-            for ($i = 0; $i < $count; $i++){
-                $wha[] = "t.teamid=".intval($teamid[$i])."";
-            }
-            $sql .= "
-                AND (".implode(" OR ", $wha).")
-            ";
-            return $db->query_read($sql);
-        } else {
-            $sql .= "
-                AND t.teamid=".intval($teamid)."
-                LIMIT 1
-            ";
-            return $db->query_first($sql);
-        }
-    }
-
-    public static function MemberAppendByNewTeam(Ab_Database $db, TeamSave $r){
-        $sql = "
-			INSERT INTO ".$db->prefix."team_member
-				(teamid, userid, status, role, dateline) VALUES (
-				".bkint($r->teamid).",
-				".bkint(Abricos::$user->id).",
-				'joined',
-				'admin',
-				".TIMENOW."
-			)
-		";
-        $db->query_write($sql);
-        return $db->insert_id();
-    }
-
-    public static function MemberInviteNewUser(Ab_Database $db, TeamMemberSave $rSave){
-        $sql = "
-			INSERT INTO ".$db->prefix."team_member
-				(teamid, userid, status, role, dateline) VALUES (
-				".bkint($rSave->vars->teamid).",
-				".bkint($rSave->userid).",
-				'waiting',
-				'user',
-				".TIMENOW."
-			)
-		";
-        $db->query_write($sql);
-        return $db->insert_id();
-    }
-
-    public static function MemberUpdate(){
-
-    }
-
-    public static function Member(Ab_Database $db, $teamid, $memberid){
-        $sql = "
-			SELECT 
-			    m.*, 
-			    t.ownerModule as module,
-			    rm.status as myStatus,
-			    rm.role as myRole
-            FROM ".$db->prefix."team_member m
-            INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
-            LEFT JOIN ".$db->prefix."team_member rm 
-                ON t.teamid=rm.teamid AND rm.userid=".intval(Abricos::$user->id)."
-            WHERE m.teamid=".intval($teamid)."
-                AND m.memberid=".intval($memberid)."
-                AND t.deldate=0
-                AND (
-                    m.userid=rm.userid
-                    OR (m.status='joined')
-                    OR (rm.status='joined' AND rm.role='admin')
-                )
-		";
-        return $db->query_first($sql);
-    }
-
     public static function MemberList(Ab_Database $db, TeamMemberListFilter $filter){
-        $vars = $filter->vars;
-
-        if ($vars->method === 'team'){
-            $where = "m.teamid=".intval($vars->teamid)."";
-        } else if ($vars->method === 'iInTeams'){
-            $count = count($vars->teamids);
-            if ($count === 0){
-                return;
-            }
-            $wha = array();
-            for ($i = 0; $i < $count; $i++){
-                $wha[] = "m.teamid=".intval($vars->teamids[$i]);
-            }
-            $where = "m.userid=".intval(Abricos::$user->id)." 
-                AND (".implode(" OR ", $wha).")";
-        } else {
-            return null;
-        }
+        $teamid = $filter->vars->teamid;
+        $policyName = $filter->vars->policy;
 
         $sql = "
-			SELECT 
-			    m.*, 
-			    t.ownerModule as module,
-			    rm.status as myStatus,
-			    rm.role as myRole
-            FROM ".$db->prefix."team_member m
-            INNER JOIN ".$db->prefix."team t ON m.teamid=t.teamid
-            LEFT JOIN ".$db->prefix."team_member rm 
-                ON t.teamid=rm.teamid AND rm.userid=".intval(Abricos::$user->id)."
-            WHERE ".$where." AND t.deldate=0
-                AND (
-                    (m.userid=rm.userid)
-                    OR (m.status='joined')
-                    OR (rm.status='joined' AND rm.role='admin')
-                )
+			SELECT up.userid
+            FROM ".$db->prefix."team_userPolicy up
+            INNER JOIN ".$db->prefix."team_policy p 
+                ON up.policyid=p.policyid 
+                    AND p.policyName='".bkstr($policyName)."'
+            WHERE up.teamid=".intval($teamid)."
 		";
         return $db->query_read($sql);
     }
+
+    /* * * * * * * * * * * * * * Invite Policy * * * * * * * * * * * * */
+
+    public static function UserInviteAppend(Ab_Database $db, $teamid, $userid, $policyid){
+        $sql = "
+			INSERT INTO ".$db->prefix."team_user_invite
+            (teamid, userid, policyid, dateline) VALUES (
+                ".intval($teamid).",
+                ".intval($userid).",
+                ".intval($policyid).",
+                ".intval(TIMENOW)."
+            )
+		";
+        $db->query_write($sql);
+    }
+
 }

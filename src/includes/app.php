@@ -32,8 +32,6 @@ class TeamApp extends AbricosApplication {
             "UserRoleList" => "TeamUserRoleList",
             "Plugin" => "TeamPlugin",
             "PluginList" => "TeamPluginList",
-            "TeamMemberRole" => "TeamMemberRole",
-            "TeamMemberRoleList" => "TeamMemberRoleList",
             "Team" => "Team",
             "TeamList" => "TeamList",
             "TeamListFilter" => "TeamListFilter",
@@ -46,7 +44,7 @@ class TeamApp extends AbricosApplication {
     }
 
     protected function GetStructures(){
-        return 'Policy,Action,Role,Plugin,TeamMemberRole,Team,TeamSave,TeamListFilter'.
+        return 'Policy,Action,Role,Plugin,Team,TeamSave,TeamListFilter'.
         ',Member,MemberSave,MemberListFilter';
     }
 
@@ -60,22 +58,21 @@ class TeamApp extends AbricosApplication {
                 return $this->TeamListToJSON($d->filter);
             case 'team':
                 return $this->TeamToJSON($d->teamid);
+
+
             case "memberSave":
                 return $this->MemberSaveToJSON($d->data);
             case 'member':
                 return $this->MemberToJSON($d->teamid, $d->memberid);
             case 'memberList':
                 return $this->MemberListToJSON($d->filter);
-
-            case 'policies':
-            case 'actionList':
-            case 'policyList':
-            case 'roleList':
-                $pm = $this->PolicyManager($d->teamid);
-                if (empty($pm)){
-                    return AbricosResponse::ERR_NOT_FOUND;
-                }
-                return $pm->ResponseToJSON($d);
+        }
+        if (isset($d->teamid)){
+            $pm = $this->PolicyManager($d->teamid);
+            if (empty($pm)){
+                return AbricosResponse::ERR_NOT_FOUND;
+            }
+            return $pm->ResponseToJSON($d);
         }
         return null;
     }
@@ -152,7 +149,19 @@ class TeamApp extends AbricosApplication {
         if (empty($tpm)){
             return false;
         }
+        if (!$tpm->IsAction(TeamAction::TEAM_VIEW)){
+            return false;
+        }
         return $tpm->IsAction($action);
+    }
+
+    public function IsTeamPolicy($teamid, $policyName){
+        $tpm = $this->PolicyManager($teamid);
+        if (empty($tpm)){
+            return false;
+        }
+        $policy = $tpm->PolicyList()->GetByName($policyName);
+        return !empty($policy);
     }
 
     public function PluginListToJSON(){
@@ -201,39 +210,6 @@ class TeamApp extends AbricosApplication {
         return $list;
     }
 
-    /**
-     * @param int $teamid
-     * @return TeamMemberRole
-     */
-    public function TeamMemberRole($teamid){
-        if (isset($this->_cache['TeamMemberRole'][$teamid])){
-            return $this->_cache['TeamMemberRole'][$teamid];
-        }
-        if (!isset($this->_cache['TeamMemberRole'])){
-            $this->_cache['TeamMemberRole'] = array();
-        }
-
-        $d = TeamQuery::TeamMemberRole($this->db, $teamid);
-        /** @var TeamMemberRole $userRole */
-        $userRole = $this->InstanceClass('TeamMemberRole', $d);
-
-        return $this->_cache['TeamMemberRole'][$teamid] = $userRole;
-    }
-
-    /**
-     * @param $teamids
-     * @return TeamMemberRoleList
-     */
-    public function TeamMemberRoleList($teamids){
-        /** @var TeamMemberRoleList $list */
-        $list = $this->InstanceClass('TeamMemberRoleList');
-
-        $rows = TeamQuery::TeamMemberRole($this->db, $teamids);
-        while (($d = $this->db->fetch_array($rows))){
-            $list->Add($this->InstanceClass('TeamMemberRole', $d));
-        }
-        return $list;
-    }
 
     public function TeamSaveToJSON($d){
         $res = $this->TeamSave($d);
@@ -270,14 +246,9 @@ class TeamApp extends AbricosApplication {
                 return $r->SetError(AbricosResponse::ERR_SERVER_ERROR);
             }
 
-            TeamQuery::MemberAppendByNewTeam($this->db, $r);
-
             $tpm = $this->PolicyManager($r->teamid);
             $tpm->CheckTeamPolicies();
-            $tpm->UserManager()->AddToPolicy(array(
-                TeamPolicy::ADMIN,
-                TeamPolicy::MEMBER
-            ));
+            $tpm->UserManager()->AddToPolicy(TeamPolicy::ADMIN);
         } else {
             $team = $this->Team($vars->teamid);
             if (AbricosResponse::IsError($team)){
@@ -354,15 +325,6 @@ class TeamApp extends AbricosApplication {
             $r->items->Add($this->InstanceClass('Team', $d));
         }
 
-        $userRoleList = $this->TeamMemberRoleList($r->items->ToArray('id'));
-
-        $count = $userRoleList->Count();
-        for ($i = 0; $i < $count; $i++){
-            $userRole = $userRoleList->GetByIndex($i);
-            $team = $r->items->Get($userRole->id);
-            $team->userRole = $userRole;
-        }
-
         return $r;
     }
 
@@ -377,34 +339,37 @@ class TeamApp extends AbricosApplication {
         /** @var TeamMemberSave $ret */
         $ret = $this->InstanceClass('MemberSave', $d);
 
-        if (!$this->IsWriteRole()){
-            return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
-        }
-
         $vars = $ret->vars;
-        $userRole = $this->TeamMemberRole($vars->teamid);
-
-        if (!$userRole->IsAdmin()){
-            return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
-        }
 
         $ret->teamid = $vars->teamid;
 
-        /** @var ITeamOwnerApp $ownerApp */
-        $ownerApp = Abricos::GetApp($userRole->module);
+        $ownerModule = $this->TeamOwnerModule($ret->vars->teamid);
 
-        if ($this->OwnerAppFunctionExist($userRole->module, 'Team_OnMemberSave')){
+        /** @var ITeamOwnerApp $ownerApp */
+        $ownerApp = Abricos::GetApp($ownerModule);
+
+        if ($this->OwnerAppFunctionExist($ownerModule, 'Team_OnMemberSave')){
             return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
         }
 
         if ($vars->memberid === 0){
+
             /** @var InviteApp $inviteApp */
             $inviteApp = Abricos::GetApp('invite');
             $rUS = $inviteApp->UserSearch($vars->invite);
 
+            if (!$this->Invite_IsUserSearch($rUS->vars)){
+                return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
+            }
+
+            $toPolicyName = $rUS->vars->owner->type;
+
+            $policy = $this->PolicyManager($ret->teamid)->PolicyList()->GetByName($toPolicyName);
+
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
 
             } else if ($rUS->IsSetCode($rUS->codes->INVITE_ALLOWED)){
+
                 /** @var InviteCreate $rCreate */
                 $rCreate = $inviteApp->Create($rUS, $d);
 
@@ -413,16 +378,19 @@ class TeamApp extends AbricosApplication {
                 }
 
                 $ret->userid = $rCreate->userid;
-                $ret->memberid = TeamQuery::MemberInviteNewUser($this->db, $ret);
+                $ret->policy = $toPolicyName;
 
                 $um = $this->PolicyManager($ret->teamid)->UserManager($ret->userid);
-                $um->AddToPolicy(TeamPolicy::WAITING);
+                $um->AddToPolicy(TeamPolicy::INVITE);
+
+                TeamQuery::UserInviteAppend($this->db, $ret->teamid, $ret->userid, $policy->id);
 
                 $ownerApp->Team_OnMemberInvite($ret, $rCreate);
             } else {
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
         } else {
+            return;
             $member = $this->Member($vars->teamid, $vars->memberid);
             if (AbricosResponse::IsError($member)){
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
@@ -480,41 +448,38 @@ class TeamApp extends AbricosApplication {
             $filter = $this->InstanceClass('MemberListFilter', $filter);
         }
 
-        if (!$this->IsViewRole()){
+        $teamid = $filter->vars->teamid;
+        $policyName = $filter->vars->policy;
+        $action = $policyName.".view";
+
+        if (!$this->IsTeamAction($teamid, $action)){
             return $filter->SetError(AbricosResponse::ERR_FORBIDDEN);
         }
 
-        switch ($filter->vars->method){
-            case 'team':
-            case 'iInTeams':
-                break;
-            default:
-                return $filter->SetError(
-                    AbricosResponse::ERR_BAD_REQUEST,
-                    TeamMemberListFilter::CODE_BAD_METHOD
-                );
-        }
-
-        $arr = array();
+        // $arr = array();
 
         $rows = TeamQuery::MemberList($this->db, $filter);
         while (($d = $this->db->fetch_array($rows))){
             /** @var TeamMember $member */
             $member = $this->InstanceClass('Member', $d);
 
+            /*
             if (!isset($arr[$member->module])){
                 $arr[$member->module] = $this->InstanceClass('MemberList');
             }
             $arr[$member->module]->Add($member);
+            /**/
 
             $filter->items->Add($member);
+
         }
 
+        /*
         foreach ($arr as $module => $list){
-            /** @var ITeamOwnerApp $ownerApp */
             $ownerApp = Abricos::GetApp($module);
             $ownerApp->Team_OnMemberList($list);
         }
+        /**/
 
         return $filter;
     }
@@ -524,9 +489,14 @@ class TeamApp extends AbricosApplication {
      * @return bool
      */
     public function Invite_IsUserSearch($rUSVars){
-        $owner = $rUSVars->owner;
-        $userRole = $this->TeamMemberRole($owner->ownerid);
-        return $userRole->IsAdmin();
+        $teamid = $rUSVars->owner->ownerid;
+        $policyName = $rUSVars->owner->type;
+
+        if (!$this->IsTeamPolicy($teamid, $policyName)){
+            return false;
+        }
+
+        return $this->IsTeamAction($teamid, $policyName.'.append');
     }
 
 }

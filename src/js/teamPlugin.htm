@@ -16,9 +16,14 @@
 <!--{menu}-->
 <div class="teamWSMenu">
     <div id="{i#list}" class="list-group">
+        <a data-url="team.config.admins({v#teamid})" href="#"
+           data-menuItem="TeamAdminListWidget"
+           class="list-group-item">
+            Администраторы
+        </a>
         <a data-url="team.config.roles({v#teamid})" href="#"
            data-menuItem="TeamRolesWidget"
-           class="list-group-item active">
+           class="list-group-item">
             Права пользователей
         </a>
         <a data-url="team.config.policies({v#teamid})" href="#"

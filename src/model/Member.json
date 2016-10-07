@@ -4,7 +4,7 @@
   "fields": {
     "id": {
       "type": "int",
-      "dbField": "memberid"
+      "dbField": "userid"
     },
     "teamid": {
       "type": "int"
@@ -12,30 +12,9 @@
     "module": {
       "type": "string"
     },
-    "userid": {
+    "policyid": {
       "type": "int"
-    },
-    "status": {
-      "type": "string",
-      "valid": "waiting,joined,removed",
-      "default": "waiting",
-      "notNULL": true
-    },
-    "role": {
-      "type": "string",
-      "valid": "user,editor,moderator,admin",
-      "default": "user",
-      "notNULL": true
-    },
-    "isPrivate": {
-      "type": "bool",
-      "rolefn": "IsAdminRole"
-    },
-    "myStatus": {
-      "type": "string"
-    },
-    "myRole": {
-      "type": "string"
     }
+
   }
 }

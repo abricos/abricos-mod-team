@@ -2,21 +2,16 @@
   "type": "response",
   "version": "0.1.0",
   "vars": {
-    "method": {
-      "type": "string",
-      "valid": "team,iInTeams",
-      "default": "team"
-    },
     "teamid": {
       "type": "int"
     },
-    "teamids": {
-      "type": "array"
+    "policy": {
+      "type": "string",
+      "parse": "full"
     }
   },
   "codes": {
-    "OK": 1,
-    "BAD_METHOD": 2
+    "OK": 1
   },
   "fields": {
     "items": {

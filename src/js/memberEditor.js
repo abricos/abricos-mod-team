@@ -17,6 +17,7 @@ Component.entryPoint = function(NS){
         team: NS.ATTRIBUTE.team,
         memberid: NS.ATTRIBUTE.memberid,
         member: NS.ATTRIBUTE.member,
+        policy: NS.ATTRIBUTE.policy,
 
         isEdit: {
             getter: function(){
@@ -87,7 +88,7 @@ Component.entryPoint = function(NS){
                         srcNode: tp.one('userInviteFormWidget'),
                         owner: {
                             module: 'team',
-                            type: this.get('appInstance').get('moduleName'),
+                            type: this.get('policy'),
                             ownerid: teamid
                         },
                     }));

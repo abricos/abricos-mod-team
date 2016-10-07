@@ -405,7 +405,6 @@ class TeamMemberRoleList extends AbricosModelList {
  * @property int $teamid
  * @property string $module
  * @property string $title
- * @property string $visibility
  */
 interface TeamSaveVars {
 }
@@ -433,8 +432,6 @@ class TeamSave extends AbricosResponse {
  * @property int $userid
  * @property string $title
  * @property string $logo
- * @property string $visibility
- * @property int $memberCount
  * @property TeamMemberRole $userRole
  */
 class Team extends AbricosModel {
@@ -547,9 +544,8 @@ class TeamMemberList extends AbricosModelList {
 /**
  * Interface TeamMemberListFilterVars
  *
- * @property string $method Must be: team|inTeams
+ * @property string $policy
  * @property int $teamid
- * @property array $teamids
  */
 interface TeamMemberListFilterVars {
 }
@@ -589,8 +585,8 @@ class TeamMemberSaveVars {
  *
  * @property TeamMemberSaveVars $vars
  * @property int $teamid
- * @property int $memberid
  * @property int $userid
+ * @property string $policy
  */
 class TeamMemberSave extends AbricosResponse {
     protected $_structModule = 'team';

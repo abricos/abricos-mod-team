@@ -25,8 +25,6 @@ if ($updateManager->isInstall()){
             title VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Название общества',
             logo VARCHAR(8) NOT NULL DEFAULT '' COMMENT '',
             
-            visibility ENUM('private', 'public') DEFAULT 'private' COMMENT '',
-            
             memberCount INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Количество участников',
             
             dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
@@ -36,29 +34,6 @@ if ($updateManager->isInstall()){
             PRIMARY KEY (teamid),
             KEY ownerModule (ownerModule),
             KEY deldate (deldate)
-		)".$charset
-    );
-
-    $db->query_write("
-		CREATE TABLE IF NOT EXISTS ".$pfx."team_member (
-			memberid INT(10) UNSIGNED NOT NULL auto_increment,
-			teamid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Сообщество',
-			userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Пользователь',
-
-			status ENUM('waiting', 'joined', 'removed') DEFAULT 'joined' COMMENT 'Статус',
-			role ENUM('user', 'editor', 'moderator', 'admin') DEFAULT 'user' COMMENT 'Роль',
-
-			isPrivate tinyINT(1) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Скрывать свое участие не членам группы',
-			
-			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата создания',
-			upddate INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'Дата обновления',
-			
-			PRIMARY KEY (memberid),
-			UNIQUE KEY member (teamid, userid),
-			KEY teamid (teamid),
-			KEY userid (userid),
-			KEY status (status),
-			KEY role (role)
 		)".$charset
     );
 
@@ -144,6 +119,22 @@ if ($updateManager->isInstall()){
             UNIQUE KEY userrole (teamid, userid, ownerModule, actionGroup)
         )".$charset
     );
+
+    $db->query_write("
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_user_invite (
+            inviteid INT(10) UNSIGNED NOT NULL auto_increment,
+            
+            teamid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+
+            policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'To Policy ID',
+			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+
+            PRIMARY KEY (inviteid),
+            KEY invite (teamid, userid)
+        )".$charset
+    );
+
 }
 
 // При последующем обновлении обязательно зачисти весь кэш ролей пользователей
