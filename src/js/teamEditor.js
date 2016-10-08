@@ -120,9 +120,6 @@ Component.entryPoint = function(NS){
                 title: team.get('title')
             });
 
-            if (tp.one('visibility-' + team.get('visibility'))){
-                tp.one('visibility-' + team.get('visibility')).set('checked', true);
-            }
             this.onLoadTeam(team);
         },
         onLoadTeam: function(team){
@@ -133,20 +130,11 @@ Component.entryPoint = function(NS){
         toJSON: function(){
             var tp = this.template,
                 team = this.get('team'),
-                vs = ['private', 'public'],
                 data = {
                     teamid: this.get('team').get('id'),
                     module: team.get('module'),
                     title: tp.getValue('title')
                 };
-
-            for (var i = 0; i < vs.length; i++){
-                if (tp.one('visibility-' + vs[i])
-                    && tp.one('visibility-' + vs[i]).get('checked')){
-                    data['visibility'] = vs[i];
-                    break;
-                }
-            }
 
             return this.onFillToJSON(data);
         },

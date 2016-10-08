@@ -7,6 +7,8 @@
  * @author Alexander Kuzmin <roosit@abricos.org>
  */
 
+require_once 'policies.php';
+
 /**
  * Class TeamActionItem
  *

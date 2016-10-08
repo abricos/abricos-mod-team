@@ -17,6 +17,7 @@ class TeamAction {
     const CONFIG_ROLE = 'config.role';
 
     const ADMIN_VIEW = 'admin.view';
+    const ADMIN_LIST = 'admin.list';
     const ADMIN_APPEND = 'admin.append';
     const ADMIN_UPDATE = 'admin.update';
     const ADMIN_REMOVE = 'admin.remove';
@@ -64,6 +65,7 @@ class TeamPolicy {
                 TeamAction::CONFIG_ROLE,
 
                 TeamAction::ADMIN_VIEW,
+                TeamAction::ADMIN_LIST,
                 TeamAction::ADMIN_APPEND,
                 TeamAction::ADMIN_UPDATE,
                 TeamAction::ADMIN_REMOVE,

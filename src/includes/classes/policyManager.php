@@ -297,7 +297,14 @@ class TeamUserPolicyManager {
 
         $action = $this->app->ActionList()->GetByPath($ownerModule, $group, $name);
         if (empty($action)){
-            throw new Exception('Team action `'.$actionKey.'` not found');
+
+            $this->tpm->CheckTeamPolicies();
+            $action = $this->app->ActionList()->GetByPath($ownerModule, $group, $name);
+            if (empty($action)){
+                throw new Exception('Team action `'.$actionKey.'` not found');
+            }
+            $this->_cacheUserPolicyList = null;
+            $this->_cacheUserRoleList = null;
         }
 
         $this->CheckUserRoles();

@@ -123,6 +123,7 @@ Component.entryPoint = function(NS){
 
             if (user){
                 tp.setHTML({
+                    userNameRO: user.get('username'),
                     firstNameRO: user.get('firstname'),
                     lastNameRO: user.get('lastname'),
                 });
@@ -160,8 +161,7 @@ Component.entryPoint = function(NS){
             return this.onFillToJSON(data);
         },
         save: function(){
-            var teamid = this.get('team').get('id'),
-                data = this.toJSON(),
+            var data = this.toJSON(),
                 callback = this.get('callback');
 
             this.set('waiting', true);
@@ -169,10 +169,12 @@ Component.entryPoint = function(NS){
                 this.set('waiting', false);
 
                 if (!err){
-                    this.go('team.member.list', teamid);
+                    this.onSave(result.memberSave);
                 }
             }, this);
         },
+        onSave: function(r){
+        }
     };
     NS.MemberEditorWidgetExt = MemberEditorWidgetExt;
 };

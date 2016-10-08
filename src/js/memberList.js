@@ -6,15 +6,17 @@ Component.requires = {
 };
 Component.entryPoint = function(NS){
 
-    var MemberListRowWidgetExt = function(){
+    var MemberListItemWidgetExt = function(){
     };
-    MemberListRowWidgetExt.ATTRS = {
+    MemberListItemWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
         member: {value: null}
     };
-    MemberListRowWidgetExt.prototype = {
+    MemberListItemWidgetExt.prototype = {
         buildTData: function(){
-            return this.get('member').toReplace();
+            return {
+                memberid: this.get('member').get('id')
+            };
         },
         onInitAppWidget: function(err, appInstance, options){
             // this.appURLUpdate();
@@ -24,7 +26,7 @@ Component.entryPoint = function(NS){
         onRenderMember: function(){
         },
     };
-    NS.MemberListRowWidgetExt = MemberListRowWidgetExt;
+    NS.MemberListItemWidgetExt = MemberListItemWidgetExt;
 
     var MemberListWidgetExt = function(){
     };
@@ -34,6 +36,7 @@ Component.entryPoint = function(NS){
         policy: NS.ATTRIBUTE.policy,
         memberList: {value: null},
         memberListFilter: NS.ATTRIBUTE.memberListFilter,
+        itemWidget: {value: null}
     };
     MemberListWidgetExt.prototype = {
         buildTData: function(){
@@ -52,8 +55,14 @@ Component.entryPoint = function(NS){
             }
         },
         destructor: function(){
-            this.closeAction();
             this._cleanMemberList();
+        },
+        _cleanMemberList: function(){
+            var list = this._wsList;
+            for (var i = 0; i < list.length; i++){
+                list[i].destroy();
+            }
+            return this._wsList = [];
         },
         reloadMemberList: function(){
             var teamApp = this.get('teamApp'),
@@ -74,13 +83,15 @@ Component.entryPoint = function(NS){
             }
 
             var appInstance = this.get('appInstance'),
-                ownerModule = appInstance.get('moduleName'),
                 tp = this.template,
                 wsList = this._cleanMemberList(),
-                MemberListRowWidget = Brick.mod[ownerModule].MemberListRowWidget || NS.MemberListRowWidget;
+                ItemWidget = this.get('itemWidget');
 
+            if (!ItemWidget){
+                return;
+            }
             memberList.each(function(member){
-                var w = new MemberListRowWidget({
+                var w = new ItemWidget({
                     boundingBox: tp.append('list', tp.replace('itemWrap')),
                     member: member,
                 });
@@ -90,115 +101,6 @@ Component.entryPoint = function(NS){
             return this.onLoadMemberList(memberList);
         },
         onLoadMemberList: function(memberList){
-        },
-        _cleanMemberList: function(){
-            var list = this._wsList;
-            for (var i = 0; i < list.length; i++){
-                list[i].destroy();
-            }
-            return this._wsList = [];
-        },
-        closeAction: function(){
-            if (this.actionWidget){
-                this.actionWidget.destroy();
-                this.actionWidget = null;
-            }
-            var tp = this.template;
-            tp.toggleView(false, 'action', 'list,buttons');
-        },
-        _actionCallback: function(memberList){
-            if (memberList){
-                this.set('memberList', memberList);
-            }
-            this._onLoadMemberList(memberList);
-            this.closeAction();
-        },
-        _showAction: function(actionType, member){
-            var tp = this.template,
-                ActionWidget = actionType === 'editor'
-                    ? NS.MemberEditorWidget
-                    : NS.MemberRemoveWidget;
-
-            tp.toggleView(true, 'action', 'list,buttons');
-
-            this.actionWidget = new ActionWidget({
-                srcNode: tp.append('action', '<div></div>'),
-                member: member,
-                callbackContext: this,
-                callback: this._actionCallback
-            });
-        },
-        showEditor: function(memberid){
-            memberid = memberid | 0;
-
-            var appInstance = this.get('appInstance'),
-                ownerModule = appInstance.get('moduleName'),
-                tp = this.template,
-                filter = this.get('memberListFilter'),
-                teamid = 0,
-                MemberEditorWidget = Brick.mod[ownerModule].MemberEditorWidget;
-
-            if (!MemberEditorWidget){
-                return;
-            }
-
-            if (memberid === 0 && filter.method === 'team'){
-                teamid = filter.teamid | 0;
-            } else if (memberid > 0){
-                var member = this.get('memberList').getById(memberid);
-                if (!member){
-                    return;
-                }
-                teamid = member.get('teamid');
-            }
-
-            if (teamid === 0){
-                return;
-            }
-
-            tp.toggleView(true, 'action', 'list,buttons');
-
-            this.actionWidget = new MemberEditorWidget({
-                srcNode: tp.append('action', '<div></div>'),
-                teamid: teamid,
-                memberid: memberid,
-                callbackContext: this,
-                callback: this._actionCallback
-            });
-        },
-        showViewer: function(memberid){
-            memberid = memberid | 0;
-
-            var appInstance = this.get('appInstance'),
-                ownerModule = appInstance.get('moduleName'),
-                tp = this.template,
-                MemberViewerWidget = Brick.mod[ownerModule].MemberViewerWidget;
-
-            if (!MemberViewerWidget){
-                return;
-            }
-
-            var member = this.get('memberList').getById(memberid);
-            if (!member){
-                return;
-            }
-
-            tp.toggleView(true, 'action', 'list,buttons');
-
-            this.actionWidget = new MemberViewerWidget({
-                srcNode: tp.append('action', '<div></div>'),
-                teamid: member.get('teamid'),
-                memberid: memberid,
-                callbackContext: this,
-                callback: this._actionCallback
-            });
-        },
-        showRemove: function(itemid){
-            itemid = itemid | 0;
-
-            var member = this.get('memberList').getById(itemid);
-
-            this._showAction('remove', member);
         },
     };
     NS.MemberListWidgetExt = MemberListWidgetExt;

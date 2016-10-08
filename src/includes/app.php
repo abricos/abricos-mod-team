@@ -324,7 +324,7 @@ class TeamApp extends AbricosApplication {
         }
 
         $d = TeamQuery::Team($this->db, $teamid);
-        if (!empty($this->db->errorText)){
+        if (empty($d)){
             print_r($this->db->errorText);
             exit;
         }
