@@ -1,7 +1,7 @@
 var Component = new Brick.Component();
 Component.requires = {
     mod: [
-        {name: '{C#MODNAME}', files: ['lib.js']}
+        {name: '{C#MODNAME}', files: ['policies.js', 'lib.js']}
     ]
 };
 Component.entryPoint = function(NS){
@@ -19,14 +19,48 @@ Component.entryPoint = function(NS){
 
             this.set('waiting', true);
             appInstance.policies(teamid, function(err, result){
+                this.set('waiting', false);
                 if (err){
                     return;
                 }
-                this.set('waiting', false);
                 this.set('policyList', result.policyList);
-                this.set('actionList', result.actionList);
                 this.set('roleList', result.roleList);
+                this._onLoadPolicies()
+            }, this);
+        },
+        _onLoadPolicies: function(){
+
+            var actionList = this.get('appInstance').get('actionList'),
+                modules = actionList.toArray('module', {distinct: true}),
+                i18n = NS.policies.language;
+
+            NS.uses(modules, 'policies', function(){
+
+                actionList.each(function(action){
+
+                    var name = action.get('group') + '.' + action.get('name'),
+                        key = 'policies.action.item.' + name,
+                        title = i18n.get(key);
+
+                    action.set('title', title ? title : name);
+
+                    var ownerNS = Brick.mod[action.get('module')];
+
+                    if (!ownerNS){
+                        return;
+                    }
+
+                    title = ownerNS.policies && ownerNS.policies.language
+                        ? ownerNS.policies.language.get(key) : '';
+
+                    if (title){
+                        action.set('title', title);
+                    }
+
+                }, this);
+
                 this.renderPolicyList();
+
             }, this);
         },
         _isSetAction: function(policyid, action){
@@ -42,10 +76,10 @@ Component.entryPoint = function(NS){
         },
         renderPolicyList: function(){
             var tp = this.template,
+                actionList = this.get('appInstance').get('actionList'),
                 ownerApp = this.get('ownerApp'),
                 lst = "",
                 activePolicyId = this.get('activePolicyId');
-
 
             this.get('policyList').each(function(policy){
                 if (activePolicyId === 0){
@@ -63,7 +97,7 @@ Component.entryPoint = function(NS){
 
             var lstAction = "";
 
-            this.get('actionList').each(function(action){
+            actionList.each(function(action){
                 lstAction += tp.replace('actionRow', {
                     id: action.get('id'),
                     title: action.get('title'),
@@ -97,7 +131,6 @@ Component.entryPoint = function(NS){
             },
             activePolicyId: {value: 0},
             policyList: {},
-            actionList: {},
             roleList: {},
         }
     });

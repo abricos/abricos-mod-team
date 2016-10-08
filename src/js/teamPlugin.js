@@ -26,6 +26,9 @@ Component.entryPoint = function(NS){
         ATTRS: {
             component: {value: COMPONENT},
             templateBlockName: {value: 'menu'},
+        },
+        isVisible: function(team){
+            return team.isAction('config');
         }
     });
 

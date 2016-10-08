@@ -91,21 +91,6 @@ Component.entryPoint = function(NS){
             actionList: {
                 type: 'modelList:ActionList',
                 attribute: true,
-                    /*
-                     onResponse: function(actionList){
-                     var i18n = this.language;
-
-                     actionList.each(function(action){
-                     var ownerApp = Brick.mod[action.get('module')],
-                     ownerI18n = ownerApp.appInstance.language,
-                     name = action.get('group') + '.' + action.get('name'),
-                     key = 'policies.action.item.' + name,
-                     title = ownerI18n.get(key) || i18n.get(key);
-
-                     action.set('title', title ? title : name);
-                     }, this);
-                     }
-                     /**/
             },
             pluginList: {
                 type: 'modelList:PluginList',

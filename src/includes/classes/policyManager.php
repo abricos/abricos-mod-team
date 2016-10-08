@@ -70,8 +70,8 @@ class TeamPolicyManager {
     }
 
     public function ResponseToJSON($d){
-        if (!$this->IsAction(TeamAction::ROLE_UPDATE)){
-            return AbricosResponse::ERR_FORBIDDEN;
+        if (!$this->IsAction(TeamAction::CONFIG_ROLE)){
+            return $this->app->ResultToJSON('policies', AbricosResponse::ERR_FORBIDDEN);
         }
 
         switch ($d->do){

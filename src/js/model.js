@@ -77,6 +77,19 @@ Component.entryPoint = function(NS){
 
     NS.Team = Y.Base.create('team', SYS.AppModel, [], {
         structureName: 'Team',
+        isAction: function(action){
+            var a = action.split('.'),
+                obj = this.get('role');
+
+            for (var i = 0, s; i < a.length; i++){
+                s = a[i];
+                if (!obj[s]){
+                    return false;
+                }
+                obj = obj[s];
+            }
+            return !!obj;
+        }
     }, {
         ATTRS: {
             extends: {value: {}},

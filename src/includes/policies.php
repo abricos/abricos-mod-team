@@ -55,8 +55,6 @@ class TeamPolicy {
     const GUEST = 'guest';
     const BANNED = 'banned';
 
-
-
     public static function GetDefaultPolicies(){
         return array(
             TeamPolicy::ADMIN => array(

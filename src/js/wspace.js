@@ -160,6 +160,10 @@ Component.entryPoint = function(NS){
                     continue;
                 }
 
+                if (Y.Lang.isFunction(MenuWidget.isVisible) && !MenuWidget.isVisible(team)){
+                    continue;
+                }
+
                 this.addWidget('menu-' + name, new MenuWidget({
                     srcNode: tp.append('menuWidget', '<div></div>'),
                     team: team,
