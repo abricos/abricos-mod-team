@@ -14,7 +14,7 @@ class TeamAction {
     const TEAM_VIEW = 'team.view';
     const TEAM_UPDATE = 'team.update';
 
-    const ROLE_UPDATE = 'role.update';
+    const CONFIG_ROLE = 'config.role';
 
     const ADMIN_VIEW = 'admin.view';
     const ADMIN_APPEND = 'admin.append';
@@ -63,7 +63,7 @@ class TeamPolicy {
                 TeamAction::TEAM_VIEW,
                 TeamAction::TEAM_UPDATE,
 
-                TeamAction::ROLE_UPDATE,
+                TeamAction::CONFIG_ROLE,
 
                 TeamAction::ADMIN_VIEW,
                 TeamAction::ADMIN_APPEND,

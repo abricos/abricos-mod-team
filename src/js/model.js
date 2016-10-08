@@ -67,7 +67,7 @@ Component.entryPoint = function(NS){
                 if (this._cacheUser){
                     return this._cacheUser;
                 }
-                var userid =  this.attrAdded('userid') ? this.get('userid') : this.get('id'),
+                var userid = this.attrAdded('userid') ? this.get('userid') : this.get('id'),
                     userList = this.appInstance.getApp('uprofile').get('userList');
 
                 return this._cacheUser = userList.getById(userid);
@@ -75,25 +75,12 @@ Component.entryPoint = function(NS){
         }
     };
 
-    NS.TeamMemberRole = Y.Base.create('teamUserRole', SYS.AppModel, [], {
-        structureName: 'TeamMemberRole',
-        isJoined: function(){
-            return this.get('status') === 'joined';
-        },
-        isWaiting: function(){
-            return this.get('status') === 'waiting';
-        },
-        isAdmin: function(){
-            return NS.roles.isAdmin ||
-                (this.get('role') === 'admin' && this.isJoined());
-        },
-    });
-
     NS.Team = Y.Base.create('team', SYS.AppModel, [], {
         structureName: 'Team',
     }, {
         ATTRS: {
-            extends: {value: {}}
+            extends: {value: {}},
+            role: {value: {}}
         }
     });
 
@@ -130,18 +117,6 @@ Component.entryPoint = function(NS){
 
     NS.RoleList = Y.Base.create('roleList', SYS.AppModelList, [], {
         appItem: NS.Role,
-    });
-
-    NS.Group = Y.Base.create('group', SYS.AppModel, [], {
-        structureName: 'Group',
-    }, {
-        ATTRS: {
-            extends: {value: {}}
-        }
-    });
-
-    NS.GroupList = Y.Base.create('groupList', SYS.AppModelList, [], {
-        appItem: NS.Group,
     });
 
     NS.TeamListFilter = Y.Base.create('teamListFilter', SYS.AppResponse, [], {
@@ -203,7 +178,6 @@ Component.entryPoint = function(NS){
             return mods;
         },
     });
-
 
     NS.Config = Y.Base.create('config', SYS.AppModel, [], {
         structureName: 'Config'

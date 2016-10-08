@@ -62,8 +62,10 @@
                         <img src="/images/loading.gif"/>
                     </a>
                 </li>
-                <li data-wait="hide">
-                    <a href="#" data-url="team.config.view({v#teamid})">
+                <li data-trigger="this:team.role"
+                    data-code="config"
+                    class="hide">
+                    <a data-url="team.config.view({v#teamid})" href="#">
                         Настройка
                     </a>
                 </li>

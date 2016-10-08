@@ -120,18 +120,18 @@ if ($updateManager->isInstall()){
         )".$charset
     );
 
+    // кэш разрешенных действий пользователя в сообществе (чистить при любых изменениях ролей!)
+    // используется только при получении сообщества пользователем
     $db->query_write("
-        CREATE TABLE IF NOT EXISTS ".$pfx."team_user_invite (
-            inviteid INT(10) UNSIGNED NOT NULL auto_increment,
+        CREATE TABLE IF NOT EXISTS ".$pfx."team_userActions (
+            useractionid INT(10) UNSIGNED NOT NULL auto_increment,
             
             teamid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
             userid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
+            actions VARCHAR(255) NOT NULL DEFAULT '' COMMENT '',
 
-            policyid INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT 'To Policy ID',
-			dateline INT(10) UNSIGNED NOT NULL DEFAULT 0 COMMENT '',
-
-            PRIMARY KEY (inviteid),
-            KEY invite (teamid, userid)
+            PRIMARY KEY (useractionid),
+            UNIQUE KEY userrole (teamid, userid)
         )".$charset
     );
 

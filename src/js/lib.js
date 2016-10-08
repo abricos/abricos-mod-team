@@ -19,7 +19,7 @@ Component.entryPoint = function(NS){
         initializer: function(){
             this._teamCache = {};
             NS.roles.load(function(){
-                this.pluginList(function(){
+                this.appData(function(){
                     this.initCallbackFire();
                 }, this);
             }, this);
@@ -78,7 +78,6 @@ Component.entryPoint = function(NS){
             RoleList: {value: NS.RoleList},
             Plugin: {value: NS.Plugin},
             PluginList: {value: NS.PluginList},
-            TeamMemberRole: {value: NS.TeamMemberRole},
             Team: {value: NS.Team},
             TeamList: {value: NS.TeamList},
             TeamListFilter: {value: NS.TeamListFilter},
@@ -88,6 +87,26 @@ Component.entryPoint = function(NS){
             Config: {value: NS.Config}
         },
         REQS: {
+            appData: {},
+            actionList: {
+                type: 'modelList:ActionList',
+                attribute: true,
+                    /*
+                     onResponse: function(actionList){
+                     var i18n = this.language;
+
+                     actionList.each(function(action){
+                     var ownerApp = Brick.mod[action.get('module')],
+                     ownerI18n = ownerApp.appInstance.language,
+                     name = action.get('group') + '.' + action.get('name'),
+                     key = 'policies.action.item.' + name,
+                     title = ownerI18n.get(key) || i18n.get(key);
+
+                     action.set('title', title ? title : name);
+                     }, this);
+                     }
+                     /**/
+            },
             pluginList: {
                 type: 'modelList:PluginList',
                 attribute: true
@@ -103,6 +122,23 @@ Component.entryPoint = function(NS){
                 },
                 onResponse: function(team, data){
                     this.setTeamCache(team.get('id'), 'Team', team);
+
+                    var actionList = this.get('actionList'),
+                        role = team.get('role'),
+                        actIds = team.get('userActions').split(','),
+                        action, actionGroup;
+
+                    for (var i = 0; i < actIds.length; i++){
+                        action = actionList.getById(actIds[i] | 0);
+                        if (!action || action.get('module') !== team.get('module')){
+                            continue;
+                        }
+                        actionGroup = action.get('group');
+                        if (!role[actionGroup]){
+                            role[actionGroup] = {};
+                        }
+                        role[actionGroup][action.get('name')] = true;
+                    }
 
                     return function(callback, context){
                         var ownerModule = team.get('module');
@@ -168,23 +204,6 @@ Component.entryPoint = function(NS){
                     }, this);
                 }
             },
-            actionList: {
-                args: ['teamid'],
-                type: 'modelList:ActionList',
-                onResponse: function(actionList){
-                    var i18n = this.language;
-
-                    actionList.each(function(action){
-                        var ownerApp = Brick.mod[action.get('module')],
-                            ownerI18n = ownerApp.appInstance.language,
-                            name = action.get('group') + '.' + action.get('name'),
-                            key = 'policies.action.item.' + name,
-                            title = ownerI18n.get(key) || i18n.get(key);
-
-                        action.set('title', title ? title : name);
-                    }, this);
-                }
-            },
             roleList: {
                 args: ['teamid'],
                 type: 'modelList:RoleList',
@@ -202,18 +221,18 @@ Component.entryPoint = function(NS){
                         }, context);
 
                         /*
-                        var ownerModules = memberList.toArray('module', {distinct: true});
+                         var ownerModules = memberList.toArray('module', {distinct: true});
 
-                        NS.initApps(ownerModules, function(){
-                            memberList.each(this._memberExtends, this);
+                         NS.initApps(ownerModules, function(){
+                         memberList.each(this._memberExtends, this);
 
-                            var userIds = memberList.toArray('userid', {distinct: true});
-                            this.getApp('uprofile').userListByIds(userIds, function(err, result){
-                                callback.call(context || null);
-                            }, context);
+                         var userIds = memberList.toArray('userid', {distinct: true});
+                         this.getApp('uprofile').userListByIds(userIds, function(err, result){
+                         callback.call(context || null);
+                         }, context);
 
-                        }, this);
-                        /**/
+                         }, this);
+                         /**/
                     };
                 }
             },

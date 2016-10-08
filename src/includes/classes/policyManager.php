@@ -12,8 +12,6 @@
  */
 class TeamPolicyManager {
 
-    private static $_cacheActionList = null;
-
     private $_cachePolicyList = null;
     private $_cacheRoleList = null;
     private $_cacheUserManager = array();
@@ -79,8 +77,6 @@ class TeamPolicyManager {
         switch ($d->do){
             case 'policies':
                 return $this->PoliciesToJSON();
-            case 'actionList':
-                return $this->ActionListToJSON();
             case 'policyList':
                 return $this->PolicyListToJSON();
             case 'roleList':
@@ -92,7 +88,6 @@ class TeamPolicyManager {
     private function PoliciesToJSON(){
         return $this->app->ImplodeJSON(array(
             $this->PolicyListToJSON(),
-            $this->ActionListToJSON(),
             $this->RoleListToJSON()
         ));
     }
@@ -141,27 +136,6 @@ class TeamPolicyManager {
         return $this->_cachePolicyList = $list;
     }
 
-    private function ActionListToJSON(){
-        $list = $this->ActionList();
-        return $this->app->ResultToJSON('actionList', $list);
-    }
-
-    /**
-     * @return TeamActionList
-     */
-    public function ActionList(){
-        if (!empty(TeamPolicyManager::$_cacheActionList)){
-            return TeamPolicyManager::$_cacheActionList;
-        }
-        /** @var TeamActionList $list */
-        $list = $this->app->InstanceClass('ActionList');
-        $rows = TeamQuery::ActionList($this->app->db);
-        while (($d = $this->app->db->fetch_array($rows))){
-            $list->Add($this->app->InstanceClass('Action', $d));
-        }
-        return TeamPolicyManager::$_cacheActionList = $list;
-    }
-
     /**
      * Идеология:
      * 1. со всех модулей собирается политики по умолчанию
@@ -181,7 +155,7 @@ class TeamPolicyManager {
 
         $ownerModule = $this->app->TeamOwnerModule($this->teamid);
 
-        $actionList = $this->ActionList();
+        $actionList = $this->app->ActionList();
         $policyList = $this->PolicyList();
 
         foreach ($defPolicies as $policy => $actions){
@@ -279,7 +253,7 @@ class TeamPolicyManager {
             TeamQuery::RoleAppendByList($this->app->db, $roleList);
         }
 
-        TeamPolicyManager::$_cacheActionList = null;
+        $this->app->CacheClear();
         $this->_cacheRoleList = null;
 
         // remove all cache user roles in team
@@ -321,7 +295,7 @@ class TeamUserPolicyManager {
 
         $ownerModule = $this->tpm->ownerModule;
 
-        $action = $this->tpm->ActionList()->GetByPath($ownerModule, $group, $name);
+        $action = $this->app->ActionList()->GetByPath($ownerModule, $group, $name);
         if (empty($action)){
             throw new Exception('Team action `'.$actionKey.'` not found');
         }
@@ -363,8 +337,12 @@ class TeamUserPolicyManager {
             return;
         }
 
-        $userRoleList = $this->UserRoleList();
         $userPolicyList = $this->UserPolicyList();
+
+        if ($userPolicyList->Count() === 0 && $this->userid > 0){ // this user is guest in current team
+            $userPolicyList = $this->tpm->UserManager(0)->UserPolicyList();
+        }
+
         $roleList = $this->tpm->RoleList();
 
         for ($i = 0; $i < $userPolicyList->Count(); $i++){
@@ -394,6 +372,21 @@ class TeamUserPolicyManager {
         TeamQuery::UserRoleAppendByList($this->app->db, $userRoleList);
 
         $this->_cacheUserRoleList = null;
+
+        $actionIds = array();
+        $actionList = $this->app->ActionList();
+        for ($i = 0; $i < $actionList->Count(); $i++){
+            $action = $actionList->GetByIndex($i);
+
+            $userRole = $userRoleList->GetByPath($action->module, $action->group);
+            if (!empty($userRole) && $userRole->IsSetCode($action->code)){
+                $actionIds[] = $action->id;
+            }
+        }
+
+        TeamQuery::UserActionsAppend($this->app->db, $this->teamid, $this->userid,
+            implode(",", $actionIds)
+        );
     }
 
     /**

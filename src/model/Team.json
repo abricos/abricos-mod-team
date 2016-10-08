@@ -20,8 +20,8 @@
     "logo": {
       "type": "string"
     },
-    "userRole": {
-      "type": "model:TeamMemberRole"
+    "userActions": {
+      "type": "string"
     }
   }
 }

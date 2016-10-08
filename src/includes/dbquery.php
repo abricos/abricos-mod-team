@@ -73,8 +73,17 @@ class TeamQuery {
 
     public static function Team(Ab_Database $db, $teamid){
         $sql = "
-			SELECT t.*
+			SELECT 
+			    t.*,
+			    IFNULL(uaUser.actions, uaGuest.actions) as userActions
             FROM ".$db->prefix."team t
+            INNER JOIN ".$db->prefix."team_userActions uaGuest 
+                ON uaGuest.teamid=t.teamid
+                    AND uaGuest.userid=0
+            LEFT JOIN ".$db->prefix."team_userActions uaUser 
+                ON uaUser.teamid=t.teamid
+                    AND uaUser.userid=".intval(Abricos::$user->id)."
+
             WHERE t.teamid=".intval($teamid)."
                 AND t.deldate=0
             LIMIT 1
@@ -280,6 +289,20 @@ class TeamQuery {
         $db->query_write($sql);
     }
 
+    public static function UserActionsAppend(Ab_Database $db, $teamid, $userid, $actions){
+        $sql = "
+            INSERT INTO ".$db->prefix."team_userActions
+            (teamid, userid, actions) 
+            VALUES (
+                ".intval($teamid).",
+                ".intval($userid).",
+                '".bkstr($actions)."'
+            )
+            ON DUPLICATE KEY UPDATE actions='".bkstr($actions)."'
+		";
+        $db->query_write($sql);
+    }
+
     public static function UserRoleClean(Ab_Database $db, $teamid, $userid = -1){
         $sql = "
 			DELETE FROM ".$db->prefix."team_userRole
@@ -288,7 +311,16 @@ class TeamQuery {
         if ($userid > -1){
             $sql .= " AND userid=".intval($userid)." ";
         }
-        return $db->query_write($sql);
+        $db->query_write($sql);
+
+        $sql = "
+			DELETE FROM ".$db->prefix."team_userActions
+            WHERE teamid=".intval($teamid)."
+		";
+        if ($userid > -1){
+            $sql .= " AND userid=".intval($userid)." ";
+        }
+        $db->query_write($sql);
     }
 
     /* * * * * * * * * * * * * * Member * * * * * * * * * * * * */
@@ -308,19 +340,5 @@ class TeamQuery {
         return $db->query_read($sql);
     }
 
-    /* * * * * * * * * * * * * * Invite Policy * * * * * * * * * * * * */
-
-    public static function UserInviteAppend(Ab_Database $db, $teamid, $userid, $policyid){
-        $sql = "
-			INSERT INTO ".$db->prefix."team_user_invite
-            (teamid, userid, policyid, dateline) VALUES (
-                ".intval($teamid).",
-                ".intval($userid).",
-                ".intval($policyid).",
-                ".intval(TIMENOW)."
-            )
-		";
-        $db->query_write($sql);
-    }
 
 }

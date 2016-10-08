@@ -50,8 +50,16 @@ class TeamApp extends AbricosApplication {
 
     public function ResponseToJSON($d){
         switch ($d->do){
+            case 'appData':
+                return $this->ImplodeJSON(
+                    $this->ActionListToJSON(),
+                    $this->PluginListToJSON()
+                );
+            case 'actionList':
+                return $this->ActionListToJSON();
             case 'pluginList':
                 return $this->PluginListToJSON();
+
             case "teamSave":
                 return $this->TeamSaveToJSON($d->data);
             case 'teamList':
@@ -164,6 +172,30 @@ class TeamApp extends AbricosApplication {
         return !empty($policy);
     }
 
+    public function ActionListToJSON(){
+        $res = $this->ActionList();
+        return $this->ResultToJSON('actionList', $res);
+    }
+
+    public function ActionList(){
+        if (isset($this->_cache['ActionList'])){
+            return $this->_cache['ActionList'];
+        }
+
+        if (!$this->IsViewRole()){
+            return AbricosResponse::ERR_FORBIDDEN;
+        }
+
+        /** @var TeamActionList $list */
+        $list = $this->InstanceClass('ActionList');
+        $rows = TeamQuery::ActionList($this->db);
+        while (($d = $this->db->fetch_array($rows))){
+            $list->Add($this->InstanceClass('Action', $d));
+        }
+
+        return $this->_cache['ActionList'] = $list;
+    }
+
     public function PluginListToJSON(){
         $res = $this->PluginList();
         return $this->ResultToJSON('pluginList', $res);
@@ -209,7 +241,6 @@ class TeamApp extends AbricosApplication {
         }
         return $list;
     }
-
 
     public function TeamSaveToJSON($d){
         $res = $this->TeamSave($d);
@@ -293,6 +324,10 @@ class TeamApp extends AbricosApplication {
         }
 
         $d = TeamQuery::Team($this->db, $teamid);
+        if (!empty($this->db->errorText)){
+            print_r($this->db->errorText);
+            exit;
+        }
 
         /** @var Team $team */
         $team = $this->InstanceClass('Team', $d);
@@ -364,7 +399,12 @@ class TeamApp extends AbricosApplication {
 
             $toPolicyName = $rUS->vars->owner->type;
 
-            $policy = $this->PolicyManager($ret->teamid)->PolicyList()->GetByName($toPolicyName);
+            if ($this->IsTeamPolicy($ret->teamid, $toPolicyName)
+                || !$this->IsTeamAction($ret->teamid, $toPolicyName.'.append')
+            ){
+                return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
+            }
+
 
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
 
@@ -381,9 +421,10 @@ class TeamApp extends AbricosApplication {
                 $ret->policy = $toPolicyName;
 
                 $um = $this->PolicyManager($ret->teamid)->UserManager($ret->userid);
-                $um->AddToPolicy(TeamPolicy::INVITE);
-
-                TeamQuery::UserInviteAppend($this->db, $ret->teamid, $ret->userid, $policy->id);
+                $um->AddToPolicy(array(
+                    TeamPolicy::INVITE,
+                    $toPolicyName
+                ));
 
                 $ownerApp->Team_OnMemberInvite($ret, $rCreate);
             } else {
