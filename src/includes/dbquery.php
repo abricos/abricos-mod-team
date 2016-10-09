@@ -330,15 +330,33 @@ class TeamQuery {
         $policyName = $filter->vars->policy;
 
         $sql = "
-			SELECT up.userid
+			SELECT 
+			    up.userid,
+			    up.teamid,
+			    t.ownerModule
             FROM ".$db->prefix."team_userPolicy up
-            INNER JOIN ".$db->prefix."team_policy p 
-                ON up.policyid=p.policyid 
+            INNER JOIN ".$db->prefix."team_policy p ON up.policyid=p.policyid 
                     AND p.policyName='".bkstr($policyName)."'
+            INNER JOIN ".$db->prefix."team t ON up.teamid=t.teamid 
             WHERE up.teamid=".intval($teamid)."
 		";
         return $db->query_read($sql);
     }
 
+    public static function Member(Ab_Database $db, $teamid, $memberid, $policyName){
+        $sql = "
+			SELECT 
+			    up.userid,
+			    up.teamid,
+			    t.ownerModule
+            FROM ".$db->prefix."team_userPolicy up
+            INNER JOIN ".$db->prefix."team_policy p ON up.policyid=p.policyid 
+                    AND p.policyName='".bkstr($policyName)."'
+            INNER JOIN ".$db->prefix."team t ON up.teamid=t.teamid 
+            WHERE up.userid=".intval($memberid)." AND up.teamid=".intval($teamid)."
+            LIMIT 1
+		";
+        return $db->query_first($sql);
+    }
 
 }

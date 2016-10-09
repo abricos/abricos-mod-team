@@ -146,7 +146,7 @@ Component.entryPoint = function(NS){
                 type: 'response:TeamListFilter'
             },
             member: {
-                args: ['teamid', 'memberid'],
+                args: ['teamid', 'memberid', 'policy'],
                 type: "model:Member",
                 onResponse: function(member){
                     return function(callback, context){
@@ -155,7 +155,7 @@ Component.entryPoint = function(NS){
                         NS.initApps([ownerModule], function(){
                             this._memberExtends(member);
 
-                            var userid = member.get('userid');
+                            var userid = member.get('id');
                             this.getApp('uprofile').user(userid, function(err, result){
                                 callback.call(context || null);
                             }, context);
@@ -198,26 +198,18 @@ Component.entryPoint = function(NS){
                 type: 'response:MemberListFilter',
                 onResponse: function(filter){
                     return function(callback, context){
-                        var memberList = filter.get('items');
+                        var memberList = filter.get('items'),
+                            ownerModules = memberList.toArray('module', {distinct: true});
 
-                        var userIds = memberList.toArray('id', {distinct: true});
-                        this.getApp('uprofile').userListByIds(userIds, function(err, result){
-                            callback.call(context || null);
-                        }, context);
+                        NS.initApps(ownerModules, function(){
+                            memberList.each(this._memberExtends, this);
 
-                        /*
-                         var ownerModules = memberList.toArray('module', {distinct: true});
+                            var userIds = memberList.toArray('id', {distinct: true});
+                            this.getApp('uprofile').userListByIds(userIds, function(err, result){
+                                callback.call(context || null);
+                            }, context);
+                        }, this);
 
-                         NS.initApps(ownerModules, function(){
-                         memberList.each(this._memberExtends, this);
-
-                         var userIds = memberList.toArray('userid', {distinct: true});
-                         this.getApp('uprofile').userListByIds(userIds, function(err, result){
-                         callback.call(context || null);
-                         }, context);
-
-                         }, this);
-                         /**/
                     };
                 }
             },

@@ -71,7 +71,7 @@ class TeamApp extends AbricosApplication {
             case "memberSave":
                 return $this->MemberSaveToJSON($d->data);
             case 'member':
-                return $this->MemberToJSON($d->teamid, $d->memberid);
+                return $this->MemberToJSON($d->teamid, $d->memberid, $d->policy);
             case 'memberList':
                 return $this->MemberListToJSON($d->filter);
         }
@@ -407,14 +407,17 @@ class TeamApp extends AbricosApplication {
 
             $toPolicyName = $rUS->vars->owner->type;
 
+            // есть ли доступ у текущего пользователя на добавление нового
+            // пользователя в политику (группу пользователей)
             if ($this->IsTeamPolicy($ret->teamid, $toPolicyName)
                 || !$this->IsTeamAction($ret->teamid, $toPolicyName.'.append')
             ){
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
 
-
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
+                // добавление существующего пользователя
+
 
             } else if ($rUS->IsSetCode($rUS->codes->INVITE_ALLOWED)){
 
@@ -439,7 +442,10 @@ class TeamApp extends AbricosApplication {
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
         } else {
-            return;
+
+
+            /*
+
             $member = $this->Member($vars->teamid, $vars->memberid);
             if (AbricosResponse::IsError($member)){
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
@@ -449,35 +455,32 @@ class TeamApp extends AbricosApplication {
             $ret->userid = $member->userid;
 
             $ownerApp->Team_OnMemberUpdate($ret);
+            /**/
         }
 
         return $ret;
     }
 
-    public function MemberToJSON($teamid, $memberid){
-        $res = $this->Member($teamid, $memberid);
+    public function MemberToJSON($teamid, $memberid, $policyName){
+        $res = $this->Member($teamid, $memberid, $policyName);
         return $this->ResultToJSON('member', $res);
     }
 
-    public function Member($teamid, $memberid){
-        $userRole = $this->TeamMemberRole($teamid);
-        if (!$userRole->TeamIsExist()){
-            return AbricosResponse::ERR_NOT_FOUND;
-        }
-        if (!$userRole->IsView()){
+    public function Member($teamid, $memberid, $policyName){
+        $action = $policyName.".view";
+        if (!$this->IsTeamAction($teamid, $action)){
             return AbricosResponse::ERR_FORBIDDEN;
         }
 
-        $d = TeamQuery::Member($this->db, $teamid, $memberid);
+        $d = TeamQuery::Member($this->db, $teamid, $memberid, $policyName);
         if (empty($d)){
             return AbricosResponse::ERR_NOT_FOUND;
         }
         /** @var TeamMember $member */
         $member = $this->InstanceClass('Member', $d);
 
-        /** @var ITeamOwnerApp $ownerApp */
-        $ownerApp = Abricos::GetApp($member->module);
-        $ownerApp->Team_OnMember($member);
+        $ownerApp = $this->TeamOwnerApp($teamid);
+        $ownerApp->Team_OnMember($member, $policyName);
 
         return $member;
     }

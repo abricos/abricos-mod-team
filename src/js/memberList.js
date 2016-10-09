@@ -14,8 +14,10 @@ Component.entryPoint = function(NS){
     };
     MemberListItemWidgetExt.prototype = {
         buildTData: function(){
+            var member = this.get('member');
             return {
-                memberid: this.get('member').get('id')
+                teamid: member.get('teamid'),
+                memberid: member.get('id')
             };
         },
         onInitAppWidget: function(err, appInstance, options){

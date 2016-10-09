@@ -297,7 +297,6 @@ class TeamUserPolicyManager {
 
         $action = $this->app->ActionList()->GetByPath($ownerModule, $group, $name);
         if (empty($action)){
-
             $this->tpm->CheckTeamPolicies();
             $action = $this->app->ActionList()->GetByPath($ownerModule, $group, $name);
             if (empty($action)){

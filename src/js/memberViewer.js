@@ -13,24 +13,26 @@ Component.entryPoint = function(NS){
         teamApp: NS.ATTRIBUTE.teamApp,
         team: NS.ATTRIBUTE.team,
         memberid: NS.ATTRIBUTE.memberid,
+        policy: NS.ATTRIBUTE.policy,
         member: NS.ATTRIBUTE.member,
     };
     MemberViewerWidgetExt.prototype = {
         buildTData: function(){
             return {
                 teamid: this.get('team').get('id'),
-                id: this.get('memberid')
+                memberid: this.get('memberid')
             };
         },
         onInitAppWidget: function(err, appInstance){
             var teamApp = this.get('teamApp'),
                 teamid = this.get('team').get('id'),
+                policy = this.get('policy'),
                 memberid = this.get('memberid'),
                 member;
 
             this.set('waiting', true);
 
-            teamApp.member(teamid, memberid, function(err, result){
+            teamApp.member(teamid, memberid, policy, function(err, result){
                 member = err ? null : result.member;
                 this._onLoadMember(result.member);
             }, this);

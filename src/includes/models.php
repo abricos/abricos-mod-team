@@ -345,63 +345,6 @@ class TeamPluginList extends AbricosModelList {
 }
 
 /**
- * Class TeamMemberRole
- *
- * @property TeamPlugin $app
- * @property int $id Team ID
- * @property int $memberid
- * @property string $module
- * @property string $status
- * @property string $role
- * @property bool $isPrivate
- */
-class TeamMemberRole extends AbricosModel {
-    protected $_structModule = 'team';
-    protected $_structName = 'TeamMemberRole';
-
-    public function TeamIsExist(){
-        return $this->id > 0;
-    }
-
-    public function IsJoined(){
-        return $this->status === TeamMember::STATUS_JOINED;
-    }
-
-    public function IsWaiting(){
-        return $this->status === TeamMember::STATUS_WAITING;
-    }
-
-    public function IsRemoved(){
-        return $this->status === TeamMember::STATUS_REMOVED;
-    }
-
-    public function IsAdmin(){
-        if (!$this->TeamIsExist()){
-            return false;
-        }
-        return $this->app->IsAdminRole()
-        || ($this->role === TeamMember::ROLE_ADMIN
-            && $this->IsJoined());
-    }
-
-    public function IsView(){
-        if (!$this->TeamIsExist()){
-            return false;
-        }
-        return $this->app->IsViewRole();
-    }
-}
-
-/**
- * Class TeamMemberRoleList
- *
- * @method TeamMemberRole Get($teamid)
- * @method TeamMemberRole GetByIndex($i)
- */
-class TeamMemberRoleList extends AbricosModelList {
-}
-
-/**
  * Interface TeamSaveVars
  *
  * @property int $teamid
@@ -430,11 +373,12 @@ class TeamSave extends AbricosResponse {
 /**
  * Class Team
  *
+ * @property int $id Team ID
  * @property string $module Owner module name
  * @property int $userid
  * @property string $title
  * @property string $logo
- * @property TeamMemberRole $userRole
+ * @property string $userActions Enable user action id (join by `,`)
  */
 class Team extends AbricosModel {
     protected $_structModule = 'team';
@@ -491,25 +435,11 @@ class TeamListFilter extends AbricosResponse {
 /**
  * Class TeamMember
  *
+ * @property int $id Member ID (User ID)
  * @property string $module
  * @property int $teamid
- * @property int $userid
- * @property string $status
- * @property string $role
- * @property bool $isPrivate
- * @property string $myStatus
- * @property string $myRole
  */
 class TeamMember extends AbricosModel {
-
-    const STATUS_WAITING = 'waiting';
-    const STATUS_JOINED = 'joined';
-    const STATUS_REMOVED = 'removed';
-
-    const ROLE_USER = 'user';
-    const ROLE_EDITOR = 'editor';
-    const ROLE_MODERATOR = 'moderator';
-    const ROLE_ADMIN = 'admin';
 
     protected $_structModule = 'team';
     protected $_structName = 'Member';

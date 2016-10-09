@@ -27,7 +27,7 @@ interface ITeamOwnerApp {
 
     public function Team_OnMemberList(TeamMemberListFilter $filter);
 
-    public function Team_OnMember(TeamMember $member);
+    public function Team_OnMember(TeamMember $member, $policyName);
 
     /**
      * @param TeamMemberSave $r
