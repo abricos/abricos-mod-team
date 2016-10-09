@@ -106,14 +106,22 @@ class TeamApp extends AbricosApplication {
      * @return string
      */
     public function TeamOwnerModule($teamid){
-        if (isset($this->_cache['TeamOwnMod'][$teamid])){
-            return $this->_cache['TeamOwnMod'][$teamid];
-        }
-        if (!isset($this->_cache['TeamOwnMod'])){
-            $this->_cache['TeamOwnMod'] = array();
+        if ($this->CacheExists('TeamOwnMod', $teamid)){
+            return $this->Cache('TeamOwnMod', $teamid);
         }
         $moduleName = TeamQuery::TeamOwnerModule($this->db, $teamid);
-        return $this->_cache['TeamOwnMod'][$teamid] = $moduleName;
+        $this->SetCache('TeamOwnMod', $teamid, $moduleName);
+        return $moduleName;
+    }
+
+    /**
+     * @param $teamid
+     * @return ITeamOwnerApp
+     */
+    public function TeamOwnerApp($teamid){
+        $ownerModule = $this->TeamOwnerModule($teamid);
+
+        return Abricos::GetApp($ownerModule);
     }
 
     private function OwnerAppFunctionExist($module, $fn){
@@ -491,36 +499,22 @@ class TeamApp extends AbricosApplication {
 
         $teamid = $filter->vars->teamid;
         $policyName = $filter->vars->policy;
-        $action = $policyName.".view";
+        $action = $policyName.".list";
 
         if (!$this->IsTeamAction($teamid, $action)){
             return $filter->SetError(AbricosResponse::ERR_FORBIDDEN);
         }
-
-        // $arr = array();
 
         $rows = TeamQuery::MemberList($this->db, $filter);
         while (($d = $this->db->fetch_array($rows))){
             /** @var TeamMember $member */
             $member = $this->InstanceClass('Member', $d);
 
-            /*
-            if (!isset($arr[$member->module])){
-                $arr[$member->module] = $this->InstanceClass('MemberList');
-            }
-            $arr[$member->module]->Add($member);
-            /**/
-
             $filter->items->Add($member);
-
         }
 
-        /*
-        foreach ($arr as $module => $list){
-            $ownerApp = Abricos::GetApp($module);
-            $ownerApp->Team_OnMemberList($list);
-        }
-        /**/
+        $ownerApp = $this->TeamOwnerApp($teamid);
+        $ownerApp->Team_OnMemberList($filter);
 
         return $filter;
     }

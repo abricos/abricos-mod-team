@@ -25,7 +25,7 @@ interface ITeamOwnerApp {
 
     public function Team_OnTeam(Team $team);
 
-    public function Team_OnMemberList(TeamMemberList $memberList);
+    public function Team_OnMemberList(TeamMemberListFilter $filter);
 
     public function Team_OnMember(TeamMember $member);
 
