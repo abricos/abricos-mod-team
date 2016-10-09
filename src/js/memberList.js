@@ -10,6 +10,7 @@ Component.entryPoint = function(NS){
     };
     MemberListItemWidgetExt.ATTRS = {
         teamApp: NS.ATTRIBUTE.teamApp,
+        team: NS.ATTRIBUTE.team,
         member: {value: null}
     };
     MemberListItemWidgetExt.prototype = {
@@ -86,6 +87,7 @@ Component.entryPoint = function(NS){
 
             var appInstance = this.get('appInstance'),
                 tp = this.template,
+                team = this.get('team'),
                 wsList = this._cleanMemberList(),
                 ItemWidget = this.get('itemWidget');
 
@@ -95,6 +97,7 @@ Component.entryPoint = function(NS){
             memberList.each(function(member){
                 var w = new ItemWidget({
                     boundingBox: tp.append('list', tp.replace('itemWrap')),
+                    team: team,
                     member: member,
                 });
                 wsList[wsList.length] = w;

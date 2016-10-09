@@ -8,6 +8,10 @@
     "memberid": {
       "type": "int"
     },
+    "policy": {
+      "type": "string",
+      "parse": "full"
+    },
     "invite": {
       "type": "object"
     },
@@ -27,7 +31,7 @@
     "teamid": {
       "type": "int"
     },
-    "userid": {
+    "memberid": {
       "type": "int"
     },
     "policy": {

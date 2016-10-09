@@ -505,6 +505,7 @@ class TeamMemberListFilter extends AbricosResponse {
  *
  * @property int $memberid
  * @property int $teamid
+ * @property string $policy
  * @property object $invite
  * @property string $firstName
  * @property string $lastName
@@ -517,7 +518,7 @@ class TeamMemberSaveVars {
  *
  * @property TeamMemberSaveVars $vars
  * @property int $teamid
- * @property int $userid
+ * @property int $memberid
  * @property string $policy
  */
 class TeamMemberSave extends AbricosResponse {

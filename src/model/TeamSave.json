@@ -12,12 +12,6 @@
     "title": {
       "type": "string",
       "parse": "full"
-    },
-    "visibility": {
-      "type": "string",
-      "valid": "private,public",
-      "default": "public",
-      "notNULL": true
     }
   },
   "codes": {

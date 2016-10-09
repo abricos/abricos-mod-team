@@ -7,8 +7,6 @@ Component.requires = {
 };
 Component.entryPoint = function(NS){
 
-    var Y = Brick.YUI;
-
     var MemberEditorWidgetExt = function(){
     };
     MemberEditorWidgetExt.ATTRS = {
@@ -34,6 +32,7 @@ Component.entryPoint = function(NS){
         onInitAppWidget: function(err, appInstance){
             var teamApp = this.get('teamApp'),
                 teamid = this.get('team').get('id'),
+                policy= this.get('policy'),
                 memberid = this.get('memberid'),
                 member;
 
@@ -42,7 +41,7 @@ Component.entryPoint = function(NS){
             this.set('waiting', true);
 
             if (memberid > 0){
-                teamApp.member(teamid, memberid, function(err, result){
+                teamApp.member(teamid, memberid, policy, function(err, result){
                     member = err ? null : result.member;
                     this._onLoadMember(result.member);
                 }, this);
@@ -76,7 +75,7 @@ Component.entryPoint = function(NS){
             if (memberid > 0){
                 var user = member.get('user');
                 tp.setHTML({
-                    username: user.get('username'),
+                    userNameRO: user.get('username'),
                     firstNameRO: user.get('firstname'),
                     lastNameRO: user.get('lastname'),
                 });
@@ -146,11 +145,11 @@ Component.entryPoint = function(NS){
             var tp = this.template,
                 member = this.get('member'),
                 memberid = this.get('memberid'),
-                teamid = this.get('team').get('id'),
                 userInviteForm = this.getWidget('userInviteForm'),
                 data = {
-                    memberid: member.get('id'),
-                    teamid: teamid,
+                    memberid: memberid,
+                    teamid: this.get('team').get('id'),
+                    policy: this.get('policy'),
                     firstName: tp.getValue('firstName'),
                     lastName: tp.getValue('lastName'),
                 };

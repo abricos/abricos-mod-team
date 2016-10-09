@@ -383,8 +383,12 @@ class TeamApp extends AbricosApplication {
         $ret = $this->InstanceClass('MemberSave', $d);
 
         $vars = $ret->vars;
+        $teamid = $ret->teamid = $vars->teamid;
+        $policyName = $ret->policy = $vars->policy;
 
-        $ret->teamid = $vars->teamid;
+        if (!$this->IsTeamPolicy($teamid, $policyName)){
+            return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
+        }
 
         $ownerModule = $this->TeamOwnerModule($ret->vars->teamid);
 
@@ -405,14 +409,10 @@ class TeamApp extends AbricosApplication {
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
 
-            $toPolicyName = $rUS->vars->owner->type;
-
             // есть ли доступ у текущего пользователя на добавление нового
             // пользователя в политику (группу пользователей)
-            if ($this->IsTeamPolicy($ret->teamid, $toPolicyName)
-                || !$this->IsTeamAction($ret->teamid, $toPolicyName.'.append')
-            ){
-                return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
+            if (!$this->IsTeamAction($ret->teamid, $policyName.'.append')){
+                return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
             }
 
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
@@ -428,13 +428,13 @@ class TeamApp extends AbricosApplication {
                     return $ret->SetError(AbricosResponse::ERR_SERVER_ERROR);
                 }
 
-                $ret->userid = $rCreate->userid;
-                $ret->policy = $toPolicyName;
+                $ret->memberid = $rCreate->userid;
+                $ret->policy = $policyName;
 
                 $um = $this->PolicyManager($ret->teamid)->UserManager($ret->userid);
                 $um->AddToPolicy(array(
                     TeamPolicy::INVITE,
-                    $toPolicyName
+                    $policyName
                 ));
 
                 $ownerApp->Team_OnMemberInvite($ret, $rCreate);
@@ -442,20 +442,18 @@ class TeamApp extends AbricosApplication {
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
         } else {
+            if (!$this->IsTeamAction($ret->teamid, $policyName.'.update')){
+                return $ret->SetError(AbricosResponse::ERR_FORBIDDEN);
+            }
 
-
-            /*
-
-            $member = $this->Member($vars->teamid, $vars->memberid);
+            $member = $this->Member($ret->teamid, $vars->memberid, $policyName);
             if (AbricosResponse::IsError($member)){
                 return $ret->SetError(AbricosResponse::ERR_BAD_REQUEST);
             }
 
             $ret->memberid = $member->id;
-            $ret->userid = $member->userid;
 
             $ownerApp->Team_OnMemberUpdate($ret);
-            /**/
         }
 
         return $ret;
