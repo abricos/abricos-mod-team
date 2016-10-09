@@ -36,4 +36,6 @@ interface ITeamOwnerApp {
     public function Team_OnMemberInvite(TeamMemberSave $r, $rCreate);
 
     public function Team_OnMemberUpdate(TeamMemberSave $r);
+
+    public function Team_OnMemberAppend(TeamMemberSave $r);
 }

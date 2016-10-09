@@ -314,6 +314,16 @@ class TeamUserPolicyManager {
         return $userRole->IsSetCode($action->code);
     }
 
+    public function IsMember(){
+        return $this->UserPolicyList()->Count() > 0;
+    }
+
+    public function IsInPolicy($policyName){
+        $policy = $this->tpm->PolicyList()->GetByName($policyName);
+        $userPolicy = $this->UserPolicyList()->Get($policy->id);
+        return !empty($userPolicy);
+    }
+
     public function AddToPolicy($policyNames){
         if (!is_array($policyNames)){
             $policyNames = array($policyNames);

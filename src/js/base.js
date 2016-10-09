@@ -72,12 +72,22 @@ Component.entryPoint = function(NS){
         },
         menuItemUpdate: function(){
             var page = this.get('page'),
-                bbox = this.get('boundingBox');
+                bbox = this.get('boundingBox'),
+                names, name, i, isActive;
 
             bbox.all('[data-menuItem]').each(function(node){
-                var name = node.getData('menuItem');
+                names = node.getData('menuItem').split(',');
 
-                if (page.widget === name){
+                isActive = false;
+                for (i = 0; i < names.length; i++){
+                    name = Y.Lang.trim(names[i]);
+                    if (page.widget === name){
+                        isActive = true;
+                        break;
+                    }
+                }
+
+                if (isActive){
                     node.addClass('active');
                 } else {
                     node.removeClass('active');

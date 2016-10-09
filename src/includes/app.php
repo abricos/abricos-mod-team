@@ -11,6 +11,8 @@ require_once 'interfaces.php';
 require_once 'policies.php';
 require_once 'classes/policyManager.php';
 
+// TODO: реализовать настройку на кол-во создаваемых сообществ одним пользователем
+
 /**
  * Class TeamApp
  *
@@ -219,6 +221,10 @@ class TeamApp extends AbricosApplication {
 
         $modules = Abricos::$modules->RegisterAllModule();
 
+        /**
+         * @var string $name
+         * @var Ab_Module $module
+         */
         foreach ($modules as $name => $module){
             if (!method_exists($module, 'Team_IsPlugin')){
                 continue;
@@ -418,6 +424,28 @@ class TeamApp extends AbricosApplication {
             if ($rUS->IsSetCode($rUS->codes->ADD_ALLOWED)){
                 // добавление существующего пользователя
 
+                $ret->memberid = $rUS->userid;
+                $um = $this->PolicyManager($teamid)->UserManager($rUS->userid);
+
+                if ($um->IsInPolicy($policyName)){
+                    $ret->AddCode(TeamMemberSave::CODE_IS_IN_POLICY);
+                    return $ret;
+                }
+
+                $um->AddToPolicy($policyName);
+
+                if ($um->IsMember()){
+                    $ret->AddCode(TeamMemberSave::CODE_IS_INSIDER);
+                } else {
+                    $ret->AddCode(TeamMemberSave::CODE_IS_STRANGER);
+
+                    if (!$um->IsInPolicy(TeamPolicy::INVITE)){
+                        $ret->AddCode(TeamMemberSave::CODE_NEED_NOTIFY);
+                        $um->AddToPolicy(TeamPolicy::INVITE);
+                    }
+                }
+
+                $ownerApp->Team_OnMemberAppend($ret);
 
             } else if ($rUS->IsSetCode($rUS->codes->INVITE_ALLOWED)){
 
@@ -431,11 +459,14 @@ class TeamApp extends AbricosApplication {
                 $ret->memberid = $rCreate->userid;
                 $ret->policy = $policyName;
 
-                $um = $this->PolicyManager($ret->teamid)->UserManager($ret->userid);
+                $um = $this->PolicyManager($ret->teamid)->UserManager($rCreate->userid);
                 $um->AddToPolicy(array(
                     TeamPolicy::INVITE,
                     $policyName
                 ));
+
+                $ret->AddCode(TeamMemberSave::CODE_IS_STRANGER);
+                $ret->AddCode(TeamMemberSave::CODE_NEED_NOTIFY);
 
                 $ownerApp->Team_OnMemberInvite($ret, $rCreate);
             } else {
@@ -455,6 +486,8 @@ class TeamApp extends AbricosApplication {
 
             $ownerApp->Team_OnMemberUpdate($ret);
         }
+
+        $ret->AddCode(TeamMemberSave::CODE_OK);
 
         return $ret;
     }

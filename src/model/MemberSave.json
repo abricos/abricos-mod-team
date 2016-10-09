@@ -25,7 +25,11 @@
     }
   },
   "codes": {
-    "OK": 1
+    "OK": 1,
+    "IS_IN_POLICY": 2,
+    "IS_INSIDER": 4,
+    "IS_STRANGER": 8,
+    "NEED_NOTIFY": 16
   },
   "fields": {
     "teamid": {

@@ -522,6 +522,21 @@ class TeamMemberSaveVars {
  * @property string $policy
  */
 class TeamMemberSave extends AbricosResponse {
+
+    const CODE_OK = 1;
+    /**
+     * Пользователь уже добавлен в эту группу
+     */
+    const CODE_IS_IN_POLICY = 2;
+
+    /**
+     * Пользователь "свой человек"
+     */
+    const CODE_IS_INSIDER = 4;
+
+    const CODE_IS_STRANGER = 8;
+    const CODE_NEED_NOTIFY = 16;
+
     protected $_structModule = 'team';
     protected $_structName = 'MemberSave';
 }
